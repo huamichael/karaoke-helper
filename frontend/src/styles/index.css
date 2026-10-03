@@ -1,0 +1,5 @@
+/* The stylesheet, one file per area. Values come from frontend/prototype/index.html.
+   Owner: A. Spec: docs/design/ui.md. */
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./base.css";
