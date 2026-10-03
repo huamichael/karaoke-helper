@@ -5,7 +5,9 @@ Checks response shapes and the error codes in docs/contracts/api.md.
 Owner: B.
 """
 
+import io
 import json
+import wave
 
 import pytest
 from fastapi.testclient import TestClient
@@ -22,6 +24,7 @@ WORD_FORM = {"song_id": "demo", "line_index": "0", "target": "word", "word_index
 @pytest.fixture
 def client(monkeypatch):
     monkeypatch.setenv("GRADER", "mock")
+    monkeypatch.setenv("WHISPER_ENGINE", "faster")
     return TestClient(main.app, raise_server_exceptions=False)
 
 
@@ -169,9 +172,34 @@ def test_real_grader_bad_audio(client, monkeypatch):
     assert_error(post(client, LINE_FORM), 422, "bad_audio")
 
 
+def silent_wav(seconds: float) -> tuple[str, bytes, str]:
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16000)
+        w.writeframes(b"\0\0" * int(16000 * seconds))
+    return ("take.wav", buf.getvalue(), "audio/wav")
+
+
+def test_real_grader_rejects_long_recording(client, monkeypatch):
+    monkeypatch.setenv("GRADER", "real")
+    assert_error(post(client, LINE_FORM, audio=silent_wav(31)), 413, "audio_too_long")
+
+
+def test_real_grader_undecodable_upload_is_bad_audio(client, monkeypatch):
+    monkeypatch.setenv("GRADER", "real")
+    assert_error(post(client, LINE_FORM), 422, "bad_audio")
+
+
 def test_real_grader_failure_is_grading_failed(client, monkeypatch):
     monkeypatch.setenv("GRADER", "real")
-    assert_error(post(client, LINE_FORM), 500, "grading_failed")
+
+    def explode(*args):
+        raise RuntimeError("layer bug")
+
+    monkeypatch.setattr(main, "grade", explode)
+    assert_error(post(client, LINE_FORM, audio=silent_wav(1)), 500, "grading_failed")
 
 
 def test_media_does_not_expose_attempts(client):
@@ -183,3 +211,17 @@ def test_bad_grader_value_rejected(monkeypatch):
     monkeypatch.setenv("GRADER", "fake")
     with pytest.raises(ValueError):
         main.config.grader()
+
+
+# --- startup --------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(("grader", "loads"), [("real", 1), ("mock", 0)])
+def test_whisper_loaded_at_startup_only_for_real_grader(monkeypatch, grader, loads):
+    calls = []
+    monkeypatch.setattr(main, "warmup", lambda: calls.append(1))
+    monkeypatch.setenv("GRADER", grader)
+    with TestClient(main.app) as c:
+        assert len(calls) == loads
+        assert c.get("/api/v1/health").status_code == 200
+    assert len(calls) == loads

@@ -105,7 +105,7 @@ type SyllableResult = {
   index: number; hanzi: string; pinyin: string;
   status: "good" | "ok" | "wrong" | "missing";
   score: Score;
-  initial: Part | null;               // null for syllables with no initial
+  initial: Part | null;               // null for syllables with no initial, unless the user added one: then expected is ""
   final: Part | null;
   tone: { expected: number; heard: number | null; score: Score } | null;  // Word practice, from stage 3
   timing: {                           // null unless the CTC layer ran

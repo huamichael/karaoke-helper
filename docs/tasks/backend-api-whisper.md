@@ -96,7 +96,7 @@ C and D add their own dependencies to `pyproject.toml` and their own rows to `fe
 
 ### Whisper
 
-- Load one model at startup: `WhisperModel("large-v3-turbo", device="cpu", compute_type="int8")`. If it is too slow on the demo Mac, try `medium`.
+- Load one model at startup. On macOS the default engine is `mlx-whisper` (`mlx-community/whisper-large-v3-turbo`). Elsewhere, and in Docker, it is `WhisperModel("large-v3-turbo", device="cpu", compute_type="int8")`. `WHISPER_ENGINE=faster` forces the CPU path. If mlx is still too slow, try `medium`. `mlx-whisper` 0.4.3 cannot do `beam_size=5`; it uses greedy decode at temperature 0.
 - Call it with `language="zh"`, `beam_size=5`, `temperature=0.0`, `condition_on_previous_text=False`, and no `initial_prompt`.
 - Never pass the expected lyric as a prompt. It biases the transcript toward a pass.
 - `vad_filter=True` reduces invented text on silence, but it may drop a very short word. Test both settings on the isolated words.

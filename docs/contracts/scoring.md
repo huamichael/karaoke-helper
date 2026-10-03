@@ -21,8 +21,9 @@ Every score is an integer from 0 to 100.
 - Each syllable has an initial (the opening consonant) and a final (the rest). Each gets a component score.
 - On the Whisper base, a component is 100 for an exact match, 60 for a commonly confused pair, 20 for any other mismatch, and 0 if the syllable is missing.
 - With the CTC layer on, a component is a continuous value from 0 to 100. When a confused variant wins over the expected sound, the score should land at 60 or below, so the two layers stay comparable.
-- Commonly confused pairs: zh/z, ch/c, sh/s, j/zh, q/ch, x/sh, n/l, an/ang, en/eng, in/ing. The table lives in `scoring/confusions.py` and both layers import it.
+- Commonly confused pairs: zh/z, ch/c, sh/s, j/zh, q/ch, x/sh, n/l, an/ang, en/eng, in/ing, ian/iang, uan/uang, uen/ueng. The table lives in `scoring/confusions.py` and both layers import it.
 - Syllable score = 0.43 × initial + 0.57 × final. If the syllable has no initial, the score is the final alone.
+- If the syllable has no initial but one was heard (果 guǒ for 我 wǒ), the initial is scored as an other mismatch (20) against an empty expected initial, and the weights above apply.
 - Status: `good` at 85 or above, `ok` from 70 to 84, `wrong` below 70, and `missing`.
 
 On the Whisper base, those thresholds work out as follows:
@@ -33,6 +34,7 @@ On the Whisper base, those thresholds work out as follows:
 | Confused pair (60) | Exact (100) | 83 | ok |
 | Exact (100) | Confused pair (60) | 77 | ok |
 | Other mismatch (20) | Exact (100) | 66 | wrong |
+| Added where none expected (20) | Exact (100) | 66 | wrong |
 | Confused pair (60) | Confused pair (60) | 60 | wrong |
 
 ## Per word
