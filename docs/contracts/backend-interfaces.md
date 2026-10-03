@@ -135,7 +135,8 @@ def score_rhythm(reference: list[Syllable], spans: list[Span | None]) -> RhythmR
 def to_syllables(text: str, overrides: dict[int, str] | None = None) -> list[Syllable]
 ```
 - The only place Hanzi becomes syllable records. One syllable per Hanzi character; other characters are dropped.
-- `overrides` maps a character position in `text` to a `pinyin_numeric` reading, for example `{5: "di4"}`.
+- `overrides` maps a character position in `text` to a `pinyin_numeric` reading, for example `{5: "di4"}`. Every character counts toward the position, spaces and punctuation included.
+- Raises `ValueError` if an override does not point at a Hanzi character, if it is not a valid reading, or if a character has no known reading. pypinyin covers all CJK characters, so the last case should not occur with Whisper output.
 - Returns the lexical `tone`. Times are `None`.
 - Works for both Simplified and Traditional characters.
 
@@ -147,7 +148,7 @@ def segment_words(text: str) -> list[str]
 ```python
 def sandhi_tones(syllables: list[Syllable]) -> list[int | None]
 ```
-- The tone each syllable is expected to be spoken with, after third-tone sandhi. `None` for the neutral tone, which is not scored.
+- The tone each syllable is expected to be spoken with, after tone sandhi: the 一 and 不 rules, then third-tone sandhi (rules in [scoring.md](scoring.md), tone section). `None` for the neutral tone, which is not scored.
 
 ```python
 def score_tones(audio: Audio, expected: list[Syllable], spans: list[Span | None] | None) -> list[ToneGrade | None]

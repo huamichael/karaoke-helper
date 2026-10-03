@@ -11,15 +11,22 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     # faster-whisper 1.2.1's decode_audio passes metadata_errors, which PyAV 19 removed.
-    "av>=11,<19",
-    "fastapi>=0.142.2",
-    "faster-whisper>=1.2.1",
-    "mlx-whisper>=0.4.3 ; sys_platform == 'darwin'",
-    "numpy>=2.5.3",
-    "pydantic>=2.13.5",
-    "python-multipart>=0.0.32",
-    "uvicorn>=0.54.0",
+    "av>=14,<19",               # B: audio decoding; D: build_song --check
+    "edge-tts>=7",              # D: spoken word clips (needs internet when generating)
+    "fastapi>=0.142.2",         # B
+    "faster-whisper>=1.2.1",    # B
+    "jieba>=0.42",              # D: word segmentation
+    "mlx-whisper>=0.4.3 ; sys_platform == 'darwin'",  # B
+    "numpy>=2.5.3",             # shared: audio arrays
+    "praat-parselmouth>=0.4",   # D: pitch tracking for tone
+    "pydantic>=2.13.5",         # B: shared types
+    "pypinyin>=0.55",           # D: Hanzi to pinyin
+    "python-multipart>=0.0.32", # B
+    "pyyaml>=6",                # D: lyrics.yaml
+    "uvicorn>=0.54.0",          # B
+    "zhconv>=1.4",              # D: Traditional to Simplified, for segmentation
 ]
+
 
 # PyTorch: CPU-only builds on Linux (WSL2 and Docker). PyPI's default Linux
 # wheels bundle several GB of CUDA libraries that no team machine can use.
@@ -36,6 +43,7 @@ torchaudio = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+filterwarnings = ["ignore::SyntaxWarning"]  # jieba 0.42 uses old regex escapes
 
 [dependency-groups]
 dev = [

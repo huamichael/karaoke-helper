@@ -8,6 +8,10 @@
 
 FROM node:22-bookworm-slim
 
+# compose.yaml runs the container as the host user, so node_modules must be
+# writable by any user.
+RUN mkdir -p /workspace/frontend/node_modules && chmod 1777 /workspace/frontend/node_modules
+
 COPY frontend-entrypoint.sh /usr/local/bin/frontend-entrypoint
 RUN chmod +x /usr/local/bin/frontend-entrypoint
 

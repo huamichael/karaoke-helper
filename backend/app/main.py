@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app import config, songs
+from app import attempts, config, songs
 from app.audio import AudioTooLong, BadAudio, load_audio
 from app.schemas import AttemptResult, ErrorBody, ErrorDetail, Health, Song, SongSummary
 from app.scoring.grader import grade
@@ -31,6 +31,7 @@ log = logging.getLogger(__name__)
 
 config.grader()  # fail at startup on a bad GRADER value
 config.whisper_engine()
+config.validate_layer_flags()
 
 
 @asynccontextmanager
@@ -126,8 +127,9 @@ async def create_attempt(
     try:
         if config.grader() == "mock":
             return grade_mock(data, song_id, line, target, mode, word_index, attempt_id)
-        result = grade(load_audio(data), line, target, mode, word_index)
-        return result.model_copy(update={"attempt_id": attempt_id, "song_id": song_id})
+        decoded = load_audio(data)
+        result = grade(decoded, line, target, mode, word_index)
+        result = result.model_copy(update={"attempt_id": attempt_id, "song_id": song_id})
     except AudioTooLong as e:
         raise ApiError(413, "audio_too_long", str(e)) from e
     except BadAudio as e:
@@ -135,3 +137,8 @@ async def create_attempt(
     except Exception as e:
         log.exception("grading failed for %s", attempt_id)
         raise ApiError(500, "grading_failed", "Something went wrong while grading. Try again.") from e
+    try:
+        attempts.save(decoded, result)
+    except Exception:
+        log.exception("could not save %s", attempt_id)
+    return result

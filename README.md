@@ -4,7 +4,7 @@ A karaoke app that grades Mandarin pronunciation. The user hears a line of a son
 
 ## Status
 
-Skeleton only. Every source file holds a header describing its purpose; the code is not written yet. Until the kickoff deliverables exist, `docker compose up` starts both containers, but the backend reports that it has no app yet and the frontend waits to be scaffolded.
+Skeleton only. Every source file holds a header describing its purpose; the code is not written yet. Until the kickoff deliverables exist, `docker compose up` starts both containers, but each prints what is missing and waits: the backend for its dependencies and routes, the frontend to be scaffolded.
 
 ## Where to look
 
@@ -53,5 +53,6 @@ Needs Python 3.12, [uv](https://docs.astral.sh/uv/) and Node 22 on your machine.
 cd backend && uv sync && GRADER=mock uv run uvicorn app.main:app --reload --port 8000
 
 # frontend, on http://localhost:5173
-cd frontend && npm install && npm run dev
+cd frontend/prototypes
+python3 -m http.server 5173
 ```

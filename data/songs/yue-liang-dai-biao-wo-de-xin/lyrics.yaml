@@ -1,0 +1,173 @@
+version: '1.0'
+metadata:
+  title: Yue Liang Dai Biao Wo De Xin
+  artist: Teresa Teng
+  album: Teresa Teng 15th Anniversary Dan Yuan Ren Chang Jiu
+  duration_ms: 208000
+  instrumental: false
+# How to split phrases into words (chips) where the automatic split is wrong.
+words:
+  我愛你: 我 愛 你
+  有多深: 有 多深
+  不移: 不移
+# English translation of each line, matched by its exact text.
+translations:
+  你問我愛你有多深: "You ask me how deeply I love you"
+  我愛你有幾分: "How much I love you"
+  我的情也真 我的愛也真: "My feelings are true, my love is true"
+  月亮代表我的心: "The moon represents my heart"
+  我的情不移 我的愛不變: "My feelings won't waver, my love won't change"
+  輕輕的一個吻: "One gentle kiss"
+  已經打動我的心: "Has already touched my heart"
+  深深的一段情: "A deep, deep love"
+  教我思念到如今: "Has kept me longing until now"
+  你去想一想 你去看一看: "Go and think it over, go and take a look"
+# English meaning of each word, shown in Word practice.
+glosses:
+  你: "you"
+  問: "to ask"
+  我: "I, me"
+  愛: "to love; love"
+  有: "to have"
+  多深: "how deep"
+  幾分: "how much"
+  的: "(possessive particle)"
+  情: "feelings"
+  也: "also"
+  真: "true"
+  月亮: "moon"
+  代表: "to represent"
+  心: "heart"
+  不移: "unwavering"
+  不變: "unchanging"
+  輕輕: "gently"
+  一個: "one, a"
+  吻: "kiss"
+  已經: "already"
+  打動: "to touch, to move"
+  深深: "deeply"
+  一段: "a stretch of"
+  教: "to make, to cause"
+  思念: "to long for"
+  到: "until"
+  如今: "now"
+  去: "to go"
+  想一想: "to think it over"
+  看一看: "to take a look"
+lines:
+- text: 你問我愛你有多深
+  start_ms: 12110
+  end_ms: 18490
+- text: 我愛你有幾分
+  start_ms: 18490
+  end_ms: 24110
+- text: 我的情也真 我的愛也真
+  start_ms: 24110
+  end_ms: 30330
+- text: 月亮代表我的心
+  start_ms: 30330
+  end_ms: 36980
+- text: 你問我愛你有多深
+  start_ms: 36980
+  end_ms: 43050
+- text: 我愛你有幾分
+  start_ms: 43050
+  end_ms: 49020
+- text: 我的情不移 我的愛不變
+  start_ms: 49020
+  end_ms: 55020
+- text: 月亮代表我的心
+  start_ms: 55020
+  end_ms: 61080
+- text: 輕輕的一個吻
+  start_ms: 61080
+  end_ms: 67290
+- text: 已經打動我的心
+  start_ms: 67290
+  end_ms: 73100
+- text: 深深的一段情
+  start_ms: 73100
+  end_ms: 79630
+- text: 教我思念到如今
+  start_ms: 79630
+  end_ms: 86160
+- text: 你問我愛你有多深
+  start_ms: 86160
+  end_ms: 91960
+- text: 我愛你有幾分
+  start_ms: 91960
+  end_ms: 98190
+- text: 你去想一想 你去看一看
+  start_ms: 98190
+  end_ms: 104020
+- text: 月亮代表我的心
+  start_ms: 104020
+  end_ms: 110540
+- text: ''
+  start_ms: 110540
+  end_ms: 134780
+- text: 輕輕的一個吻
+  start_ms: 134780
+  end_ms: 140880
+- text: 已經打動我的心
+  start_ms: 140880
+  end_ms: 146860
+- text: 深深的一段情
+  start_ms: 146860
+  end_ms: 152930
+- text: 教我思念到如今
+  start_ms: 152930
+  end_ms: 159530
+- text: 你問我愛你有多深
+  start_ms: 159530
+  end_ms: 165640
+- text: 我愛你有幾分
+  start_ms: 165640
+  end_ms: 171270
+- text: 你去想一想 你去看一看
+  start_ms: 171270
+  end_ms: 177650
+- text: 月亮代表我的心
+  start_ms: 177650
+  end_ms: 183790
+- text: 你去想一想 你去看一看
+  start_ms: 183790
+  end_ms: 189880
+- text: 月亮代表我的心
+  start_ms: 189880
+  end_ms: 194410
+- text: ''
+  start_ms: 194410
+plain: |-
+  你問我愛你有多深
+  我愛你有幾分
+  我的情也真 我的愛也真
+  月亮代表我的心
+
+  你問我愛你有多深
+  我愛你有幾分
+  我的情不移 我的愛不變
+  月亮代表我的心
+
+  輕輕的一個吻
+  已經打動我的心
+  深深的一段情
+  教我思念到如今
+
+  你問我愛你有多深
+  我愛你有幾分
+  你去想一想 你去看一看
+  月亮代表我的心
+
+  輕輕的一個吻
+  已經打動我的心
+  深深的一段情
+  教我思念到如今
+
+  你問我愛你有多深
+  我愛你有幾分
+  你去想一想 你去看一看
+  月亮代表我的心
+
+  你去想一想 你去看一看
+  月亮代表我的心

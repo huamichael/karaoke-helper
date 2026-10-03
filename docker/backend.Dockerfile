@@ -19,6 +19,10 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH="/opt/venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1
 
+# compose.yaml runs the container as the host user, so the venv and cache
+# volumes must be writable by any user.
+RUN mkdir -p /opt/venv /cache && chmod 1777 /opt/venv /cache
+
 COPY backend-entrypoint.sh /usr/local/bin/backend-entrypoint
 RUN chmod +x /usr/local/bin/backend-entrypoint
 

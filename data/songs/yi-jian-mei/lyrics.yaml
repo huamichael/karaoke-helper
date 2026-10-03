@@ -1,0 +1,181 @@
+version: '1.0'
+metadata:
+  title: Yi Jian Mei (xue hua piao piao bei feng xiao xiao)
+  artist: Fei Yu-ching
+  album: ميكس Yi Jian Mei (xue hua piao piao bei feng xiao xiao)
+  duration_ms: 235000
+  instrumental: false
+# Characters this song sings differently from pypinyin's reading. Each phrase is
+# fixed wherever it appears; give one pinyin_numeric reading per character.
+readings:
+  掩没: yan3 mo4    # 没 means "bury" here, not "not have"
+  长留: chang2 liu2 # "remain long", not "grow"
+# How to split phrases into words (chips) where the automatic split is wrong.
+words:
+  总有: 总有
+  开过: 开过
+  北风萧萧: 北风 萧萧
+  一翦寒梅: 一翦 寒梅
+  雪中: 雪中
+  只为: 只为
+  心间: 心间
+# English translation of each line, matched by its exact text.
+translations:
+  真情像草原广阔: "True love is as vast as the grasslands"
+  层层风雨不能阻隔: "Layer upon layer of wind and rain cannot keep it apart"
+  总有云开日出时候: "There will always come a time when the clouds part and the sun rises"
+  万丈阳光照耀你我: "Boundless sunlight shining on you and me"
+  真情像梅花开过: "True love is like the plum blossom in bloom"
+  冷冷冰雪不能掩没: "Cold ice and snow cannot bury it"
+  就在最冷枝头绽放: "It blooms on the coldest branch"
+  看见春天走向你我: "Seeing spring walk toward you and me"
+  雪花飘飘 北风萧萧: "Snowflakes drifting, the north wind howling"
+  天地 一片 苍茫: "Heaven and earth, one vast expanse"
+  一翦寒梅 傲立雪中: "A sprig of winter plum stands proudly in the snow"
+  只为 伊人 飘香: "Giving its fragrance only for the one I love"
+  爱我所爱 无怨无悔: "Loving whom I love, without complaint or regret"
+  此情 长留 心间: "This love stays forever in my heart"
+# English meaning of each word, shown in Word practice.
+glosses:
+  真情: "true love"
+  像: "like"
+  草原: "grassland"
+  广阔: "vast"
+  层层: "layer upon layer"
+  风雨: "wind and rain"
+  不能: "cannot"
+  阻隔: "to keep apart"
+  总有: "there will always be"
+  云开: "the clouds part"
+  日出: "sunrise"
+  时候: "time, moment"
+  万丈: "boundless"
+  阳光: "sunlight"
+  照耀: "to shine on"
+  你: "you"
+  我: "I, me"
+  梅花: "plum blossom"
+  开过: "to have bloomed"
+  冷冷: "cold"
+  冰雪: "ice and snow"
+  掩没: "to bury, to cover"
+  就: "just, right"
+  在: "at, on"
+  最: "most"
+  冷: "cold"
+  枝头: "tip of a branch"
+  绽放: "to bloom"
+  看见: "to see"
+  春天: "spring"
+  走向: "to walk toward"
+  雪花: "snowflakes"
+  飘飘: "drifting"
+  北风: "north wind"
+  萧萧: "howling (of wind)"
+  天地: "heaven and earth"
+  一片: "an expanse of"
+  苍茫: "vast and hazy"
+  一翦: "a sprig of"
+  寒梅: "winter plum blossom"
+  傲立: "to stand proudly"
+  雪中: "in the snow"
+  只为: "only for"
+  伊人: "the one I love"
+  飘香: "to give off fragrance"
+  爱我: "to love (what) I"
+  所爱: "(what one) loves"
+  无怨: "without complaint"
+  无悔: "without regret"
+  此情: "this love"
+  长留: "to stay forever"
+  心间: "in the heart"
+lines:
+- text: 真情像草原广阔
+  start_ms: 36520
+  end_ms: 43360
+- text: 层层风雨不能阻隔
+  start_ms: 43360
+  end_ms: 50100
+- text: 总有云开日出时候
+  start_ms: 50100
+  end_ms: 57270
+- text: 万丈阳光照耀你我
+  start_ms: 57270
+  end_ms: 63730
+- text: 真情像梅花开过
+  start_ms: 63730
+  end_ms: 70360
+- text: 冷冷冰雪不能掩没
+  start_ms: 70360
+  end_ms: 77160
+- text: 就在最冷枝头绽放
+  start_ms: 77160
+  end_ms: 84310
+- text: 看见春天走向你我
+  start_ms: 84310
+  end_ms: 91090
+- text: 雪花飘飘 北风萧萧
+  start_ms: 91090
+  end_ms: 97830
+- text: 天地 一片 苍茫
+  start_ms: 97830
+  end_ms: 104720
+- text: 一翦寒梅 傲立雪中
+  start_ms: 104720
+  end_ms: 111470
+- text: 只为 伊人 飘香
+  start_ms: 111470
+  end_ms: 118220
+- text: 爱我所爱 无怨无悔
+  start_ms: 118220
+  end_ms: 124930
+- text: 此情 长留 心间
+  start_ms: 124930
+  end_ms: 140100
+- text: ''
+  start_ms: 140100
+  end_ms: 165440
+- text: 雪花飘飘 北风萧萧
+  start_ms: 165440
+  end_ms: 172330
+- text: 天地 一片 苍茫
+  start_ms: 172330
+  end_ms: 179190
+- text: 一翦寒梅 傲立雪中
+  start_ms: 179190
+  end_ms: 185890
+- text: 只为 伊人 飘香
+  start_ms: 185890
+  end_ms: 192790
+- text: 爱我所爱 无怨无悔
+  start_ms: 192790
+  end_ms: 199360
+- text: 此情 长留 心间
+  start_ms: 199360
+  end_ms: 212760
+- text: ''
+  start_ms: 212760
+plain: |-
+  真情像草原广阔
+  层层风雨不能阻隔
+  总有云开日出时候
+  万丈阳光照耀你我
+
+  真情像梅花开过
+  冷冷冰雪不能掩没
+  就在最冷枝头绽放
+  看见春天走向你我
+
+  雪花飘飘 北风萧萧
+  天地 一片 苍茫
+  一翦寒梅 傲立雪中
+  只为 伊人 飘香
+  爱我所爱 无怨无悔
+  此情 长留 心间
+
+  雪花飘飘 北风萧萧
+  天地 一片 苍茫
+  一翦寒梅 傲立雪中
+  只为 伊人 飘香
+  爱我所爱 无怨无悔
+  此情 长留 心间

@@ -26,5 +26,7 @@ frontend/prototype/assets/covers/
 # ... and the app loads them from here (see frontend/src/theme/songThemes.ts)
 frontend/public/covers/
 
-# Uncomment if the repository is public and the tracks are copyrighted
-# data/songs/*/audio.*
+# Song tracks are copyrighted and the repository is public: share them outside git
+data/songs/*/audio.*
+# Line cuts written by build_song --check: also copyrighted
+data/songs/*/check/
