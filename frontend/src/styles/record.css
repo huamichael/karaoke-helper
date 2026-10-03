@@ -3,14 +3,25 @@
 
 .dial { position: absolute; top: 0; right: 0; bottom: 0; z-index: 2; width: 52vw; touch-action: none; cursor: grab; transition: transform .8s var(--ease), opacity .5s; }
 .dial.grabbing { cursor: grabbing; }
-.disc { position: absolute; border-radius: 50%; pointer-events: none; }
+.disc { position: absolute; pointer-events: none; }
+/* Collage: the record is a torn-paper cut-out pasted onto the photograph. Its edge is torn, a fringe of off-white
+   paper shows round it with a paper shadow, and scraps cut from the photo overlap the rim (logic/collage.ts). */
+.disc-paper { position: absolute; inset: 0; filter: drop-shadow(0 18px 34px rgba(0,0,0,.5)) drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+.disc-paper i { position: absolute; inset: 0; background: #ebe4d6; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+.disc-body { position: absolute; inset: 0; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+.scraps { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.scrap { position: absolute; transform: var(--t); filter: drop-shadow(0 9px 14px rgba(0,0,0,.42)) drop-shadow(0 1px 2px rgba(0,0,0,.3)); animation: scrapIn .7s var(--ease) both; }
+.scrap-paper, .scrap-img { position: absolute; inset: 0; }
+.scrap-paper { background: #ece5d8; }
+.scrap-img { background-repeat: no-repeat; }
+.tape { position: absolute; width: 78px; height: 24px; background: rgba(250,246,232,.42); box-shadow: 0 1px 2px rgba(0,0,0,.12); clip-path: polygon(0 12%, 6% 0, 14% 10%, 22% 0, 30% 8%, 100% 0, 96% 30%, 100% 55%, 95% 82%, 100% 100%, 8% 100%, 0 88%, 4% 60%, 0 36%); }
+@keyframes scrapIn { from { opacity: 0; transform: var(--t) scale(.94) translateY(6px); } }
 .disc-spin { position: absolute; inset: 0; border-radius: 50%; will-change: transform; }
 .disc-grooves { position: absolute; inset: 0; border-radius: 50%;
   background:
     radial-gradient(circle, transparent 61.5%, rgba(0,0,0,.7) 61.5% 62.2%, transparent 62.2% 79%, rgba(0,0,0,.7) 79% 79.7%, transparent 79.7%),
     repeating-radial-gradient(circle, rgba(255,255,255,.055) 0 1px, transparent 1px 4px),
-    radial-gradient(circle, #18181e 0%, #0b0b0f 66%, #060608 100%);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.12), inset 0 0 0 12px rgba(0,0,0,.4), 0 60px 160px rgba(0,0,0,.7); }
+    radial-gradient(circle, #18181e 0%, #0d0d11 62%, #0a0a0d 100%); }
 /* a sheen in the song's own colours; it stays still while the grooves turn */
 .disc-sheen { position: absolute; inset: 0; border-radius: 50%; mix-blend-mode: screen; opacity: .75;
   background: conic-gradient(from 205deg, transparent 0deg, color-mix(in srgb, var(--accent) 55%, transparent) 12deg, transparent 32deg, transparent 150deg, color-mix(in srgb, var(--c2) 50%, transparent) 172deg, color-mix(in srgb, var(--c3) 45%, transparent) 186deg, transparent 210deg);
@@ -20,6 +31,28 @@
 .disc-label { position: absolute; left: 50%; top: 50%; width: calc(var(--rl) * 2); height: calc(var(--rl) * 2); margin: calc(var(--rl) * -1) 0 0 calc(var(--rl) * -1); border-radius: 50%; overflow: hidden; background: radial-gradient(circle, var(--c1), var(--c0)); box-shadow: 0 0 0 2px rgba(255,255,255,.14), 0 0 0 7px rgba(0,0,0,.45), 0 12px 50px rgba(0,0,0,.55); }
 .cover { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; }
 .disc-hole { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px; border-radius: 50%; background: #08080a; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 75%, transparent), 0 0 0 10px rgba(0,0,0,.35); }
+/* The tonearm (three.js) is drawn over everything on the right; clicks reach it by hit-testing (Tonearm.tsx). */
+.arm-canvas { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; }
+.home.on-arm, .home.on-arm * { cursor: pointer !important; }
+/* The sound switch is the cap on the tonearm's pivot. */
+.arm-sound { position: absolute; z-index: 4; width: 32px; height: 32px; margin: -16px 0 0 -16px; display: grid; place-items: center; border: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #3b3b43, #121216 72%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 1px 3px rgba(0,0,0,.5); color: #fff; cursor: pointer; transition: transform .2s var(--ease), color .25s; }
+.arm-sound svg { width: 15px; height: 15px; }
+.arm-sound:hover { transform: scale(1.1); }
+.arm-sound[aria-pressed="false"] { color: rgba(255,255,255,.45); }
+/* The cover is also the play / stop switch, like a video player. Stopped: the label dims and shows play.
+   Playing: nothing, until the pointer is on the label; then it dims and shows pause. Hovering the glyph only
+   brightens it; it never grows. */
+.cover-btn { position: absolute; z-index: 2; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(0,0,0,0); cursor: pointer; transition: background .3s cubic-bezier(0,0,.2,1); }
+.cover-btn svg { width: 96px; height: 96px; color: #fff; opacity: 0; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)); transition: opacity .25s cubic-bezier(0,0,.2,1), filter .25s cubic-bezier(0,0,.2,1); }
+.cover-btn path { stroke: currentColor; stroke-width: 1.2; stroke-linejoin: round; }
+.cover-btn.paused, .cover-btn:focus-visible { background: rgba(0,0,0,.34); }
+.cover-btn.paused svg, .cover-btn:focus-visible svg { opacity: .8; }
+@media (hover: hover) {
+  .cover-btn:hover { background: rgba(0,0,0,.34); }
+  .cover-btn:hover svg { opacity: .8; }
+  .cover-btn svg:hover { opacity: 1; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)) drop-shadow(0 0 14px rgba(255,255,255,.35)); }
+}
+.cover-btn:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(255,255,255,.55); }
 .needle { position: absolute; width: 36px; height: 2px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 16px var(--accent); transform: translate(-50%, -50%); pointer-events: none; }
 
 .dn { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 10px; border: 0; background: none; text-align: center; white-space: nowrap; cursor: pointer; text-shadow: 0 2px 16px rgba(0,0,0,.7); }

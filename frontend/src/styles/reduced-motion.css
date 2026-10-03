@@ -2,7 +2,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .blob, .vinyl, .photo, .grain, .eq i, .ch, .lyric-demo .hz::after, .lyric-demo .mark, .burst, .word.suggest.pulse,
-  .mark.show.fresh, .dock-row > *, .opts-row > *, .sing.entering .line, .sing.entering .dock { animation: none !important; }
+  .mark.show.fresh, .scrap, .dock-row > *, .opts-row > *, .sing.entering .line, .sing.entering .dock { animation: none !important; }
   .lyric-demo .hz::after { clip-path: none; }
   .lyric-demo .mark { opacity: 1; transform: none; }
 }

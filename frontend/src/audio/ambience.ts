@@ -10,6 +10,7 @@ let ctx: AudioContext | null = null;
 let crackle: GainNode | null = null;
 let noise: GainNode | null = null;
 let active = false;
+let playing = false;
 let level = 0;
 
 function loop(c: AudioContext, seconds: number, fill: (d: Float32Array) => void) {
@@ -57,7 +58,7 @@ function start() {
 function apply() {
   if (!ctx || !crackle || !noise) return;
   const t = ctx.currentTime;
-  crackle.gain.setTargetAtTime(active ? 0.6 : 0, t, 0.2);
+  crackle.gain.setTargetAtTime(active && playing ? 0.6 : 0, t, 0.2);
   noise.gain.setTargetAtTime(active ? level * 0.08 : 0, t, 0.03);
 }
 
@@ -65,9 +66,10 @@ if (typeof document !== "undefined") {
   for (const ev of ["pointerdown", "keydown"]) document.addEventListener(ev, start, { once: true });
 }
 
-/** On while the song screen shows and sound is on. */
-export function setAmbienceActive(on: boolean) {
+/** On while the song screen shows and sound is on; the crackle only while the record plays. */
+export function setAmbienceActive(on: boolean, recordPlaying: boolean) {
   active = on;
+  playing = recordPlaying;
   apply();
 }
 

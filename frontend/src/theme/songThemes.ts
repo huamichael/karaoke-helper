@@ -30,6 +30,8 @@ export type SongTheme = {
   artist?: string;
   album?: string;
   year?: string;
+  /** Where each collage scrap looks into the photo (CSS background-position), one per scrap. */
+  focus?: [string, string, string];
   /** The song screen's subtitle: one line that fills and grades itself on a loop. Decorative. */
   sample?: { hz: string; py: string; marks: Status[] };
 };
@@ -56,6 +58,7 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     photo: "/photos/molihua.jpg",
     photoCredit: { name: "Irina Iriser", url: "https://unsplash.com/photos/vB4_CtsfaZ0" },
     cover: "/covers/molihua.jpg",
+    focus: ["72% 22%", "46% 38%", "30% 72%"],
     artist: "鳳飛飛",
     album: "鳳飛飛 金賞輯 3",
     year: "1971",
@@ -71,6 +74,7 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     photo: "/photos/yijianmei.jpg",
     photoCredit: { name: "yamasa-n", url: "https://unsplash.com/photos/SPEUTg0phCg" },
     cover: "/covers/yijianmei.jpg",
+    focus: ["34% 30%", "52% 64%", "68% 58%"],
     artist: "費玉清",
     album: "清韻悠揚 精選（一）",
     year: "1983",
@@ -86,6 +90,7 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     photo: "/photos/yueliang.jpg",
     photoCredit: { name: "Laura Cleffmann", url: "https://unsplash.com/photos/gRT7o73xua0" },
     cover: "/covers/yueliang.jpg",
+    focus: ["42% 40%", "58% 52%", "50% 47%"],
     artist: "鄧麗君",
     album: "島國之情歌 第四集 香港之戀",
     year: "1977",

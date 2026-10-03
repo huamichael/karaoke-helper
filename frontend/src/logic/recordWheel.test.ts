@@ -61,8 +61,18 @@ describe("labelSlots", () => {
     expect(above.y).toBeLessThan(400);
     expect(below.y).toBeGreaterThan(400);
     expect(above.angleDeg).toBe(180 + STEP_DEG);
-    expect(below.scale).toBeCloseTo(0.78);
+    expect(below.scale).toBeCloseTo(0.8);
     expect(below.opacity).toBeCloseTo(0.6);
+  });
+  it("spaces the songs 45° apart", () => {
+    expect(STEP_DEG).toBe(45);
+  });
+  it("tilts each name to the record's angle: level at the needle, ±45° above and below", () => {
+    const [above, sel, below] = labelSlots(0, 3, g);
+    expect(sel.tiltDeg).toBeCloseTo(0);
+    expect(above.tiltDeg).toBeCloseTo(45);
+    expect(below.tiltDeg).toBeCloseTo(-45);
+    expect(labelSlots(0.5, 3, g).find((x) => x.key === 1)!.tiltDeg).toBeCloseTo(-22.5);
   });
   it("never shows more than four, and the ones leaving fade out", () => {
     for (const u of [0.1, 0.5, 0.9, 1.4]) {

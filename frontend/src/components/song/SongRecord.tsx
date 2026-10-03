@@ -1,22 +1,27 @@
 /**
- * SongRecord: the song wheel as a huge stylized record. Its label is the album
- * cover; the songs ride its groove band, three in view, looping.
+ * SongRecord: the song wheel as a huge stylized record, 45° per song. The songs
+ * ride its groove band, three in view, looping, each name tilted to the record's
+ * angle as if printed on it.
  *
  * The position is unbounded and shown modulo the song count (logic/recordWheel.ts).
  * It follows the wheel, trackpad or a drag continuously and settles on a song with
- * a spring when the gesture ends; ↑ ↓ ← → and clicking a song turn it too. It turns
- * slowly while a preview plays.
+ * a spring when the gesture ends; ↑ ↓ ← → and clicking a song turn it too. While
+ * the record plays, the platter turns at 30° a second, spinning up and down
+ * (logic/turntable.ts). The cover button, the tonearm and the sound cap ride
+ * inside the dial as children, so they leave with it.
  *
  * Owner: A. Spec: docs/design/ui.md §3.3 ("Spinning the record"), §5.1, §6.
  */
 import { useReducedMotion } from "motion/react";
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import { useLatest } from "../../hooks/useLatest";
 import {
   crossfadeWeights, dragSettle, DRAG_PX_PER_SONG, labelSlots, mod, selectedIndex, STEP_DEG, stepSpring, wheelSettle, WHEEL_PX_PER_SONG,
   type wheelGeometry,
 } from "../../logic/recordWheel";
 import type { Entry } from "../../logic/songList";
+import { PLATTER_SPEED, platterStep } from "../../logic/turntable";
+import { RecordDisc } from "./RecordDisc";
 
 export type SongRecordHandle = { wheel(e: WheelEvent): void; step(dir: 1 | -1): void };
 
@@ -24,17 +29,24 @@ type Props = {
   entries: Entry[];
   g: ReturnType<typeof wheelGeometry>;
   initial: number;
+  /** The platter turns: the record is playing, or still slowing down. */
+  spinning: boolean;
+  /** "Playing a preview" under the selected song. */
   previewing: boolean;
   onTurn(u: number): void;
   onSelect(index: number): void;
   onSettle(index: number): void;
   onGestureStart(): void;
+  /** Drawn on the record, under the song names: the collage scraps. */
+  between?: ReactNode;
+  /** Drawn over everything in the dial: the cover button, the tonearm, the sound cap. */
+  children?: ReactNode;
 };
 
 type Drag = { id: number; y0: number; u0: number; lastY: number; lastT: number; v: number; moved: boolean };
 
 export const SongRecord = forwardRef<SongRecordHandle, Props>(function SongRecord(
-  { entries, g, initial, previewing, onTurn, onSelect, onSettle, onGestureStart }, ref,
+  { entries, g, initial, spinning, previewing, onTurn, onSelect, onSettle, onGestureStart, between, children }, ref,
 ) {
   const n = Math.max(1, entries.length);
   const reduced = useReducedMotion();
@@ -89,6 +101,11 @@ export const SongRecord = forwardRef<SongRecordHandle, Props>(function SongRecor
     }
   };
 
+  const turnTo = (t: number) => {
+    cb.current.onGestureStart();
+    springTo(t);
+  };
+
   useEffect(() => () => { cancelAnimationFrame(st.current.raf); clearTimeout(st.current.wheelT || undefined); }, []);
 
   useImperativeHandle(ref, () => ({
@@ -114,23 +131,28 @@ export const SongRecord = forwardRef<SongRecordHandle, Props>(function SongRecor
     },
     step(dir) {
       const s = st.current;
-      springTo(Math.round(s.raf ? s.target : s.u) + dir);
+      turnTo(Math.round(s.raf ? s.target : s.u) + dir);
     },
   }));
 
-  // Spin slowly while the preview plays.
+  // The platter: spins up when the record plays, slows to a stop after the arm is back on its rest.
+  const platter = useRef({ speed: 0 });
   useEffect(() => {
-    if (!previewing || reduced) return;
-    let last = performance.now();
-    let raf = requestAnimationFrame(function turn(now) {
-      setSpin((x) => x + ((now - last) / 1000) * 36);
+    const target = spinning && !reduced ? PLATTER_SPEED : 0;
+    let last = performance.now(), raf = 0;
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000), p = platter.current;
       last = now;
-      raf = requestAnimationFrame(turn);
-    });
+      p.speed = platterStep(p.speed, target, dt);
+      if (p.speed) setSpin((x) => x + p.speed * dt);
+      if (p.speed || target) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [previewing, reduced]);
+  }, [spinning, reduced]);
 
   const onPointerDown = (e: PointerEvent) => {
+    if ((e.target as HTMLElement).closest(".arm-sound")) return;
     st.current.drag = { id: e.pointerId, y0: e.clientY, u0: st.current.u, lastY: e.clientY, lastT: performance.now(), v: 0, moved: false };
     stopSpring();
   };
@@ -167,30 +189,19 @@ export const SongRecord = forwardRef<SongRecordHandle, Props>(function SongRecor
   return (
     <div ref={dial} className={`dial${grabbing ? " grabbing" : ""}`} role="listbox" aria-label="Songs"
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
-      <div className="disc" style={{ width: 2 * g.R, height: 2 * g.R, left: g.cx - g.R, top: g.cy - g.R, ["--rl" as string]: `${g.rl}px` }}>
-        <div className="disc-spin" style={{ transform: `rotate(${(u * STEP_DEG + spin).toFixed(2)}deg)` }}>
-          <div className="disc-grooves" />
-          <svg className="disc-ring" viewBox="0 0 200 200" aria-hidden>
-            <defs><path id="ringPath" d="M100,100 m-90,0 a90,90 0 1,1 180,0 a90,90 0 1,1 -180,0" /></defs>
-            <text><textPath href="#ringPath" textLength="560" lengthAdjust="spacing">{ring + ring}</textPath></text>
-          </svg>
-          <div className="disc-label">
-            {entries.map((e, k) => e.theme.cover && (
-              <div key={e.id} className="cover" style={{ backgroundImage: `url(${e.theme.cover})`, opacity: weights[k].toFixed(3) }} />
-            ))}
-          </div>
-          <i className="disc-hole" />
-        </div>
-        <div className="disc-sheen" />
-      </div>
+      <RecordDisc entries={entries} weights={weights} g={g} rotation={u * STEP_DEG + spin} ring={ring} />
+      {between}
       {labelSlots(u, n, g).map((s) => {
         const e = entries[s.song];
         if (!e) return null;
         const size = Math.min(24, Math.floor((g.nameMax - 20) / [...e.title].length));
         return (
           <button key={s.key} className="dn" role="option" aria-selected={s.selected}
-            style={{ maxWidth: Math.round(g.nameMax), opacity: +s.opacity.toFixed(3), transform: `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%, -50%) scale(${s.scale.toFixed(3)})` }}
-            onClick={() => springTo(s.key)}>
+            style={{
+              maxWidth: Math.round(g.nameMax), opacity: +s.opacity.toFixed(3),
+              transform: `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%, -50%) rotate(${s.tiltDeg.toFixed(2)}deg) scale(${s.scale.toFixed(3)})`,
+            }}
+            onClick={() => turnTo(s.key)}>
             <span className="dn-n">{String(s.song + 1).padStart(2, "0")}</span>
             <span className="dn-t" style={{ fontSize: size }}>{e.title}</span>
             <span className="dn-a">{e.artist}{e.playable ? "" : ", coming soon"}</span>
@@ -199,6 +210,7 @@ export const SongRecord = forwardRef<SongRecordHandle, Props>(function SongRecor
         );
       })}
       <i className="needle" style={{ left: g.cx - g.R + 22, top: g.cy }} />
+      {children}
     </div>
   );
 });

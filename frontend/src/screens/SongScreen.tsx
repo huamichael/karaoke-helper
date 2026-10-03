@@ -5,26 +5,34 @@
  * accuracy, then starts at line 1.
  *
  * The design (ui.md §5.1): each song's photograph is the page, its title is set
- * huge in a hairline serif, and the songs ride a huge record on the right. Turning
- * the record changes songs; once it settles, a short preview plays.
+ * huge in a hairline serif, and the songs ride a huge record on the right, pasted
+ * onto the photo like a collage. The record is a turntable: arm on the record =
+ * playing (the platter turns and a short preview plays); arm on its rest =
+ * stopped. The cover, the arm or Space plays and stops it; the cap on the arm's
+ * pivot (or M) turns the sound on and off.
  *
  * Owner: A. Spec: docs/tasks/frontend.md, docs/design/ui.md §4.1, §5.1.
  */
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { getSong, type Mode, type Song } from "../api/client";
 import { setAmbienceActive, setStatic } from "../audio/ambience";
 import { playPreview, type Playback } from "../audio/player";
+import { CoverButton } from "../components/song/CoverButton";
 import { Credit } from "../components/song/Credit";
 import { HomeHeader } from "../components/song/HomeHeader";
 import { LyricSample } from "../components/song/LyricSample";
+import { Scraps } from "../components/song/Scraps";
 import { MODE_HINT, SingButton } from "../components/song/SingButton";
 import { SongRecord, type SongRecordHandle } from "../components/song/SongRecord";
 import { SongTitle } from "../components/song/SongTitle";
+import { SoundCap } from "../components/song/SoundCap";
+import { Tonearm, type ArmPlace, type TonearmHandle } from "../components/song/Tonearm";
 import { SHOW_MODE_CHOICE } from "../config";
 import { useLatest } from "../hooks/useLatest";
 import { useWindowSize } from "../hooks/useWindowSize";
 import { betweenAmount, wheelGeometry } from "../logic/recordWheel";
 import type { Entry } from "../logic/songList";
+import { armLayout } from "../logic/turntable";
 
 type Props = {
   entries: Entry[];
@@ -39,7 +47,9 @@ type Props = {
   onRetry(): void;
 };
 
+// The sound switch and the turntable keep their state across visits to the song screen.
 let soundOn = true;
+let recordOn = true;
 const songs = new Map<string, Promise<Song>>();
 const songFor = (id: string) => {
   if (!songs.has(id)) songs.set(id, getSong(id).catch((e) => { songs.delete(id); throw e; }));
@@ -50,57 +60,113 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
   const { w: W, h: H } = useWindowSize();
   const root = useRef<HTMLElement>(null);
   const record = useRef<SongRecordHandle>(null);
-  const preview = useRef<Playback | null>(null);
-  const previewTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const arm = useRef<TonearmHandle>(null);
+  const audio = useRef<Playback | null>(null);
+  const settleTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const playingNow = useRef(recordOn); // read by async arm callbacks before React re-renders
   const [picking, setPicking] = useState(false);
   const [hint, setHint] = useState<Mode | "none">("none");
   const [sound, setSound] = useState(soundOn);
+  const [playing, setPlaying] = useState(recordOn);
+  const [spinning, setSpinning] = useState(recordOn);
   const [previewing, setPreviewing] = useState(false);
 
   const entry = entries[selected];
-  const g = wheelGeometry(W, H, W * 0.48, 0);
+  const g = useMemo(() => wheelGeometry(W, H, W * 0.48, 0), [W, H]);
+  const dialW = W * 0.52;
+  const pivot = armLayout(g, dialW, H).pivot;
   const avail = g.discLeft - W * 0.07 - 72; // every title line ends at least 72px before the record
   const indent = Math.round(Math.min(W * 0.12, 180, avail * 0.3));
   const copyw = Math.max(260, Math.min(460, avail - indent));
+  const live = useLatest({ entries, selected, sound, leaving, previewing });
+  const go = (where: ArmPlace) => arm.current?.go(where) ?? Promise.resolve(true);
 
-  // ---- preview ----
+  // ---- the preview: shown while the arm is down on a playable song, heard while sound is on ----
+  const stopAudio = useCallback(() => { audio.current?.stop(); audio.current = null; }, []);
+  const startAudio = useCallback((k: number) => {
+    const e = live.current.entries[k];
+    if (!e?.playable || !live.current.sound || audio.current) return;
+    songFor(e.id).then((song) => {
+      const now = live.current;
+      if (!playingNow.current || now.leaving || !now.sound || now.entries[now.selected]?.id !== e.id || audio.current) return;
+      const pb = playPreview(song.audio_url, song.lines[0]?.start_ms ?? 0, () => {});
+      audio.current = pb;
+      pb.done.then(() => { if (audio.current === pb) audio.current = null; });
+    }, () => {});
+  }, [live]);
   const stopPreview = useCallback(() => {
-    clearTimeout(previewTimer.current);
-    preview.current?.stop();
-    preview.current = null;
+    clearTimeout(settleTimer.current);
+    stopAudio();
     setPreviewing(false);
-  }, []);
-  const live = useLatest({ entries, sound, leaving });
-  const onSettle = useCallback((k: number) => {
-    stopPreview();
-    previewTimer.current = setTimeout(() => {
-      const { entries, sound, leaving } = live.current;
-      const e = entries[k];
-      if (!sound || leaving || !e?.playable) return;
-      songFor(e.id).then((song) => {
-        if (live.current.entries[k]?.id !== e.id || !live.current.sound || preview.current) return;
-        const pb = playPreview(song.audio_url, song.lines[0]?.start_ms ?? 0, () => setPreviewing(true));
-        preview.current = pb;
-        pb.done.then(() => { if (preview.current === pb) { preview.current = null; setPreviewing(false); } });
-      }, () => {});
-    }, 450);
-  }, [live, stopPreview]);
+  }, [stopAudio]);
+  const startPreview = useCallback((k: number) => {
+    const { entries, leaving } = live.current;
+    if (!playingNow.current || leaving || !entries[k]?.playable) return;
+    setPreviewing(true);
+    startAudio(k);
+  }, [live, startAudio]);
 
-  useEffect(() => stopPreview, [stopPreview]);
-  useEffect(() => { if (leaving || !sound) stopPreview(); }, [leaving, sound, stopPreview]);
+  // ---- the turntable ----
+  const setRecord = (on: boolean) => {
+    recordOn = on;
+    playingNow.current = on;
+    setPlaying(on);
+    clearTimeout(settleTimer.current);
+    if (on) {
+      setSpinning(true);
+      go("play").then((ok) => { if (ok) startPreview(live.current.selected); });
+    } else {
+      stopPreview();
+      go("rest").then((ok) => { if (ok && !playingNow.current) setSpinning(false); });
+    }
+  };
+  const toggleRecord = () => { if (!live.current.leaving) setRecord(!playingNow.current); };
+  const toggleSound = () => {
+    soundOn = !live.current.sound;
+    setSound(soundOn);
+    if (!soundOn) stopAudio();
+  };
+  useEffect(() => { if (sound && previewing) startAudio(selected); }, [sound, previewing, selected, startAudio]);
+
+  // Changing songs while it plays lifts the arm on the cue lever; it sets down again once the record settles.
+  const gestureStart = useCallback(() => {
+    stopPreview();
+    setPicking(false);
+    if (playingNow.current) arm.current?.go("cue");
+  }, [stopPreview]);
+  const onSettle = useCallback((k: number) => {
+    clearTimeout(settleTimer.current);
+    if (!playingNow.current) return;
+    settleTimer.current = setTimeout(() => {
+      (arm.current?.go("play") ?? Promise.resolve(true)).then((ok) => { if (ok) startPreview(k); });
+    }, 220);
+  }, [startPreview]);
+
+  // On load the record starts like a real one: the arm moves from its rest onto the record.
+  const recordKey = entries.map((e) => `${e.id}:${+e.playable}`).join("|");
+  useEffect(() => {
+    if (!recordKey || !playingNow.current) return;
+    setSpinning(true);
+    (arm.current?.go("play") ?? Promise.resolve(true)).then((ok) => { if (ok) startPreview(live.current.selected); });
+    return stopPreview;
+  }, [recordKey, live, startPreview, stopPreview]);
+
+  useEffect(() => {
+    if (!leaving) return;
+    stopPreview();
+    setSpinning(false);
+  }, [leaving, stopPreview]);
 
   // ---- ambience ----
   useEffect(() => {
-    setAmbienceActive(sound && !leaving);
-    return () => setAmbienceActive(false);
-  }, [sound, leaving]);
+    setAmbienceActive(sound && !leaving, playing);
+    return () => setAmbienceActive(false, false);
+  }, [sound, leaving, playing]);
 
   const turn = useCallback((u: number) => {
     onTurn(u);
     setStatic(betweenAmount(u));
   }, [onTurn]);
-
-  const gestureStart = useCallback(() => { stopPreview(); setPicking(false); }, [stopPreview]);
 
   // ---- input: wheel anywhere on the screen, keys ----
   useEffect(() => {
@@ -118,12 +184,15 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
     onStart(mode);
   };
   const keys = useLatest((e: KeyboardEvent) => {
-    if (leaving) return;
+    if (leaving || e.metaKey || e.ctrlKey || e.altKey) return;
+    const onButton = !!(e.target as HTMLElement).closest?.("button, input, textarea");
     if (e.key === "Escape") return setPicking(false);
+    if (e.key === " " && !onButton) { e.preventDefault(); return toggleRecord(); }
+    if (e.key === "m" || e.key === "M") return toggleSound();
     if (picking && e.key.startsWith("Arrow")) return;
     if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); record.current?.step(1); }
     else if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); record.current?.step(-1); }
-    else if (e.key === "Enter" && !(e.target as HTMLElement).closest?.("button")) {
+    else if (e.key === "Enter" && !onButton) {
       e.preventDefault();
       if (!entry?.playable) return;
       if (SHOW_MODE_CHOICE) { setHint("none"); setPicking(true); } else start("spoken");
@@ -135,16 +204,11 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
     return () => document.removeEventListener("keydown", f);
   }, [keys]);
 
-  const toggleSound = () => {
-    soundOn = !sound;
-    setSound(soundOn);
-  };
-
   const t = entry?.theme;
   return (
     <section ref={root} className={`home${leaving ? " leaving" : ""}${arriving ? " arriving" : ""}`}>
       <div className="h-shade" />
-      <HomeHeader sound={sound} onSound={toggleSound} />
+      <HomeHeader />
 
       {entry && (
         <div className="h-main" style={{ "--indent": `${indent}px`, "--copyw": `${copyw}px` } as CSSProperties}>
@@ -166,17 +230,23 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
 
       {entries.length > 0 && (
         <SongRecord
-          key={entries.map((e) => `${e.id}:${+e.playable}`).join("|")}
+          key={recordKey}
           ref={record}
           entries={entries}
           g={g}
           initial={selected}
+          spinning={spinning}
           previewing={previewing}
           onTurn={turn}
           onSelect={onSelect}
           onSettle={onSettle}
           onGestureStart={gestureStart}
-        />
+          between={entry && <Scraps songId={entry.id} theme={entry.theme} g={g} W={W} H={H} />}
+        >
+          <CoverButton cx={g.cx} cy={g.cy} rl={g.rl} playing={playing} onToggle={toggleRecord} />
+          <Tonearm ref={arm} g={g} width={dialW} height={H} accent={t?.palette.accent ?? "#ece8ff"} host={root} onToggle={toggleRecord} />
+          <SoundCap x={pivot.x} y={pivot.y} sound={sound} onToggle={toggleSound} />
+        </SongRecord>
       )}
 
       {t && <LyricSample sample={t.sample} />}

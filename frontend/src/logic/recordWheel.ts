@@ -2,13 +2,13 @@
  * The song screen's record wheel, as numbers.
  *
  * The wheel's position u is unbounded: u = 0 is the first song, u = 1 the next,
- * and it loops, so song = u mod n. The record turns 40° per song. The selected
+ * and it loops, so song = u mod n. The record turns 45° per song. The selected
  * song sits at the needle (180°, the record's left edge), one above, one below.
  *
  * Owner: A. Spec: docs/design/ui.md §3.3 ("Spinning the record") and §5.1.
  */
 
-export const STEP_DEG = 40;
+export const STEP_DEG = 45;
 /** Wheel and trackpad pixels per song. */
 export const WHEEL_PX_PER_SONG = 420;
 /** Drag pixels per song. */
@@ -35,7 +35,7 @@ export function betweenAmount(u: number): number {
   return Math.min(1, Math.abs(u - Math.round(u)) * 2);
 }
 
-export type Slot = { key: number; song: number; angleDeg: number; x: number; y: number; scale: number; opacity: number; selected: boolean };
+export type Slot = { key: number; song: number; angleDeg: number; tiltDeg: number; x: number; y: number; scale: number; opacity: number; selected: boolean };
 
 /** The song names riding the groove band: at most three in view, plus one fading in or out. */
 export function labelSlots(u: number, n: number, g: { cx: number; cy: number; rn: number }): Slot[] {
@@ -50,9 +50,10 @@ export function labelSlots(u: number, n: number, g: { cx: number; cy: number; rn
       key: j,
       song: mod(j, n),
       angleDeg,
+      tiltDeg: -(j - u) * STEP_DEG, // tilted to the record's angle there, as if printed on it
       x: g.cx + g.rn * Math.cos(t),
       y: g.cy + g.rn * Math.sin(t), // screen y points down, so the next song (j > u) sits below the needle
-      scale: 1 - Math.min(d, 1) * 0.22,
+      scale: 1 - Math.min(d, 1) * 0.2,
       opacity: d <= 1 ? 1 - d * 0.4 : Math.max(0, (0.6 * (1.5 - d)) / 0.5),
       selected: j === base,
     });
