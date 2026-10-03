@@ -64,6 +64,9 @@ MESSAGES: dict[str, str] = {
     "TONE_4_1": 'Your pitch stayed level. Start high and drop sharply, like a firm "No!"',
     "TONE_4_2": 'Your pitch rose. Start high and drop sharply, like a firm "No!"',
     "TONE_4_3": 'Your pitch dipped and rose. Start high and drop sharply, like a firm "No!"',
+    # Rhythm codes. Wording is the scoring.md example; C can replace it.
+    "RHYTHM_EARLY": "You came in early here.",
+    "RHYTHM_LATE": "You came in late here.",
 }
 
 
@@ -89,8 +92,12 @@ def _sound_message(code: str, kind: str, part: Part) -> str:
     return f'Sounded closer to "{part.heard}". Aim for "{part.expected}".'
 
 
-def pick(sound: SoundScore | None, tone: ToneGrade | None) -> Feedback | None:
-    """The one message for a syllable. Order: missing, initial or final, tone. None when nothing is wrong."""
+def pick(sound: SoundScore | None, tone: ToneGrade | None, rhythm_code: str | None = None) -> Feedback | None:
+    """The one message for a syllable. Order: missing, initial or final, tone, rhythm. None when nothing is wrong.
+
+    rhythm_code is RHYTHM_EARLY or RHYTHM_LATE when the grader has decided this syllable's
+    rhythm score is below the good line. Sound and tone messages still win.
+    """
     if sound is None:
         return Feedback(code="MISSING", message=MESSAGES["MISSING"])
     parts = [("initial", sound.initial), ("final", sound.final)]
@@ -102,4 +109,6 @@ def pick(sound: SoundScore | None, tone: ToneGrade | None) -> Feedback | None:
     if tone is not None and tone.heard is not None and tone.heard != tone.expected:
         code = f"TONE_{tone.expected}_{tone.heard}"
         return Feedback(code=code, message=MESSAGES.get(code, f"Tone {tone.heard} heard; aim for tone {tone.expected}."))
+    if rhythm_code is not None:
+        return Feedback(code=rhythm_code, message=MESSAGES[rhythm_code])
     return None

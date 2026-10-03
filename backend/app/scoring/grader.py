@@ -23,6 +23,7 @@ from app.schemas import (
     Part,
     PracticeWordStep,
     RhythmResult,
+    RhythmSyllable,
     Scores,
     SoundScore,
     Span,
@@ -37,6 +38,8 @@ from app.schemas import (
 from app.scoring import feedback
 from app.scoring.ctc import align, score_sounds
 from app.scoring.matcher import match, score_sounds_base
+from app.scoring.rhythm import score_rhythm
+from app.scoring.tone import score_tones
 from app.scoring.transcribe import transcribe
 
 log = logging.getLogger(__name__)
@@ -62,19 +65,31 @@ def grade(audio: Audio, line: Line, target: str, mode: str | None, word_index: i
         return no_speech_result(**context)
     observed = match(expected, transcript.syllables)
     sounds = score_sounds_base(expected, observed)
-    spans = _optional("align", align, audio, expected) if layers.ctc_spans else None
+    n = len(expected)
+    spans = _optional("align", n, align, audio, expected) if layers.ctc_spans else None
     if layers.ctc_scores and spans is not None:
-        finer = _optional("score_sounds", score_sounds, audio, expected, spans)
+        finer = _optional("score_sounds", n, score_sounds, audio, expected, spans)
         if finer is not None:
             sounds = finer
-    return assemble(expected, observed, sounds, spans, None, None, transcript,
+    rhythm = None
+    if layers.rhythm and spans is not None:
+        rhythm = _optional("score_rhythm", n, score_rhythm, expected, spans)
+    tones = None
+    if layers.tone and (spans is not None or n == 1):
+        tones = _optional("score_tones", n, score_tones, audio, expected, spans)
+    return assemble(expected, observed, sounds, spans, rhythm, tones, transcript,
                     word_specs=word_specs, engine="whisper+ctc" if spans is not None else "whisper",
                     trim_offset_ms=audio.trim_offset_ms, **context)
 
 
-def _optional(name: str, fn: Callable, *args):
+def _optional(name: str, n: int, fn: Callable, *args):
+    """fn(*args), or None if it raises or does not return one entry per expected syllable."""
     try:
-        return fn(*args)
+        out = fn(*args)
+        entries = out.syllables if isinstance(out, RhythmResult) else out
+        if out is not None and len(entries) != n:
+            raise ValueError(f"returned {len(entries)} entries for {n} expected syllables")
+        return out
     except Exception:
         log.exception("%s failed; continuing without it", name)
         return None
@@ -148,6 +163,17 @@ def round_half_up(x: float) -> int:
     return int(x + 0.5)
 
 
+def _rhythm_code(rhythm_syllable: RhythmSyllable | None) -> str | None:
+    """Early or late when this syllable's rhythm score is below the good line. None when it is on time.
+
+    85 on the rhythm formula (100 × e^(−|offset| / 400 ms)) is about 65 ms off.
+    An offset of 0 has no direction, so it never produces a message.
+    """
+    if rhythm_syllable is None or rhythm_syllable.score >= GOOD_FROM or rhythm_syllable.offset_ms == 0:
+        return None
+    return "RHYTHM_EARLY" if rhythm_syllable.offset_ms < 0 else "RHYTHM_LATE"
+
+
 def status_for(score: int) -> Status:
     if score >= GOOD_FROM:
         return "good"
@@ -180,6 +206,14 @@ def _syllable_result(index, e, sound, span, rhythm_syllable, tone, trim_offset_m
         else:
             score = round_half_up(INITIAL_WEIGHT * (initial.score or 0) + FINAL_WEIGHT * final_score)
         status = status_for(score)
+    if status == "good" and tone is not None and tone.heard is not None and tone.heard != tone.expected:
+        # A mismatched tone scores at most 60 (scoring.md), so this lands on "wrong".
+        # The "ok" fallback only matters if a mismatch ever scores in the good band.
+        lowered = status_for(tone.score) if tone.score is not None else "wrong"
+        status = "ok" if lowered == "good" else lowered
+    rhythm_code = _rhythm_code(rhythm_syllable)
+    if status == "good" and rhythm_code is not None and rhythm_syllable is not None:
+        status = status_for(rhythm_syllable.score)
     timing = None
     if span is not None:
         timing = Timing(start_ms=span.start_ms + trim_offset_ms, end_ms=span.end_ms + trim_offset_ms,
@@ -188,7 +222,7 @@ def _syllable_result(index, e, sound, span, rhythm_syllable, tone, trim_offset_m
     return SyllableResult(
         index=index, hanzi=e.hanzi, pinyin=e.pinyin, status=status, score=score,
         initial=initial, final=final, tone=tone, timing=timing,
-        feedback=None if status == "good" else feedback.pick(sound, tone),
+        feedback=None if status == "good" else feedback.pick(sound, tone, rhythm_code),
     )
 
 
