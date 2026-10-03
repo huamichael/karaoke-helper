@@ -1,0 +1,4 @@
+/* Short hints at the bottom of the screen ("Stop recording to change line."). */
+
+.toast { position: fixed; left: 50%; bottom: 116px; transform: translate(-50%, 16px); opacity: 0; z-index: 30; padding: 11px 20px; border-radius: 999px; background: rgba(20,20,30,.86); border: 1px solid var(--glass-line); font-size: 15px; transition: opacity .3s var(--ease), transform .3s var(--ease); pointer-events: none; white-space: nowrap; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }

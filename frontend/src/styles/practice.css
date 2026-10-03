@@ -1,0 +1,32 @@
+/* Word practice, in place: the word at the exact centre of the screen (three rows, 1fr auto 1fr),
+   its result marked on the pinyin, and what it says underneath. Spec: docs/design/ui.md §5.4. */
+
+.focus { position: absolute; inset: 0; z-index: 4; display: grid; grid-template-rows: 1fr auto 1fr; justify-items: center; text-align: center; pointer-events: none; }
+.focus > .f-mid, .focus > .f-below { pointer-events: auto; }
+.f-word { position: relative; display: inline-flex; gap: 18px; }
+.f-word .tok { display: flex; flex-direction: column; align-items: center; }
+.f-word .py { height: 1.4em; font-size: clamp(22px, 3.4vh, 30px); line-height: 1.4em; color: var(--text-2); opacity: 1; }
+/* Part has no status yet, so the whole syllable takes its status colour and underline. */
+.pp { transition: color .3s; }
+.pp.s-ok { color: var(--ok); text-decoration: underline dotted 2px; text-underline-offset: 7px; }
+.pp.s-wrong { color: var(--wrong); text-decoration: underline wavy 1.5px; text-underline-offset: 7px; }
+.pp.s-missing { color: var(--missing); text-decoration: underline dashed 1.5px; text-underline-offset: 7px; }
+.f-word .hz { font-family: var(--serif); font-weight: 700; font-size: clamp(96px, 17vh, 150px); line-height: 1.12; transition: color .45s var(--ease); }
+.focus.success .f-word .hz { color: var(--good); }
+.cap { height: 20px; font-size: 14px; line-height: 20px; color: var(--text-3); white-space: nowrap; }
+.cap.s-ok { color: var(--ok); } .cap.s-wrong { color: var(--wrong); } .cap.s-missing { color: var(--missing); }
+.burst { position: absolute; left: 50%; top: 55%; width: 170px; height: 170px; margin: -85px 0 0 -85px; border-radius: 50%; border: 2px solid var(--good); opacity: 0; pointer-events: none; }
+.focus.success .burst { animation: burst 1s var(--ease) .1s 1; }
+@keyframes burst { from { opacity: .9; transform: scale(.55); } to { opacity: 0; transform: scale(2.4); } }
+
+.f-below { align-self: start; display: flex; flex-direction: column; align-items: center; padding-top: 6px; max-width: 640px; }
+.f-gloss { display: flex; align-items: center; gap: 12px; font-size: 17px; color: var(--text-2); }
+.f-dots { display: inline-flex; gap: 5px; }
+.f-dots .dot { width: 9px; height: 9px; }
+.f-dots .dot:last-child { animation: pop .3s var(--ease); }
+@keyframes pop { from { opacity: 0; transform: scale(.96) translateY(-4px); } }
+.f-hint { margin-top: 18px; font-size: 15px; color: var(--text-3); }
+.f-status { margin-top: 18px; font-size: 24px; font-weight: 600; }
+.f-note { margin-top: 18px; padding: 8px 16px; border-radius: 12px; background: rgba(248,113,113,.16); font-size: 15px; }
+.f-below .scores { margin-top: 14px; }
+.f-below .advice { margin-top: 18px; }

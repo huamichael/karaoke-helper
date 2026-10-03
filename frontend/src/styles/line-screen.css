@@ -1,0 +1,13 @@
+/* The line screen as a whole: its states (header shown, controls open, practising, idle cursor)
+   and how it enters. Spec: docs/design/ui.md §3.3, §4.2–4.3. */
+
+.sing { position: absolute; inset: 0; display: flex; overflow: hidden; user-select: none; }
+.sing.idle, .sing.idle * { cursor: none !important; }
+
+.sing.entering .line { animation: lineIn .8s var(--ease) both; animation-delay: calc(var(--k, 0) * 60ms + 100ms); }
+@keyframes lineIn { from { opacity: 0; transform: translateY(26px); filter: blur(6px); } }
+.sing.entering .dock { animation: dockIn .7s var(--ease) .45s both; }
+@keyframes dockIn { from { opacity: 0; transform: translate(-50%, 24px); } }
+
+.narrow { display: none; position: fixed; inset: 0; z-index: 50; background: var(--c0); place-items: center; text-align: center; padding: 32px; font-size: 18px; line-height: 1.5; }
+@media (max-width: 1023px) { .narrow { display: grid; } }

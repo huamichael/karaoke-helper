@@ -1,6 +1,70 @@
 /**
  * Shows one lyric line: Hanzi with Pinyin for each character, and the translation.
  *
- * Owner: A. Spec: docs/tasks/frontend.md.
+ * The active line is large and, under it, shows its latest result: the score row,
+ * what we heard, and the feedback message, then the line's note (no_speech or a
+ * failed request). Other lines are small and clickable to change line.
+ *
+ * Owner: A. Spec: docs/tasks/frontend.md, docs/design/ui.md §4.2, §5.3.
  */
-export {};
+import type { CSSProperties } from "react";
+import type { AttemptResult, Line } from "../api/client";
+import type { LinePhase } from "../logic/actions";
+import { Feedback, Heard } from "./Feedback";
+import { ScoreRow } from "./ScoreRow";
+import { WordChips } from "./WordChips";
+
+type Props = {
+  line: Line;
+  index: number;
+  activeIndex: number;
+  phase: LinePhase;
+  result: AttemptResult | null;
+  fresh: boolean;
+  practised: number[];
+  fill: number[] | null;
+  note: string | null;
+  /** Words can be clicked: not while recording, grading or practising. */
+  interactive: boolean;
+  morphWord: number | null;
+  awayWord: number | null;
+  onWord(index: number): void;
+  onLine(index: number): void;
+  onMorphDone(): void;
+};
+
+export function LyricLine({ line, index, activeIndex, phase, result, fresh, practised, fill, note, interactive, morphWord, awayWord, onWord, onLine, onMorphDone }: Props) {
+  const active = index === activeIndex;
+  const cls = ["line", active && "active", index < activeIndex && "past", active && fill && "filling", active && phase === "grading" && "grading"]
+    .filter(Boolean).join(" ");
+  return (
+    <div className={cls} style={{ "--k": index } as CSSProperties} onClick={active ? undefined : () => onLine(index)}>
+      <WordChips
+        line={line}
+        active={active}
+        result={result}
+        fresh={active && fresh}
+        practised={practised}
+        fill={active ? fill : null}
+        clickable={interactive}
+        morphWord={active ? morphWord : null}
+        awayWord={active ? awayWord : null}
+        onWord={onWord}
+        onMorphDone={onMorphDone}
+      />
+      {active && (
+        <div className="meta">
+          {line.translation && <p className="tr">{line.translation}</p>}
+          {result && (
+            <div className="res">
+              <ScoreRow scores={result.scores} fresh={fresh} />
+              <Heard heard={result.heard} />
+              <Feedback message={result.next_step.message} />
+            </div>
+          )}
+          {note && <p className="note" role="status">{note}</p>}
+        </div>
+      )}
+    </div>
+  );
+}

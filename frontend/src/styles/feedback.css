@@ -1,0 +1,5 @@
+/* The feedback message, rendered as the backend sent it.
+   TODO(coach): docs/design/ui.md §5.5 turns this into a coach bubble (avatar 教 on glass) with an
+   "Ask why" drawer behind VITE_SHOW_COACH. Not built yet; see components/Feedback.tsx. */
+
+.advice { max-width: 580px; font-size: 17px; font-weight: 500; line-height: 1.45; }

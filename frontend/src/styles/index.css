@@ -1,0 +1,20 @@
+/* The stylesheet, one file per area. Values come from frontend/prototype/index.html.
+   Owner: A. Spec: docs/design/ui.md. */
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./base.css";
+@import "./backdrop.css";
+@import "./buttons.css";
+@import "./status.css";
+@import "./vinyl.css";
+@import "./song-screen.css";
+@import "./record.css";
+@import "./line-screen.css";
+@import "./lyrics.css";
+@import "./topbar.css";
+@import "./dock.css";
+@import "./rail.css";
+@import "./practice.css";
+@import "./feedback.css";
+@import "./toast.css";
+@import "./reduced-motion.css";

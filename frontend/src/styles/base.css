@@ -1,0 +1,6 @@
+/* Page basics. */
+
+html, body, #root { height: 100%; overflow: hidden; }
+body { background: var(--c0); color: #fff; font-family: 'Instrument Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }

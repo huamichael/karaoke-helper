@@ -1,0 +1,8 @@
+/* Status marks, the same everywhere. The shape cue keeps them readable without colour:
+   good solid, ok half-filled, wrong hollow, missing dashed. Spec: docs/design/ui.md §3.1. */
+
+.dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.s-good > .mark, .dot.s-good { background: var(--good); }
+.s-ok > .mark, .dot.s-ok { background: linear-gradient(90deg, var(--ok) 50%, transparent 50%); box-shadow: inset 0 0 0 1.5px var(--ok); }
+.s-wrong > .mark, .dot.s-wrong { box-shadow: inset 0 0 0 2px var(--wrong); }
+.s-missing > .mark, .dot.s-missing { border: 2px dashed var(--missing); }
