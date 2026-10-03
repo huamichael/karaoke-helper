@@ -2,7 +2,7 @@
 
 **Keeper:** A. **Used by:** A, and anyone preparing the demo.
 
-**Status:** draft v0.10, 3 October 2026. Follows [PROJECT_PLAN.md](../PROJECT_PLAN.md) revision 5.
+**Status:** draft v0.11, 3 October 2026. Follows [PROJECT_PLAN.md](../PROJECT_PLAN.md) revision 5.
 
 This document holds the frontend's visual design and interaction details. It does not restate behaviour or data. When it disagrees with these files, they win:
 
@@ -192,11 +192,11 @@ Target viewport **1440×900**; must work at **1280×720** (projector). Below 102
 - **Between songs** the picture dissolves through static (section 3.3). With sound on, a faint vinyl crackle plays on the song screen and radio static rises between songs; both are generated with Web Audio and need no files. Browsers only allow sound after a click or a key press.
 - **The subtitle.** At the bottom centre, like a film subtitle, one line of the song's lyric fills and grades itself on a loop, with "Sing a line back and every word gets a colour." under it.
 - **Preview.** Once the dial settles, about 12 seconds of the song from `audio_url`, faded in and out. See section 9, question 3 for where the clip comes from.
-- **Credit** for the photograph sits small in the bottom-right corner.
 - **The tonearm** is rendered with three.js, built like a real S-shaped arm: gimbal base, anti-skate dial, cue lever, S-tube, headshell with cartridge and finger lift, knurled counterweight, arm rest. A top-down orthographic camera keeps it aligned with the flat record; brushed and polished metal, a key and a fill light, a cast shadow and contact shadows give it depth. Its accent parts take the song's accent colour, and it lights up under the pointer.
 - **It behaves like a real turntable.** Arm on the record = playing; arm on its rest = stopped.
   - Play (click the arm, the cover or `Space`): the platter spins up, the arm lifts on the cue lever, swings to the record's lead-in just above the selected song, and sets down; then the preview and the crackle start. While it plays, the stylus creeps slowly inward.
-  - Stop: the arm lifts, swings back and sets down on its rest; then the platter slows to a stop. The cover shows a large pause sign; while it plays there is none.
+  - Stop: the arm lifts, swings back and sets down on its rest; then the platter slows to a stop.
+  - The cover works like a video player's play button. Stopped, it is dimmed and shows ▶. Playing, it shows nothing until the pointer is on it; then it dims and shows ⏸. The sign always shows the action a click will take. Pointing at the sign brightens it; it never grows. On a toggle the sign morphs: the two pause bars fold into the two halves of the triangle in about 240 ms, as on YouTube.
   - Changing songs while it plays lifts the arm on the cue lever; it sets down again when the record settles.
   - On first load the record starts like a real one: the arm moves from its rest onto the record.
 - **Sound** on and off is the cap on the tonearm's pivot, with a speaker icon (or `M`). Clicking anywhere else on the arm plays or stops the record.

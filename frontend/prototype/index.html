@@ -160,12 +160,20 @@ body.singing .grain { opacity: .07; }
 .disc-hole { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px; border-radius: 50%; background: #08080a; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 75%, transparent), 0 0 0 10px rgba(0,0,0,.35); }
 .arm-canvas { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; }
 #home.on-arm, #home.on-arm * { cursor: pointer; }
-/* The cover is also the play / stop switch. While the record is stopped it shows a pause sign; while it plays, nothing. */
-.cover-btn { position: absolute; z-index: 2; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(0,0,0,0); cursor: pointer; transition: background .45s var(--ease); }
-.cover-btn svg { width: 72px; height: 72px; color: #fff; opacity: 0; transform: scale(.82); filter: drop-shadow(0 6px 22px rgba(0,0,0,.5)); transition: opacity .35s var(--ease), transform .45s var(--ease); }
-.cover-btn.paused { background: rgba(0,0,0,.36); }
-.cover-btn.paused svg { opacity: 1; transform: none; }
-.cover-btn.paused:hover svg { transform: scale(1.08); }
+/* The cover is also the play / stop switch, like a video player. Stopped: the label dims and shows play.
+   Playing: nothing, until the pointer is on the label; then it dims and shows pause. The glyph morphs between the two.
+   Hovering the glyph only brightens it; it never grows. */
+.cover-btn { position: absolute; z-index: 2; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(0,0,0,0); cursor: pointer; transition: background .3s cubic-bezier(0,0,.2,1); }
+.cover-btn svg { width: 96px; height: 96px; color: #fff; opacity: 0; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)); transition: opacity .25s cubic-bezier(0,0,.2,1), filter .25s cubic-bezier(0,0,.2,1); }
+.cover-btn path { stroke: currentColor; stroke-width: 1.2; stroke-linejoin: round; }
+.cover-btn.paused, .cover-btn:focus-visible { background: rgba(0,0,0,.34); }
+.cover-btn.paused svg, .cover-btn:focus-visible svg { opacity: .8; }
+@media (hover: hover) {
+  .cover-btn:hover { background: rgba(0,0,0,.34); }
+  .cover-btn:hover svg { opacity: .8; }
+  .cover-btn svg:hover { opacity: 1; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)) drop-shadow(0 0 14px rgba(255,255,255,.35)); }
+}
+.cover-btn:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(255,255,255,.55); }
 .needle { position: absolute; width: 36px; height: 2px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 16px var(--accent); transform: translate(-50%, -50%); pointer-events: none; }
 .dn { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 10px; border: 0; background: none; text-align: center; white-space: nowrap; cursor: pointer; text-shadow: 0 2px 16px rgba(0,0,0,.7); }
 .dn-n { font-size: 11.5px; letter-spacing: .14em; color: var(--text-3); font-variant-numeric: tabular-nums; }
@@ -477,7 +485,7 @@ kbd { font-family: inherit; font-size: 12px; padding: 1px 6px; margin-right: 3px
       <div class="scraps" id="scraps"></div>
       <div id="dialLabels"></div>
       <i class="needle" id="needle"></i>
-      <button class="cover-btn" id="coverBtn" data-act="homeToggle" aria-label="Stop the record"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="3.6" height="14" rx="1.2"/><rect x="13.9" y="5" width="3.6" height="14" rx="1.2"/></svg></button>
+      <button class="cover-btn" id="coverBtn" data-act="homeToggle" aria-label="Stop the record"><svg viewBox="0 0 36 36" fill="currentColor" aria-hidden="true"><path id="cvA" d="M12.6 25.4 15.4 25.4 15.4 10.6 12.6 10.6z"/><path id="cvB" d="M20.6 25.4 23.4 25.4 23.4 10.6 20.6 10.6z"/></svg></button>
       <canvas class="arm-canvas" id="armCanvas" aria-hidden="true"></canvas>
       <button class="arm-sound" id="armSound" aria-pressed="true" aria-label="Sound on" title="Sound on (M)"></button>
     </div>
@@ -956,14 +964,41 @@ function startPreview(){
   ambSet();
 }
 function stopPreview(){ document.querySelectorAll('.dn.playing').forEach(el => el.classList.remove('playing')); }
+// The cover glyph: the two pause bars fold into the two halves of the play triangle, like a video player.
+const GLYPH = {
+  pause: [[[12.6,25.4],[15.4,25.4],[15.4,10.6],[12.6,10.6]], [[20.6,25.4],[23.4,25.4],[23.4,10.6],[20.6,10.6]]],
+  play:  [[[12.6,25],[18.25,21.5],[18.25,14.5],[12.6,11]], [[18.25,21.5],[23.9,18],[23.9,18],[18.25,14.5]]],
+  t: 0, raf: 0,                                   // t: 0 = pause bars, 1 = play triangle
+};
+function drawGlyph(t){
+  GLYPH.t = t;
+  ['#cvA', '#cvB'].forEach((id, k) => {
+    const pts = GLYPH.pause[k].map(([x, y], i) => { const [X, Y] = GLYPH.play[k][i]; return `${(x + (X - x) * t).toFixed(2)} ${(y + (Y - y) * t).toFixed(2)}`; });
+    $(id).setAttribute('d', 'M' + pts.join(' ') + 'z');
+  });
+}
+function morphGlyph(toPlay){
+  cancelAnimationFrame(GLYPH.raf);
+  const from = GLYPH.t, to = toPlay ? 1 : 0, t0 = performance.now(), dur = 240;
+  if (reduced() || from === to) return drawGlyph(to);
+  const tick = now => {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    drawGlyph(from + (to - from) * e);
+    if (k < 1) GLYPH.raf = requestAnimationFrame(tick);
+  };
+  GLYPH.raf = requestAnimationFrame(tick);
+}
 function setHomePlaying(on){
   homePlaying = on; clearTimeout(previewT);
   const c = $('#coverBtn'); c.classList.toggle('paused', !on); c.setAttribute('aria-label', on ? 'Stop the record' : 'Play the record');
+  morphGlyph(!on);                                // stopped shows play, playing shows pause
   if (on){ platter(true); armGo('play', startPreview); }
   else { stopPreview(); armGo('rest', () => { if (!homePlaying) platter(false); }); }
   ambSet();
 }
 function homeToggle(){ setHomePlaying(!homePlaying); }
+// a mouse click should not leave keyboard focus on the cover, or a later Space press keeps it dimmed while playing
+$('#coverBtn').addEventListener('click', e => { if (e.detail) e.currentTarget.blur(); });
 const stopDial = () => { cancelAnimationFrame(DIAL.raf); DIAL.raf = 0; DIAL.v = 0; };
 
 // wheel or trackpad spins the record continuously; when the gesture ends it settles on a song
