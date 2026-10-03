@@ -1,0 +1,102 @@
+/**
+ * Per-song design data, keyed by song id. Not part of the API.
+ *
+ * Each song has a five-colour palette, and may have a photograph (Unsplash
+ * License, in public/photos), an album cover (copyrighted: public/covers, which
+ * git ignores), the recording's artist, album and year, how the title splits over
+ * two lines on the song screen, and a sample line that grades itself on a loop.
+ *
+ * A theme without a matching song from the backend shows on the record as
+ * "Coming soon" (docs/design/ui.md §5.1), so `title` is only needed for those.
+ *
+ * Owner: A. Spec: docs/design/ui.md §3.1, §5.1, §9 question 7.
+ */
+import type { Status } from "../api/client";
+
+export type Palette = { c0: string; c1: string; c2: string; c3: string; accent: string };
+
+export type SongTheme = {
+  palette: Palette;
+  /** Shown only for songs the backend does not serve yet. */
+  title?: string;
+  /** The title over two staggered lines: 茉莉 / 花. */
+  split?: [string, string?];
+  titlePinyin?: string;
+  titleEnglish?: string;
+  blurb?: string;
+  photo?: string;
+  photoCredit?: { name: string; url: string };
+  cover?: string;
+  artist?: string;
+  album?: string;
+  year?: string;
+  /** The song screen's subtitle: one line that fills and grades itself on a loop. Decorative. */
+  sample?: { hz: string; py: string; marks: Status[] };
+};
+
+export const FALLBACK_PALETTE: Palette = { c0: "#15141f", c1: "#3b3f6b", c2: "#6b4a6a", c3: "#2f5a5a", accent: "#ece8ff" };
+
+export const SONG_THEMES: Record<string, SongTheme> = {
+  demo: {
+    palette: { c0: "#1f160e", c1: "#8a4b1f", c2: "#f0c27a", c3: "#5a3a22", accent: "#f7d9a8" },
+    split: ["两只", "老虎"],
+    titlePinyin: "liǎng zhī lǎo hǔ",
+    titleEnglish: "Two Tigers",
+    blurb: "A children's round sung to the tune of Frère Jacques. Short words, one per note: the easiest place to start.",
+    artist: "Traditional",
+    sample: { hz: "两只老虎", py: "liǎng zhī lǎo hǔ", marks: ["good", "ok", "good", "wrong"] },
+  },
+  molihua: {
+    title: "茉莉花",
+    palette: { c0: "#0f231a", c1: "#2f6b4f", c2: "#d9e4c4", c3: "#5f9c7a", accent: "#f4f1d6" },
+    split: ["茉莉", "花"],
+    titlePinyin: "mò lì huā",
+    titleEnglish: "Jasmine Flower",
+    blurb: "A Jiangsu folk song, as 鳳飛飛 sang it in 1971. Slow, with one syllable per note, so every word is easy to hear.",
+    photo: "/photos/molihua.jpg",
+    photoCredit: { name: "Irina Iriser", url: "https://unsplash.com/photos/vB4_CtsfaZ0" },
+    cover: "/covers/molihua.jpg",
+    artist: "鳳飛飛",
+    album: "鳳飛飛 金賞輯 3",
+    year: "1971",
+    sample: { hz: "好一朵美丽的茉莉花", py: "hǎo yì duǒ měi lì de mò lì huā", marks: ["good", "good", "good", "wrong", "good", "good", "good", "ok", "good"] },
+  },
+  yijianmei: {
+    title: "一剪梅",
+    palette: { c0: "#1d1222", c1: "#7a2f4f", c2: "#e7b8c6", c3: "#4a3a6b", accent: "#f8d3de" },
+    split: ["一剪", "梅"],
+    titlePinyin: "yì jiǎn méi",
+    titleEnglish: "A Spray of Plum Blossoms",
+    blurb: "Fei Yu-ching's ballad. Long held notes that test how cleanly you finish each word.",
+    photo: "/photos/yijianmei.jpg",
+    photoCredit: { name: "yamasa-n", url: "https://unsplash.com/photos/SPEUTg0phCg" },
+    cover: "/covers/yijianmei.jpg",
+    artist: "費玉清",
+    album: "清韻悠揚 精選（一）",
+    year: "1983",
+    sample: { hz: "一剪梅", py: "yì jiǎn méi", marks: ["good", "ok", "good"] },
+  },
+  yueliang: {
+    title: "月亮代表我的心",
+    palette: { c0: "#161230", c1: "#3b2f78", c2: "#f2cf7a", c3: "#6b4fa0", accent: "#f7dd99" },
+    split: ["月亮代表", "我的心"],
+    titlePinyin: "yuè liàng dài biǎo wǒ de xīn",
+    titleEnglish: "The Moon Represents My Heart",
+    blurb: "Teresa Teng's best-known love song, sung all over the world.",
+    photo: "/photos/yueliang.jpg",
+    photoCredit: { name: "Laura Cleffmann", url: "https://unsplash.com/photos/gRT7o73xua0" },
+    cover: "/covers/yueliang.jpg",
+    artist: "鄧麗君",
+    album: "島國之情歌 第四集 香港之戀",
+    year: "1977",
+    sample: { hz: "月亮代表我的心", py: "yuè liàng dài biǎo wǒ de xīn", marks: ["good", "good", "good", "ok", "good", "good", "wrong"] },
+  },
+};
+
+export const themeFor = (songId: string): SongTheme => SONG_THEMES[songId] ?? { palette: FALLBACK_PALETTE };
+
+/** Crossfade every colour on the page: the five are registered with @property, so they animate. */
+export function applyPalette(p: Palette) {
+  const root = document.documentElement.style;
+  for (const [k, v] of Object.entries(p)) root.setProperty(`--${k}`, v);
+}

@@ -1,0 +1,31 @@
+/* Buttons shared by every screen. Buttons scale to 97% while pressed (ui.md §3.3). */
+
+.btn { height: 46px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.08); font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: background .2s, transform .15s, opacity .2s; white-space: nowrap; }
+.btn:hover { background: rgba(255,255,255,.16); }
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--accent); color: var(--c0); border-color: transparent; }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn:disabled { opacity: .32; cursor: not-allowed; transform: none; }
+.btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+.btn.quiet { background: none; border-color: transparent; color: var(--text-2); padding: 0 18px; }
+.btn.quiet:hover { color: #fff; background: rgba(255,255,255,.08); }
+
+.icon-btn { width: 40px; height: 40px; border-radius: 12px; border: 0; background: none; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; transition: background .2s; }
+.icon-btn:hover { background: rgba(255,255,255,.12); }
+.icon-btn svg { width: 20px; height: 20px; }
+
+.round { width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.08); display: grid; place-items: center; cursor: pointer; transition: background .2s; flex-shrink: 0; }
+.round:hover { background: rgba(255,255,255,.16); }
+.round:active { transform: scale(.97); }
+.round svg { width: 20px; height: 20px; }
+
+/* Record: the accent pill. While recording, a ring pulses with the input level (--v) and a thin bar shows time used (--t). */
+.rec { position: relative; white-space: nowrap; height: 56px; padding: 0 26px 0 20px; border-radius: 999px; border: 0; background: var(--accent); color: var(--c0); display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 16px; cursor: pointer; overflow: visible; transition: transform .15s; }
+.rec:active { transform: scale(.97); }
+.rec svg { width: 20px; height: 20px; position: relative; }
+.rec .vol { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: 0 0 0 calc(var(--v, 0) * 16px) color-mix(in srgb, var(--accent) 32%, transparent); transition: box-shadow .08s; }
+.rec .bar { position: absolute; left: 18px; right: 18px; bottom: 8px; height: 2px; border-radius: 2px; background: color-mix(in srgb, var(--c0) 20%, transparent); overflow: hidden; }
+.rec .bar i { display: block; height: 100%; width: calc(var(--t, 0) * 100%); background: var(--c0); }
+.rec-time { font-variant-numeric: tabular-nums; font-weight: 500; opacity: .7; }
+.rec.plain { background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.22); }
+.rec:disabled { opacity: .32; cursor: not-allowed; transform: none; }

@@ -1,0 +1,9 @@
+/* The line rail: one short tick per line on the right edge; the active one longer and brighter. */
+
+.rail { position: absolute; right: 18px; top: 50%; z-index: 4; display: flex; flex-direction: column; gap: 4px; transform: translateY(-50%); opacity: .5; transition: opacity .35s; }
+.rail:hover, .rail.lit { opacity: 1; }
+.sing.practising .rail { opacity: 0; pointer-events: none; }
+.rail button { width: 28px; height: 14px; display: flex; justify-content: flex-end; align-items: center; background: none; border: 0; cursor: pointer; }
+.rail i { display: block; width: 10px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.55); transition: width .35s var(--ease), background .35s; }
+.rail button.on i { width: 22px; background: #fff; }
+.rail button:hover i { width: 16px; }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { NextStep } from "../api/client";
-import { actionsFor, type DockAction, type LinePhase } from "./actions";
+import { actionsFor, practiceActionsFor, type DockAction, type LinePhase } from "./actions";
 
 const NEXT: NextStep = { type: "next_line", message: "" };
 const RETRY: NextStep = { type: "retry_line", message: "" };
@@ -83,6 +83,37 @@ describe("actionsFor, controls open", () => {
   });
   it("failed shows Send again in the retry slot", () => {
     expect(actionsFor("failed", null, true)[2]).toMatchObject({ id: "resend", label: "Send again", primary: true, disabled: false });
+  });
+});
+
+describe("practiceActionsFor", () => {
+  it("offers Listen, Record and a quiet I'm confident", () => {
+    const a = practiceActionsFor("ready", 0);
+    expect(ids(a)).toEqual(["plisten", "precord", "confident"]);
+    expect(a[1]).toMatchObject({ kind: "record", label: "Record", primary: true });
+    expect(a[2]).toMatchObject({ kind: "quiet", label: "I'm confident" });
+  });
+  it("says Record again after an attempt", () => {
+    expect(practiceActionsFor("result", 2)[1].label).toBe("Record again");
+  });
+  it("turns Listen into Stop while the reference plays", () => {
+    expect(practiceActionsFor("playing", 0)[0]).toMatchObject({ label: "Stop", icon: "stop", disabled: false });
+  });
+  it("disables Listen while recording, and Record becomes Stop", () => {
+    const a = practiceActionsFor("recording", 0);
+    expect(a[0].disabled).toBe(true);
+    expect(a[1]).toMatchObject({ id: "precord", label: "Stop" });
+  });
+  it("shows the busy state while grading", () => {
+    expect(ids(practiceActionsFor("grading", 1))).toEqual(["plisten", "busy"]);
+  });
+  it("offers Send again after a failed request", () => {
+    expect(practiceActionsFor("failed", 1)[1]).toMatchObject({ id: "presend", label: "Send again", primary: true });
+  });
+  it("after success offers Sing the line again as primary and Keep practising", () => {
+    const a = practiceActionsFor("success", 3);
+    expect(ids(a)).toEqual(["keep", "sing"]);
+    expect(primary(a)).toEqual(["sing"]);
   });
 });
 

@@ -1,0 +1,13 @@
+/* The vinyl: the Listen button in the dock, and the wordmark. It spins while audio plays. */
+
+.vinyl { width: 56px; height: 56px; border-radius: 50%; position: relative; flex-shrink: 0; display: grid; place-items: center; background: repeating-radial-gradient(circle, #121212 0 1.5px, #222 1.5px 3px); animation: spin 3.2s linear infinite paused; box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+.vinyl::after { content: ''; position: absolute; inset: 31%; border-radius: 50%; background: var(--c1); box-shadow: 0 0 0 2px rgba(255,255,255,.15); }
+.vinyl.spinning { animation-play-state: running; }
+.vinyl svg { position: relative; z-index: 1; width: 13px; height: 13px; color: #fff; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.vbtn { height: 56px; display: inline-flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none; border-radius: 999px; cursor: pointer; transition: opacity .2s; flex-shrink: 0; }
+.vbtn.lbl { padding-right: 22px; }
+.vbtn .txt { font-weight: 600; font-size: 16px; }
+.vbtn:disabled { opacity: .35; cursor: not-allowed; }
+.vbtn:hover:not(:disabled) .vinyl { box-shadow: 0 0 0 3px rgba(255,255,255,.18), 0 6px 16px rgba(0,0,0,.35); }

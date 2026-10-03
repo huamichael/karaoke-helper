@@ -8,19 +8,44 @@
  * Owner: A. Spec: docs/design/ui.md §5.3 and §5.3.1.
  */
 import type { NextStep } from "../api/client";
+import type { PracticePhase } from "./practiceMachine";
 
 export type LinePhase = "idle" | "listening" | "ready" | "recording" | "grading" | "result" | "failed";
 
-export type DockActionId = "listen" | "record" | "retry" | "resend" | "next" | "busy";
+export type DockActionId =
+  | "listen" | "record" | "retry" | "resend" | "next" | "busy"
+  | "plisten" | "precord" | "presend" | "confident" | "keep" | "sing";
 
 export type DockAction = {
   id: DockActionId;
-  /** vinyl: the Listen record; record: the accent Record/Stop pill; round: an icon button; button: a labelled pill; busy: "Listening back…" */
-  kind: "vinyl" | "record" | "round" | "button" | "busy";
+  /** vinyl: the Listen record; record: the accent Record/Stop pill; round: an icon button;
+   *  button: a labelled pill; quiet: a borderless pill; busy: "Listening back…" */
+  kind: "vinyl" | "record" | "round" | "button" | "quiet" | "busy";
   label: string | null;
   primary: boolean;
   disabled: boolean;
+  icon?: "play" | "stop" | "retry";
 };
+
+/** Word practice's dock: Listen to the reference, Record, and a quiet "I'm confident" that ends practice. */
+export function practiceActionsFor(phase: PracticePhase, attempts: number): DockAction[] {
+  const playing = phase === "playing";
+  const listen = (disabled = false): DockAction => ({
+    id: "plisten", kind: "button", label: playing ? "Stop" : "Listen", icon: playing ? "stop" : "play", primary: false, disabled,
+  });
+  switch (phase) {
+    case "success":
+      return [act("keep", "quiet", "Keep practising"), act("sing", "button", "Sing the line again", true)];
+    case "recording":
+      return [listen(true), act("precord", "record", "Stop", true)];
+    case "grading":
+      return [listen(true), act("busy", "busy", "Listening back…")];
+    case "failed":
+      return [listen(), act("presend", "button", "Send again", true)];
+    default:
+      return [listen(), act("precord", "record", attempts ? "Record again" : "Record", true), act("confident", "quiet", "I'm confident")];
+  }
+}
 
 type Primary = "listen" | "record" | "retry" | "next" | null;
 

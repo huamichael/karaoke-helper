@@ -3,3 +3,16 @@
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./base.css";
+@import "./backdrop.css";
+@import "./buttons.css";
+@import "./status.css";
+@import "./vinyl.css";
+@import "./line-screen.css";
+@import "./lyrics.css";
+@import "./topbar.css";
+@import "./dock.css";
+@import "./rail.css";
+@import "./practice.css";
+@import "./feedback.css";
+@import "./toast.css";
+@import "./reduced-motion.css";
