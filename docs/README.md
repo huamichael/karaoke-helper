@@ -12,6 +12,7 @@ Start here. This folder is the single source of truth for the project. Every doc
 | [contracts/backend-interfaces.md](contracts/backend-interfaces.md) | Module ownership, the functions between the three backend tasks, layer switches, integration schedule | You work on the backend |
 | [contracts/scoring.md](contracts/scoring.md) | Formulas, thresholds, how each layer scores, feedback codes | You compute or explain a score |
 | [tasks/frontend.md](tasks/frontend.md) | Task A: the user interface | You are A |
+| [design/ui.md](design/ui.md) | The frontend's visual design and interaction details, with prototype screenshots | You are A, or you prepare the demo |
 | [tasks/backend-api-whisper.md](tasks/backend-api-whisper.md) | Task B: the API and the Whisper base | You are B |
 | [tasks/backend-ctc-rhythm.md](tasks/backend-ctc-rhythm.md) | Task C: the CTC layer and rhythm | You are C |
 | [tasks/backend-songs-tone.md](tasks/backend-songs-tone.md) | Task D: the song pipeline and tone | You are D |
@@ -25,6 +26,7 @@ Everyone reads sections 1, 2 and 4 of the plan. After that, open your task file.
 - **A data shape or a function signature:** the contract wins over a task file and over the plan.
 - **A score, threshold or formula:** `contracts/scoring.md`.
 - **Scope, order and timing:** `PROJECT_PLAN.md`.
+- **How the frontend looks and moves:** `design/ui.md`. It yields to `tasks/frontend.md` and the contracts on behaviour and data.
 - **Once code exists:** `backend/app/schemas.py` is the contracts in executable form. If the code and a contract disagree, that is a bug. Fix whichever is wrong and make them agree in the same commit.
 
 ## Changing a contract

@@ -10,6 +10,7 @@ You build the whole user interface: the song screen, the line screen with record
 
 1. [PROJECT_PLAN.md](../PROJECT_PLAN.md), sections 1 and 2.
 2. [contracts/api.md](../contracts/api.md): every request you send and every field you render.
+3. [design/ui.md](../design/ui.md): how the screens look and move. It adds design on top of this file and never overrides it.
 
 You do not need the other contract files.
 

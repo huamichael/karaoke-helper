@@ -310,6 +310,7 @@ MHACKS/
 │   ├── README.md                  # index of the documentation
 │   ├── PROJECT_PLAN.md            # this file
 │   ├── contracts/                 # api, data-model, backend-interfaces, scoring
+│   ├── design/                    # A  ui.md: visual design and interaction details; screens/
 │   └── tasks/                     # frontend, backend-api-whisper, backend-ctc-rhythm, backend-songs-tone
 ├── frontend/                      # A; the file split inside src/ is a starting point
 │   └── src/
