@@ -398,7 +398,9 @@ Total is about 24 hours of design work on top of the functional work. P1 alone i
 
 ## 11. Prototype
 
-A single-file clickable prototype exists outside this repo; ask A for it. It is a design reference, not the app: the app is written during the event, against the mock grader.
+A single-file clickable prototype lives in [frontend/prototype/](../../frontend/prototype/). It is a design reference, not the app: the app is written during the event, against the mock grader.
+
+To run it, serve that folder (`cd frontend/prototype && python3 -m http.server 5180`) and open `http://localhost:5180/?demo`. `?demo` shows the Rehearsal switch. The album covers in `assets/covers/` are copyrighted, so `.gitignore` keeps them out of the repo; without them the record labels on the song screen are blank. Ask A for them.
 
 It shows everything in this document with a fake in-browser grader, including the song screen, both control states, swiping, Word practice in place from first mistake to success, and the coach drawer with scripted replies. The song preview is shown, not heard: the prototype has no audio files. With Rehearsal on Auto, the first attempt at lines 2, 4 and 6 comes back with a mistake and every other attempt is good, so the demo script plays out without touching the controls.
 

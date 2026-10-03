@@ -12,7 +12,7 @@ Start here. This folder is the single source of truth for the project. Every doc
 | [contracts/backend-interfaces.md](contracts/backend-interfaces.md) | Module ownership, the functions between the three backend tasks, layer switches, integration schedule | You work on the backend |
 | [contracts/scoring.md](contracts/scoring.md) | Formulas, thresholds, how each layer scores, feedback codes | You compute or explain a score |
 | [tasks/frontend.md](tasks/frontend.md) | Task A: the user interface | You are A |
-| [design/ui.md](design/ui.md) | The frontend's visual design and interaction details, with prototype screenshots | You are A, or you prepare the demo |
+| [design/ui.md](design/ui.md) | The frontend's visual design and interaction details, with prototype screenshots. The clickable prototype is in `frontend/prototype/` | You are A, or you prepare the demo |
 | [tasks/backend-api-whisper.md](tasks/backend-api-whisper.md) | Task B: the API and the Whisper base | You are B |
 | [tasks/backend-ctc-rhythm.md](tasks/backend-ctc-rhythm.md) | Task C: the CTC layer and rhythm | You are C |
 | [tasks/backend-songs-tone.md](tasks/backend-songs-tone.md) | Task D: the song pipeline and tone | You are D |

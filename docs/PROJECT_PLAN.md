@@ -313,6 +313,7 @@ MHACKS/
 │   ├── design/                    # A  ui.md: visual design and interaction details; screens/
 │   └── tasks/                     # frontend, backend-api-whisper, backend-ctc-rhythm, backend-songs-tone
 ├── frontend/                      # A; the file split inside src/ is a starting point
+│   ├── prototype/                 # A  clickable design prototype, not the app; see design/ui.md §11
 │   └── src/
 │       ├── api/                   # client.ts, types.ts (generated)
 │       ├── audio/                 # player.ts, recorder.ts

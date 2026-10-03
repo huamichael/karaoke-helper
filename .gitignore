@@ -20,5 +20,8 @@ dist/
 data/attempts/*
 !data/attempts/.gitkeep
 
+# Album covers used by the prototype are copyrighted (see docs/design/ui.md §11)
+frontend/prototype/assets/covers/
+
 # Uncomment if the repository is public and the tracks are copyrighted
 # data/songs/*/audio.*
