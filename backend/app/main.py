@@ -31,6 +31,7 @@ log = logging.getLogger(__name__)
 
 config.grader()  # fail at startup on a bad GRADER value
 config.whisper_engine()
+config.validate_layer_flags()
 
 
 @asynccontextmanager

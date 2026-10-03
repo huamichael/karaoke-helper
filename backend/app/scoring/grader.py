@@ -10,9 +10,10 @@ Owner: B. Spec: docs/contracts/backend-interfaces.md, section 4; docs/contracts/
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+import logging
+from collections.abc import Callable, Sequence
 
-from app import songs
+from app import config, songs
 from app.schemas import (
     AttemptResult,
     Audio,
@@ -34,8 +35,11 @@ from app.schemas import (
     WordResult,
 )
 from app.scoring import feedback
+from app.scoring.ctc import align, score_sounds
 from app.scoring.matcher import match, score_sounds_base
 from app.scoring.transcribe import transcribe
+
+log = logging.getLogger(__name__)
 
 # --- scoring.md ---------------------------------------------------------------
 INITIAL_WEIGHT, FINAL_WEIGHT = 0.43, 0.57
@@ -52,13 +56,28 @@ WORST_FIRST: list[Status] = ["missing", "wrong", "ok", "good"]
 def grade(audio: Audio, line: Line, target: str, mode: str | None, word_index: int | None) -> AttemptResult:
     expected, word_specs = _expected(line, target, mode, word_index)
     context = _context(line, target, mode, word_index)
+    layers = config.layers_for(target, context["mode"], syllable_count=len(expected))
     transcript = transcribe(audio)
     if transcript.no_speech:
         return no_speech_result(**context)
     observed = match(expected, transcript.syllables)
     sounds = score_sounds_base(expected, observed)
-    return assemble(expected, observed, sounds, None, None, None, transcript,
-                    word_specs=word_specs, engine="whisper", trim_offset_ms=audio.trim_offset_ms, **context)
+    spans = _optional("align", align, audio, expected) if layers.ctc_spans else None
+    if layers.ctc_scores and spans is not None:
+        finer = _optional("score_sounds", score_sounds, audio, expected, spans)
+        if finer is not None:
+            sounds = finer
+    return assemble(expected, observed, sounds, spans, None, None, transcript,
+                    word_specs=word_specs, engine="whisper+ctc" if spans is not None else "whisper",
+                    trim_offset_ms=audio.trim_offset_ms, **context)
+
+
+def _optional(name: str, fn: Callable, *args):
+    try:
+        return fn(*args)
+    except Exception:
+        log.exception("%s failed; continuing without it", name)
+        return None
 
 
 def no_speech_result(*, line_index: int, target: str, mode: str | None, word_index: int | None) -> AttemptResult:

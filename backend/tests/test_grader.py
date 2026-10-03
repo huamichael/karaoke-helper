@@ -14,10 +14,17 @@ from app.schemas import (
     Audio, Line, LyricSyllable, Part, RhythmResult, RhythmSyllable, SoundScore, Span, ToneGrade, Transcript, Word,
 )
 from app.scoring import feedback, grader
+from app.scoring.matcher import score_sounds_base
 from tests.test_matcher import READINGS, sylls
 from tests.test_schemas import EXAMPLE_RESULT
 
 AUDIO = Audio(samples=np.zeros(16000, dtype=np.float32), sample_rate=16000, trim_offset_ms=0)
+
+
+@pytest.fixture(autouse=True)
+def layer_flags_off(monkeypatch):
+    for name in ("ENABLE_CTC", "ENABLE_RHYTHM", "ENABLE_TONE"):
+        monkeypatch.setenv(name, "0")
 
 
 def make_line(words: list[str], index: int = 0) -> Line:
@@ -45,6 +52,10 @@ def heard(text: str) -> Transcript:
 def run(monkeypatch, said: str, line: Line = LINE, target="line", mode="spoken", word_index=None, audio=AUDIO):
     monkeypatch.setattr(grader, "transcribe", lambda _: heard(said))
     return grader.grade(audio, line, target, mode, word_index)
+
+
+def spans_for(expected, start=0):
+    return [Span(start_ms=start + 100 * i, end_ms=start + 100 * i + 80, confidence=0.9) for i in range(len(expected))]
 
 
 def one(initial: int | None, final: int):
@@ -139,7 +150,6 @@ def test_word_target_with_tones():
     line = make_line(["一起"])
     exp = line.syllables
     obs = sylls("一李", heard=True)
-    from app.scoring.matcher import score_sounds_base
     tones = [ToneGrade(expected=4, heard=4, score=100), ToneGrade(expected=3, heard=2, score=40)]
     r = grader.assemble(exp, obs, score_sounds_base(exp, obs), None, None, tones, heard("一李"),
                         word_specs=[(0, "一起", [0, 1])], engine="whisper", trim_offset_ms=0,
@@ -152,8 +162,7 @@ def test_word_target_with_tones():
 def test_timing_adds_trim_offset_and_rhythm_counts_in_singing_mode():
     exp = LINE.syllables
     obs = sylls("我想和你一起", heard=True)
-    from app.scoring.matcher import score_sounds_base
-    spans = [Span(start_ms=100 * i, end_ms=100 * i + 80, confidence=0.9) for i in range(6)]
+    spans = spans_for(exp)
     rhythm = RhythmResult(score=80, syllables=[RhythmSyllable(offset_ms=-20, score=80)] * 6)
     common = dict(word_specs=[(w.index, w.text, w.syllable_indices) for w in LINE.words], engine="whisper+ctc",
                   trim_offset_ms=150, line_index=0, target="line", word_index=None)
@@ -190,6 +199,65 @@ def test_tone_feedback_only_when_sounds_are_right():
     assert feedback.pick(sound, ToneGrade(expected=3, heard=2, score=40)).code == "TONE_3_2"
     assert feedback.pick(sound, ToneGrade(expected=3, heard=3, score=100)) is None
     assert feedback.pick(None, None).code == "MISSING"
+
+
+# --- CTC layer, behind ENABLE_CTC ------------------------------------------------------
+
+
+def test_singing_with_ctc_sets_engine_and_timing(monkeypatch):
+    monkeypatch.setenv("ENABLE_CTC", "1")
+    audio = Audio(samples=AUDIO.samples, sample_rate=16000, trim_offset_ms=150)
+    monkeypatch.setattr(grader, "align", lambda a, expected: spans_for(expected))
+    monkeypatch.setattr(grader, "score_sounds", lambda a, expected, spans: score_sounds_base(expected, expected))
+    r = run(monkeypatch, "我想和你一起", mode="singing", audio=audio)
+    assert r.engine == "whisper+ctc"
+    assert (r.syllables[1].timing.start_ms, r.syllables[1].timing.end_ms) == (250, 330)
+    assert all(s.timing is not None for s in r.syllables)
+
+
+def test_spoken_does_not_call_ctc_when_enabled(monkeypatch):
+    monkeypatch.setenv("ENABLE_CTC", "1")
+    monkeypatch.setattr(grader, "align", lambda *_: (_ for _ in ()).throw(AssertionError("align")))
+    r = run(monkeypatch, "我想和你一起", mode="spoken")
+    assert r.engine == "whisper"
+    assert all(s.timing is None for s in r.syllables)
+
+
+def test_align_failure_stays_whisper(monkeypatch):
+    monkeypatch.setenv("ENABLE_CTC", "1")
+    monkeypatch.setattr(grader, "align", lambda *_: (_ for _ in ()).throw(RuntimeError("align down")))
+    r = run(monkeypatch, "我想和你一起", mode="singing")
+    assert r.engine == "whisper"
+    assert r.scores.overall == 100
+    assert all(s.timing is None for s in r.syllables)
+
+
+def test_score_sounds_failure_keeps_spans_and_base_scores(monkeypatch):
+    monkeypatch.setenv("ENABLE_CTC", "1")
+    monkeypatch.setattr(grader, "align", lambda a, expected: spans_for(expected))
+    monkeypatch.setattr(grader, "score_sounds", lambda *_: (_ for _ in ()).throw(RuntimeError("score down")))
+    r = run(monkeypatch, "我想和李一起", mode="singing")
+    assert r.engine == "whisper+ctc"
+    assert r.syllables[0].timing is not None
+    assert r.syllables[3].initial.score == 60
+
+
+def test_word_of_two_syllables_aligns_but_does_not_rescore(monkeypatch):
+    monkeypatch.setenv("ENABLE_CTC", "1")
+    called = []
+    monkeypatch.setattr(grader, "align", lambda a, expected: called.append("align") or spans_for(expected))
+    monkeypatch.setattr(grader, "score_sounds", lambda *_: called.append("score") or [])
+    r = run(monkeypatch, "一起", target="word", mode=None, word_index=4)
+    assert called == ["align"]
+    assert r.engine == "whisper+ctc"
+    assert r.syllables[0].timing is not None
+
+
+def test_one_syllable_word_does_not_call_align(monkeypatch):
+    monkeypatch.setenv("ENABLE_CTC", "1")
+    monkeypatch.setattr(grader, "align", lambda *_: (_ for _ in ()).throw(AssertionError("align")))
+    r = run(monkeypatch, "我", target="word", mode=None, word_index=0)
+    assert r.engine == "whisper"
 
 
 # --- no speech and invalid input -------------------------------------------------------
