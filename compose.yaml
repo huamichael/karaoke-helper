@@ -1,0 +1,47 @@
+# Development environment for Karaoke_Helper.
+#
+# `docker compose up` starts the backend (http://localhost:8000) and the
+# frontend dev server (http://localhost:5173). The repo is mounted into both
+# containers, so edits on the host reload live. Python, uv, Node and every
+# package come from the containers; nothing but Docker is needed on the host.
+#
+# Owner: B. Docs: README.md, "Running with Docker".
+
+services:
+  backend:
+    build:
+      context: docker
+      dockerfile: backend.Dockerfile
+    working_dir: /workspace/backend
+    volumes:
+      - .:/workspace
+      - backend-venv:/opt/venv           # Linux venv, kept apart from any host .venv
+      - model-cache:/cache               # Whisper and CTC weights, uv download cache
+    environment:
+      GRADER: ${GRADER:-mock}            # mock needs no models; set GRADER=real to grade
+      ENABLE_CTC: ${ENABLE_CTC:-0}
+      ENABLE_RHYTHM: ${ENABLE_RHYTHM:-0}
+      ENABLE_TONE: ${ENABLE_TONE:-0}
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: docker
+      dockerfile: frontend.Dockerfile
+    working_dir: /workspace/frontend
+    volumes:
+      - .:/workspace
+      - frontend-node-modules:/workspace/frontend/node_modules   # Linux builds, kept apart from the host's
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}       # read by the browser, so it stays localhost
+      VITE_SHOW_MODE_CHOICE: ${VITE_SHOW_MODE_CHOICE:-0}
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  backend-venv:
+  frontend-node-modules:
+  model-cache:
