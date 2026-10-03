@@ -1,0 +1,4 @@
+# Build context is docker/ only; the images need nothing but the entrypoints.
+*
+!backend-entrypoint.sh
+!frontend-entrypoint.sh

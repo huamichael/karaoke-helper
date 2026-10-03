@@ -26,6 +26,7 @@ Each file has one owner. Nobody edits another owner's file without asking.
 | `backend/pipeline/build_song.py` | D | Builds `song.json` and word clips |
 | `data/songs/` | D | The demo song bundles |
 | `backend/tests/fixtures/` | D keeps it; everyone adds recordings | Shared test data |
+| `compose.yaml`, `docker/` | B | The Docker dev environment |
 
 ## 2. Shared types
 

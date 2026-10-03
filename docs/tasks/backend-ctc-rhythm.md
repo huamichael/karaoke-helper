@@ -45,6 +45,8 @@ You never need Whisper, the API or the frontend to do your work. Every function 
 Answer four questions and report them to the team:
 
 1. **Does forced alignment run?** Check `torchaudio.functional.forced_align` in the version you pin. It was scheduled for removal and then kept. The fallback is the `ctc-forced-aligner` package.
+   - Pin `torch` to the release that matches `torchaudio`. In October 2026 an unpinned lock resolved `torch` 2.14 with `torchaudio` 2.11, because torchaudio is in maintenance mode and releases less often. A compiled torchaudio built for a different torch version can fail to import. For example: `torch==2.11.*`, `torchaudio==2.11.*`.
+   - `backend/pyproject.toml` already sends both packages to the CPU-only PyTorch index on Linux. Do not remove that.
 2. **Which model?** Start with `torchaudio.pipelines.MMS_FA`. It aligns romanised text, so toneless pinyin goes in directly. `kehanlu/mandarin-wav2vec2-aishell1` is the alternative, but it outputs characters, which makes comparing sound variants harder.
 3. **Are the boundaries right?** Align the fixture recordings, cut the audio at each span, and listen to the clips. Do this for sung lines and for spoken words.
 4. **How fast is it?** Time one 5-second clip on the demo Mac.

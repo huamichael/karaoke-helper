@@ -223,6 +223,13 @@ The switches that implement this table are in [contracts/backend-interfaces.md](
 
 Everything installs with `pip` or `npm` on both Windows (WSL2) and macOS. Nothing requires conda, a GPU, or a cloud service at demo time.
 
+**Two ways to run, both kept working:**
+
+- **Docker, for development.** `docker compose up` gives everyone the same Python, uv, Node and packages with nothing else installed. Models download into a Docker volume on first use. On a Mac it runs on the CPU only.
+- **Native, for the demo.** The demo Mac runs natively, for speed and so the `mlx-whisper` fallback is available. Set it up and test it during the hours 19–22 rehearsal, with the models already downloaded. Docker is the fallback if the native setup breaks.
+
+On Linux, `backend/pyproject.toml` takes PyTorch from the CPU-only index, so neither WSL2 nor Docker downloads CUDA libraries.
+
 ## 7. Roadmap
 
 ### Owners
@@ -295,8 +302,10 @@ The letter after each path is its owner.
 MHACKS/
 ├── AGENTS.md                      # entry point for AI agents; points into docs/
 ├── CLAUDE.md                      # loads AGENTS.md in Claude Code
-├── README.md                      # what this is and how to run it
+├── README.md                      # what this is and how to run it, with Docker or natively
 ├── .gitignore
+├── compose.yaml                   # B  dev environment: backend and frontend containers
+├── docker/                        # B  Dockerfiles and container entrypoints
 ├── docs/
 │   ├── README.md                  # index of the documentation
 │   ├── PROJECT_PLAN.md            # this file

@@ -29,3 +29,4 @@ Ask the developer which task they own, then read that task file. It lists the co
 6. **No scoring logic in the frontend.**
 7. **Keep documents current.** When behaviour changes, update the matching document in the same commit.
 8. **Stay cross-platform.** The team uses Windows (WSL2) and macOS with no NVIDIA GPU. Do not add dependencies that need conda, CUDA, a system ffmpeg, or a cloud service.
+9. **Keep both run paths working.** The project runs with `docker compose up` and natively with uv and npm. Add dependencies only through `backend/pyproject.toml` or `frontend/package.json`, never by installing them inside a container by hand.

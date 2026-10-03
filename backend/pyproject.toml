@@ -18,6 +18,18 @@ dependencies = [
     "uvicorn>=0.54.0",
 ]
 
+# PyTorch: CPU-only builds on Linux (WSL2 and Docker). PyPI's default Linux
+# wheels bundle several GB of CUDA libraries that no team machine can use.
+# macOS keeps the normal PyPI wheels.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+torchaudio = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
