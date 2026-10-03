@@ -1,0 +1,75 @@
+/* The song screen: the photograph is the page, a huge hairline title, the Sing pill, a subtitle
+   that grades itself, and credits. The record is in record.css. Spec: docs/design/ui.md §4.1, §5.1. */
+
+.home { position: absolute; inset: 0; overflow: hidden; }
+.h-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(0,0,0,.68) 0%, rgba(0,0,0,.34) 46%, rgba(0,0,0,.42) 100%), linear-gradient(0deg, rgba(0,0,0,.62) 0%, transparent 36%), linear-gradient(180deg, rgba(0,0,0,.42) 0%, transparent 24%); }
+
+.h-top { position: absolute; top: 28px; left: 7vw; right: 40px; z-index: 3; display: flex; justify-content: space-between; align-items: flex-start; transition: opacity .4s; }
+.wordmark { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; }
+.wordmark .vinyl { width: 26px; height: 26px; box-shadow: none; animation-play-state: running; }
+.h-tag { margin-top: 16px; font-size: 15px; color: rgba(255,255,255,.82); }
+.steps { display: flex; gap: 18px; margin-top: 8px; list-style: none; font-size: 13px; color: var(--text-3); }
+.steps b { font-family: var(--serif); font-weight: 700; color: var(--accent); margin-right: 6px; }
+@media (max-width: 1360px) { .steps { gap: 16px; } }
+@media (max-height: 760px) { .steps { display: none; } }
+.sound { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(0,0,0,.18); backdrop-filter: blur(10px); color: var(--text-2); font-size: 13.5px; cursor: pointer; transition: background .2s, color .2s; }
+.sound:hover { color: #fff; background: rgba(0,0,0,.3); }
+.sound svg { width: 16px; height: 16px; }
+
+/* The title: Noto Serif SC 200, about 19% of the screen height, over two staggered lines. */
+.h-main { position: absolute; left: 7vw; top: 50%; z-index: 2; transform: translateY(-54%); }
+.h-title { font-family: var(--serif); font-weight: 200; font-size: var(--ts, 170px); line-height: 1.02; letter-spacing: .02em; text-shadow: 0 10px 60px rgba(0,0,0,.28); }
+.h-line { display: block; width: max-content; white-space: nowrap; }
+.h-line + .h-line { padding-left: var(--indent); }
+.ch { display: inline-block; animation: chIn 1s var(--ease) both; animation-delay: calc(var(--i) * 70ms); }
+@keyframes chIn { from { opacity: 0; filter: blur(14px); transform: translateY(20px); } }
+.h-copy { max-width: calc(var(--indent) + var(--copyw, 460px)); padding-left: var(--indent); margin-top: 26px; animation: riseIn .8s var(--ease) .2s both; transition: opacity .4s; }
+.h-sub { font-size: 17px; }
+.h-sub span + span { margin-left: 14px; color: var(--text-2); }
+.h-blurb { max-width: min(40ch, var(--copyw, 460px)); margin-top: 10px; font-size: 15px; line-height: 1.55; color: rgba(255,255,255,.75); }
+.h-cta { display: flex; align-items: center; gap: 14px; width: max-content; margin-top: 24px; }
+.h-meta { font-size: 14px; color: var(--text-3); }
+.sing-hint { min-height: 20px; margin-top: 10px; font-size: 13.5px; color: var(--text-2); opacity: 0; transform: translateY(-4px); transition: opacity .3s, transform .35s var(--ease); }
+.h-copy.picking .sing-hint { opacity: 1; transform: none; transition-delay: .12s; }
+@keyframes riseIn { from { opacity: 0; transform: translateY(14px); } }
+
+/* Sing is one pill; pressing it springs open into the two modes. */
+.sing-pill { position: relative; display: inline-flex; align-items: center; height: 54px; border-radius: 999px; overflow: hidden; background: var(--accent); color: var(--c0); box-shadow: 0 14px 44px -14px color-mix(in srgb, var(--accent) 70%, transparent); transition: background .35s var(--ease), height .35s var(--ease), box-shadow .35s, color .35s; }
+.sing-inner { display: flex; align-items: center; width: max-content; }
+.sing-go { position: relative; height: 54px; padding: 0 30px; border: 0; background: none; color: inherit; font-size: 16px; font-weight: 600; white-space: nowrap; cursor: pointer; overflow: hidden; }
+.sing-go::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.6) 50%, transparent 70%); transform: translateX(-130%); pointer-events: none; }
+.sing-pill:hover .sing-go::after { transform: translateX(130%); transition: transform .9s var(--ease); }
+.sing-go:active { transform: scale(.97); }
+.sing-pill.picking { height: 56px; background: rgba(10,10,18,.45); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); backdrop-filter: blur(16px); }
+.sing-pick { display: flex; align-items: center; gap: 4px; padding: 0 5px; }
+.sing-pick button { display: flex; align-items: center; justify-content: center; height: 46px; padding: 0 18px; border: 0; border-radius: 999px; background: none; color: #fff; white-space: nowrap; cursor: pointer; animation: riseIn .35s var(--ease) both; animation-delay: calc(var(--i) * 50ms + 90ms); transition: background .2s, color .2s; font-size: 14.5px; font-weight: 600; }
+.sing-pick button:hover, .sing-pick button:focus-visible { background: var(--accent); color: var(--c0); outline: none; }
+.sing-pick .sing-x { width: 40px; height: 40px; padding: 0; border-radius: 50%; color: var(--text-2); }
+.sing-pick .sing-x svg { width: 16px; height: 16px; }
+
+/* The subtitle: one line of the song fills and grades itself on a loop. */
+.subtitle { position: absolute; left: 50%; bottom: 6.5vh; z-index: 2; display: flex; flex-direction: column; align-items: center; transform: translateX(-50%); pointer-events: none; animation: riseIn .8s var(--ease) .35s both; transition: opacity .4s; }
+.lyric-demo { display: flex; gap: 8px; }
+.lyric-demo .tok { display: flex; flex-direction: column; align-items: center; }
+.lyric-demo .py { height: 18px; font-size: 13px; color: rgba(255,255,255,.6); opacity: 1; }
+.lyric-demo .hz { position: relative; font-family: var(--serif); font-weight: 700; font-size: clamp(24px, 3.6vh, 32px); line-height: 1.2; color: rgba(255,255,255,.35); text-shadow: 0 2px 18px rgba(0,0,0,.5); }
+.lyric-demo .hz::after { content: attr(data-hz); position: absolute; inset: 0; color: #fff; clip-path: inset(0 100% 0 0); animation: demofill 6.5s var(--ease) infinite; animation-delay: var(--d); }
+.lyric-demo .mark { display: block; width: 70%; height: 4px; margin-top: 7px; border-radius: 3px; opacity: 0; animation: demomark 6.5s var(--ease) infinite; animation-delay: calc(var(--d) + 1.4s); }
+@keyframes demofill { 0% { clip-path: inset(0 100% 0 0); } 12%, 88% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 0); opacity: 0; } }
+@keyframes demomark { 0% { opacity: 0; transform: scaleX(.2); } 6%, 70% { opacity: 1; transform: none; } 80%, 100% { opacity: 0; transform: scaleX(.2); } }
+.sub-cap { margin-top: 10px; font-size: 13px; color: rgba(255,255,255,.55); }
+
+.credit { position: absolute; right: 28px; bottom: 20px; z-index: 3; font-size: 11.5px; color: rgba(255,255,255,.45); transition: opacity .4s; }
+.credit a { color: inherit; text-decoration: none; }
+.credit a:hover { color: #fff; }
+.credit i { display: inline-block; width: 18px; }
+
+.home-error { position: absolute; left: 7vw; bottom: 12vh; z-index: 3; max-width: 520px; }
+
+/* Leaving for a song: the title drifts up and blurs out, the record turns away, the photo blurs. */
+.home.leaving .ch { animation: chOut .55s var(--ease) both; animation-delay: calc(var(--i) * 40ms); }
+@keyframes chOut { to { opacity: 0; filter: blur(14px); transform: translateY(-26px); } }
+.home.leaving .h-copy, .home.leaving .subtitle, .home.leaving .h-top, .home.leaving .credit { opacity: 0; }
+.home.leaving .dial { transform: translateX(16%) rotate(-4deg); opacity: 0; }
+.home.arriving .dial { animation: dialIn .9s var(--ease) both; }
+@keyframes dialIn { from { opacity: 0; transform: translateX(16%); } }

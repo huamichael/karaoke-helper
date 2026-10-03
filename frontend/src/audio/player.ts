@@ -90,6 +90,36 @@ function speakLine(line: Pick<Line, "start_ms" | "end_ms" | "text">, onTick: (ms
   });
 }
 
+/**
+ * The song screen's preview: about 12 seconds of the track from startMs, faded in
+ * and out. onPlaying fires once sound actually starts (it may never: no file yet,
+ * or the browser has not had a click). The clip's source is ui.md §9, question 3.
+ */
+export function playPreview(audioUrl: string, startMs: number, onPlaying: () => void, durationMs = 12_000): Playback {
+  return controlled((finish) => {
+    const a = new Audio(mediaUrl(audioUrl));
+    a.volume = 0;
+    a.currentTime = startMs / 1000;
+    let raf = 0, t0 = 0;
+    const fade = (now: number) => {
+      const t = now - t0;
+      a.volume = Math.max(0, Math.min(1, t / 800, (durationMs - t) / 800)) * 0.8;
+      if (t >= durationMs) finish("ended");
+      else raf = requestAnimationFrame(fade);
+    };
+    a.play().then(() => {
+      t0 = performance.now();
+      onPlaying();
+      raf = requestAnimationFrame(fade);
+    }, () => finish("ended"));
+    return () => {
+      cancelAnimationFrame(raf);
+      a.pause();
+      a.removeAttribute("src");
+    };
+  });
+}
+
 /** The spoken reference: the word's clip, or speechSynthesis in zh-CN when audio_url is null. */
 export function playWord(word: Pick<Word, "text" | "audio_url">): Playback {
   if (!word.audio_url) return speak(word.text, 0.8);

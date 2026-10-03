@@ -12,9 +12,9 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 export const SOFT = { type: "spring", bounce: 0.1, duration: 0.3 } as const;
 
-type Props = { className: string; innerClassName: string; contentKey: string; children: ReactNode; label?: string };
+type Props = { className: string; innerClassName: string; contentKey: string; children: ReactNode; label?: string; border?: number };
 
-export function MeasuredPill({ className, innerClassName, contentKey, children, label }: Props) {
+export function MeasuredPill({ className, innerClassName, contentKey, children, label, border = 1 }: Props) {
   const inner = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState<number | null>(null);
   const reduced = useReducedMotion();
@@ -22,12 +22,12 @@ export function MeasuredPill({ className, innerClassName, contentKey, children, 
   useLayoutEffect(() => {
     const el = inner.current;
     if (!el) return;
-    const measure = () => setWidth(el.offsetWidth + 2); // + the 1px border on each side
+    const measure = () => setWidth(el.offsetWidth + 2 * border);
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [contentKey]);
+  }, [contentKey, border]);
 
   return (
     <motion.div

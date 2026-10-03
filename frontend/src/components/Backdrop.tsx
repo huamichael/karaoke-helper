@@ -31,7 +31,13 @@ export const Backdrop = forwardRef<BackdropHandle, { entries: Entry[]; selected:
   };
 
   useImperativeHandle(ref, () => ({ setWeights }));
-  useLayoutEffect(() => setWeights(entries.map((_, k) => (k === selected ? 1 : 0))));
+  // Until the record reports in, show the selected song. Later renders leave the weights alone.
+  const shown = useRef(false);
+  useLayoutEffect(() => {
+    if (shown.current || !entries.length) return;
+    shown.current = true;
+    setWeights(entries.map((_, k) => (k === selected ? 1 : 0)));
+  });
 
   return (
     <div className="backdrop" aria-hidden>

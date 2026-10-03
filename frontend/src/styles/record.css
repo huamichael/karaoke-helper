@@ -1,0 +1,33 @@
+/* The song record: huge, stylized rather than real. Its label is the album cover; the songs ride
+   its groove band, three at a time, and loop round as it turns. Spec: docs/design/ui.md §5.1. */
+
+.dial { position: absolute; top: 0; right: 0; bottom: 0; z-index: 2; width: 52vw; touch-action: none; cursor: grab; transition: transform .8s var(--ease), opacity .5s; }
+.dial.grabbing { cursor: grabbing; }
+.disc { position: absolute; border-radius: 50%; pointer-events: none; }
+.disc-spin { position: absolute; inset: 0; border-radius: 50%; will-change: transform; }
+.disc-grooves { position: absolute; inset: 0; border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 61.5%, rgba(0,0,0,.7) 61.5% 62.2%, transparent 62.2% 79%, rgba(0,0,0,.7) 79% 79.7%, transparent 79.7%),
+    repeating-radial-gradient(circle, rgba(255,255,255,.055) 0 1px, transparent 1px 4px),
+    radial-gradient(circle, #18181e 0%, #0b0b0f 66%, #060608 100%);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.12), inset 0 0 0 12px rgba(0,0,0,.4), 0 60px 160px rgba(0,0,0,.7); }
+/* a sheen in the song's own colours; it stays still while the grooves turn */
+.disc-sheen { position: absolute; inset: 0; border-radius: 50%; mix-blend-mode: screen; opacity: .75;
+  background: conic-gradient(from 205deg, transparent 0deg, color-mix(in srgb, var(--accent) 55%, transparent) 12deg, transparent 32deg, transparent 150deg, color-mix(in srgb, var(--c2) 50%, transparent) 172deg, color-mix(in srgb, var(--c3) 45%, transparent) 186deg, transparent 210deg);
+  -webkit-mask: radial-gradient(circle, transparent calc(var(--rl) + 2px), #000 calc(var(--rl) + 3px)); mask: radial-gradient(circle, transparent calc(var(--rl) + 2px), #000 calc(var(--rl) + 3px)); }
+.disc-ring { position: absolute; left: 50%; top: 50%; width: calc(var(--rl) * 2.4); height: calc(var(--rl) * 2.4); margin: calc(var(--rl) * -1.2) 0 0 calc(var(--rl) * -1.2); overflow: visible; }
+.disc-ring text { fill: rgba(255,255,255,.6); font-family: 'Instrument Sans', sans-serif; font-size: 4.6px; letter-spacing: .4px; }
+.disc-label { position: absolute; left: 50%; top: 50%; width: calc(var(--rl) * 2); height: calc(var(--rl) * 2); margin: calc(var(--rl) * -1) 0 0 calc(var(--rl) * -1); border-radius: 50%; overflow: hidden; background: radial-gradient(circle, var(--c1), var(--c0)); box-shadow: 0 0 0 2px rgba(255,255,255,.14), 0 0 0 7px rgba(0,0,0,.45), 0 12px 50px rgba(0,0,0,.55); }
+.cover { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; }
+.disc-hole { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px; border-radius: 50%; background: #08080a; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 75%, transparent), 0 0 0 10px rgba(0,0,0,.35); }
+.needle { position: absolute; width: 36px; height: 2px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 16px var(--accent); transform: translate(-50%, -50%); pointer-events: none; }
+
+.dn { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 10px; border: 0; background: none; text-align: center; white-space: nowrap; cursor: pointer; text-shadow: 0 2px 16px rgba(0,0,0,.7); }
+.dn-n { font-size: 11.5px; letter-spacing: .14em; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.dn-t { font-family: var(--serif); font-weight: 700; font-size: 24px; }
+.dn-a { font-size: 12.5px; color: var(--text-2); }
+.dn-p { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12.5px; color: var(--text-2); animation: riseIn .4s var(--ease) both; }
+.eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.eq i { width: 3px; height: 3px; border-radius: 1px; background: var(--accent); animation: eq .8s ease-in-out infinite alternate; }
+.eq i:nth-child(2) { animation-delay: -.3s; } .eq i:nth-child(3) { animation-delay: -.55s; }
+@keyframes eq { to { height: 12px; } }
