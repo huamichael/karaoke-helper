@@ -51,6 +51,19 @@ MESSAGES: dict[str, str] = {
     "FINAL_UANG_UAN": _tip("uan", "uang", _BACK),
     "FINAL_UEN_UENG": _tip("ueng", "uen", _FRONT),
     "FINAL_UENG_UEN": _tip("uen", "ueng", _BACK),
+    # Tone codes are TONE_<expected>_<heard>. Owner: D.
+    "TONE_1_2": "Your pitch rose. Keep it high and level, as if holding one note.",
+    "TONE_1_3": "Your pitch dipped. Keep it high and level, as if holding one note.",
+    "TONE_1_4": "Your pitch fell. Keep it high and level, as if holding one note.",
+    "TONE_2_1": 'Your pitch stayed level. Let it rise, as when asking "What?"',
+    "TONE_2_3": 'Your pitch dipped first. Start in the middle and rise steadily, as when asking "What?"',
+    "TONE_2_4": 'Your pitch fell. Let it rise instead, as when asking "What?"',
+    "TONE_3_1": "Your pitch stayed high. Drop your voice low; at the end of a word, let it come back up a little.",
+    "TONE_3_2": "Your pitch rose without going low. Drop your voice low first; at the end of a word, let it come back up.",
+    "TONE_3_4": "Your pitch fell from high. Start low and stay low; at the end of a word, let it come back up a little.",
+    "TONE_4_1": 'Your pitch stayed level. Start high and drop sharply, like a firm "No!"',
+    "TONE_4_2": 'Your pitch rose. Start high and drop sharply, like a firm "No!"',
+    "TONE_4_3": 'Your pitch dipped and rose. Start high and drop sharply, like a firm "No!"',
 }
 
 

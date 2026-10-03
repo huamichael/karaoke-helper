@@ -120,3 +120,25 @@ def test_spans_required_for_longer_words():
 def test_spans_must_match_syllables():
     with pytest.raises(ValueError, match="one entry per"):
         score_tones(two_syllables(2, 3), to_syllables("你好"), TWO_SYLLABLE_SPANS[:1])
+
+
+# Tone feedback messages (the TONE_ rows in app/scoring/feedback.py)
+
+
+def test_every_wrong_tone_has_its_own_message():
+    from app.scoring.feedback import MESSAGES
+
+    for expected in (1, 2, 3, 4):
+        for heard in (1, 2, 3, 4):
+            if heard != expected:
+                assert f"TONE_{expected}_{heard}" in MESSAGES
+
+
+def test_wrong_tone_feedback_reaches_the_learner():
+    from app.schemas import Part, SoundScore, ToneGrade
+    from app.scoring.feedback import MESSAGES, pick
+
+    perfect = SoundScore(initial=Part(expected="x", heard="x", score=100), final=Part(expected="in", heard="in", score=100))
+    feedback = pick(perfect, ToneGrade(expected=1, heard=4, score=40))
+    assert feedback.code == "TONE_1_4" and feedback.message == MESSAGES["TONE_1_4"]
+    assert pick(perfect, ToneGrade(expected=1, heard=1, score=95)) is None

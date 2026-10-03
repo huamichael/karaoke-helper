@@ -8,11 +8,12 @@ You own everything about Mandarin text and pitch. First you write the one functi
 
 ## Status
 
-As of 3 October 2026, every deliverable below is built and tested (174 tests), except:
+As of 3 October 2026, every deliverable below is built and tested, except:
 
 - Tuning `score_tones` on real recordings. Its constants come from synthetic voices.
-- Tone feedback rows in `scoring/feedback.py`, which waits for B to define that file's structure.
 - The fixture recordings in `backend/tests/fixtures/audio/`, which the team records.
+
+The 12 tone feedback messages (`TONE_<expected>_<heard>`) are in `scoring/feedback.py`. They reach the learner once B's grader calls `score_tones`.
 
 The three demo songs are built: 月亮代表我的心, 一剪梅 and 茉莉花. Their `lyrics.yaml` files hold reading fixes, word fixes, translations and glosses.
 
