@@ -215,10 +215,10 @@ The switches that implement this table are in [contracts/backend-interfaces.md](
 | Audio decoding | PyAV, through `faster_whisper.decode_audio` | Avoids installing ffmpeg on four machines. |
 | Speech-to-text | `faster-whisper`, plus `mlx-whisper` on macOS | Runs on Windows and macOS. The Mac default is `mlx-whisper` (`large-v3-turbo`, 0.63 s on a 1.4 s line). Docker and Windows use `faster-whisper` (~5 s on the same line). `WHISPER_ENGINE` overrides it. |
 | CTC alignment | `torch` + `torchaudio` (`MMS_FA`, `forced_align`) | Pin versions: `forced_align` was scheduled for removal and then kept. The `ctc-forced-aligner` package is the fallback. |
-| Mandarin text | `pypinyin`, `jieba` | Plus a per-song overrides file for readings. |
+| Mandarin text | `pypinyin`, `jieba`, `zhconv` | Per-song reading and word fixes live in each song's `lyrics.yaml`. |
 | Pitch | `praat-parselmouth` | For tone. |
 | Spoken reference clips | `edge-tts`, generated ahead of time | Needs internet when generating. The browser's `speechSynthesis` covers a missing clip. |
-| Synced lyrics | LRCLIB, converted by the pipeline | |
+| Synced lyrics | One hand-prepared `lyrics.yaml` per song, read by the pipeline | Format in `contracts/data-model.md`, section 5 |
 | Storage | JSON and audio files on disk | No database, no accounts. Recordings are saved to disk so we can tune thresholds. |
 
 Everything installs with `pip` or `npm` on both Windows (WSL2) and macOS. Nothing requires conda, a GPU, or a cloud service at demo time.
@@ -279,10 +279,10 @@ Stretch goals are attempted only once stage 3 is in and stable: melody score, th
 | Rhythm needs the original track aligned to the lyric, and instruments make that alignment worse. | Songs with sparse accompaniment. Check the aligned times by ear. If they are poor, isolate the vocal with a stem-separation tool or correct the times by hand in `song.json`. |
 | Whisper is less reliable on very short clips, such as one syllable spoken on its own. It can return nothing or invented text. We have not tested this yet. | B tests about 20 isolated words in the first block. Keep a margin of silence around the word when trimming. Treat an empty result as `no_speech`. If single syllables stay unreliable, practise the syllable inside a longer word or short phrase. |
 | Whisper invents text when given silence. | Trim silence and use its voice-activity filter before transcribing; return `no_speech`. |
-| Songs use readings that automatic pinyin gets wrong: 的 sung as "dì", 了 as "liǎo", characters with several readings such as 和. | A per-song overrides file, and a Mandarin reader reviews every demo song. |
+| Songs use readings that automatic pinyin gets wrong: 的 sung as "dì", 了 as "liǎo", characters with several readings such as 和. | A `readings` block in each song's `lyrics.yaml`, and a Mandarin reader reviews every demo song. |
 | Four people and their AI agents edit one repo at once. | One owner per file. Contracts change before code does. Agents are told to stay inside their owner's files. |
 | Venue Wi-Fi and noise. | Download roughly 3 GB of models before the event. Use a close microphone or headset. |
-| Audio and lyrics rights. | If the repo is public, do not commit copyrighted recordings. Folk tunes such as 两只老虎 or 茉莉花 are safe compositions, though a given recording still has its own rights. Judges already know the melody of 两只老虎 (it is "Frère Jacques"). |
+| Audio and lyrics rights. | The demo songs are copyrighted and the repo is public, so their tracks are ignored by git and shared through a team folder. Lyrics and `song.json` are committed. Folk tunes such as 两只老虎 or 茉莉花 are safe compositions, though a given recording still has its own rights. Judges already know the melody of 两只老虎 (it is "Frère Jacques"). |
 
 ## 9. Still to settle
 
@@ -348,7 +348,7 @@ MHACKS/
 │       ├── test_mandarin.py, test_tone.py                 # D
 │       └── fixtures/{lines,audio}/   # D keeps; everyone adds recordings
 ├── data/
-│   ├── songs/<song_id>/           # D  song.json, overrides.json, audio, words/
+│   ├── songs/<song_id>/           # D  lyrics.yaml, audio.mp3, song.json, words/
 │   └── attempts/                  # ignored by git: saved recordings for tuning
 └── scripts/
     ├── dev.sh                     # start backend and frontend together

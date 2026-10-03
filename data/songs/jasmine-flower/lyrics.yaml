@@ -1,0 +1,127 @@
+version: '1.0'
+metadata:
+  title: 茉莉花
+  artist: 凤飞飞
+  album: 模拟再现 6N纯银镀膜
+  duration_ms: 206000
+  instrumental: false
+# How to split phrases into words (chips) where the automatic split is wrong.
+words:
+  好一朵: 好 一朵
+  又香又白人人誇: 又 香 又 白 人人 誇
+  別人家: 別人家
+# English translation of each line, matched by its exact text.
+translations:
+  好一朵美麗的茉莉花: "What a beautiful jasmine flower"
+  芬芳美麗滿枝椏: "Fragrant and lovely, filling the branches"
+  又香又白人人誇: "So fragrant and so white, everyone praises it"
+  讓我來將你摘下 送給別人家: "Let me pick you and give you to someone else"
+  茉莉花呀茉莉花: "Oh jasmine flower, jasmine flower"
+# English meaning of each word, shown in Word practice.
+glosses:
+  好: "how (exclamation)"
+  一朵: "one (flower)"
+  美麗: "beautiful"
+  的: "(possessive particle)"
+  茉莉花: "jasmine flower"
+  芬芳: "fragrant"
+  滿: "full of"
+  枝椏: "branches"
+  又: "both, also"
+  香: "fragrant"
+  白: "white"
+  人人: "everyone"
+  誇: "to praise"
+  讓: "to let"
+  我: "I, me"
+  來: "to come"
+  將: "(marks the object)"
+  你: "you"
+  摘下: "to pick"
+  送給: "to give to"
+  別人家: "someone else's home"
+  呀: "(exclamation)"
+lines:
+- text: 好一朵美麗的茉莉花
+  start_ms: 21090
+  end_ms: 26730
+- text: 好一朵美麗的茉莉花
+  start_ms: 26730
+  end_ms: 32490
+- text: 芬芳美麗滿枝椏
+  start_ms: 32490
+  end_ms: 38110
+- text: 又香又白人人誇
+  start_ms: 38110
+  end_ms: 43760
+- text: 讓我來將你摘下 送給別人家
+  start_ms: 43760
+  end_ms: 53650
+- text: 茉莉花呀茉莉花
+  start_ms: 53650
+  end_ms: 60340
+- text: ''
+  start_ms: 60340
+  end_ms: 71970
+- text: 好一朵美麗的茉莉花
+  start_ms: 71970
+  end_ms: 77630
+- text: 好一朵美麗的茉莉花
+  start_ms: 77630
+  end_ms: 83250
+- text: 芬芳美麗滿枝椏
+  start_ms: 83250
+  end_ms: 88940
+- text: 又香又白人人誇
+  start_ms: 88940
+  end_ms: 94720
+- text: 讓我來將你摘下 送給別人家
+  start_ms: 94720
+  end_ms: 104740
+- text: 茉莉花呀茉莉花
+  start_ms: 104740
+  end_ms: 111020
+- text: ''
+  start_ms: 111020
+  end_ms: 134510
+- text: 好一朵美麗的茉莉花
+  start_ms: 134510
+  end_ms: 139900
+- text: 好一朵美麗的茉莉花
+  start_ms: 139900
+  end_ms: 145920
+- text: 芬芳美麗滿枝椏
+  start_ms: 145920
+  end_ms: 151530
+- text: 又香又白人人誇
+  start_ms: 151530
+  end_ms: 156930
+- text: 讓我來將你摘下 送給別人家
+  start_ms: 156930
+  end_ms: 167290
+- text: 茉莉花呀茉莉花
+  start_ms: 167290
+  end_ms: 174280
+- text: ''
+  start_ms: 174280
+plain: |-
+  好一朵美麗的茉莉花
+  好一朵美麗的茉莉花
+  芬芳美麗滿枝椏
+  又香又白人人誇
+  讓我來將你摘下 送給別人家
+  茉莉花呀茉莉花
+
+  好一朵美麗的茉莉花
+  好一朵美麗的茉莉花
+  芬芳美麗滿枝椏
+  又香又白人人誇
+  讓我來將你摘下 送給別人家
+  茉莉花呀茉莉花
+
+  好一朵美麗的茉莉花
+  好一朵美麗的茉莉花
+  芬芳美麗滿枝椏
+  又香又白人人誇
+  讓我來將你摘下 送給別人家
+  茉莉花呀茉莉花

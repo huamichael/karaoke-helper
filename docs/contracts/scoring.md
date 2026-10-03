@@ -88,8 +88,16 @@ Compare when the user starts each syllable with when the original singer does.
 
 Extract the pitch contour inside each syllable's span and express it in semitones relative to the median pitch of the recording. Compare it with the four standard tone shapes: high level, rising, dipping, falling.
 
-- The closest shape is `heard`. The distance to the expected shape is the score.
-- Expected tones follow third-tone sandhi (two third tones in a row: the first is said as a second tone). The neutral tone is not scored.
+- Each shape may stretch to between 0.5 and 2 times its size to fit the speaker's pitch range. The closest stretched shape is `heard`.
+- Score = 100 × e^(−distance / 6 semitones), where distance is the RMS gap to the expected shape. If another shape fits better, the score is capped at 60.
+- The shapes on the five-level scale are 55, 35, 214 (21 when the third tone is not the last syllable of the word) and 51. One level is 2.5 semitones.
+- Expected tones follow tone sandhi, applied in this order:
+  - 一: second tone before a fourth or neutral tone, fourth before any other tone, first tone at the end of a word or after 第.
+  - 不: second tone before a fourth tone, otherwise fourth.
+  - 一 or 不 between two copies of the same character (想一想, 好不好) is neutral.
+  - In a run of third tones, all but the last are said as second tones.
+- The neutral tone is not scored. A syllable with under 50 ms of voiced pitch gets `heard` and `score` of `None`.
+- These numbers come from synthetic voices and must be tuned on real recordings. They are constants at the top of `app/scoring/tone.py`.
 - A single-syllable word uses the whole voiced part of the recording, so it does not depend on the CTC layer. A word of two or more syllables needs the CTC layer's spans.
 
 ## Feedback

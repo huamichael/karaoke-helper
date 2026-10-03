@@ -24,5 +24,7 @@ data/attempts/*
 # Album covers used by the prototype are copyrighted (see docs/design/ui.md §11)
 frontend/prototype/assets/covers/
 
-# Uncomment if the repository is public and the tracks are copyrighted
-# data/songs/*/audio.*
+# Song tracks are copyrighted and the repository is public: share them outside git
+data/songs/*/audio.*
+# Line cuts written by build_song --check: also copyrighted
+data/songs/*/check/

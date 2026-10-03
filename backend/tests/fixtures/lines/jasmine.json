@@ -1,0 +1,168 @@
+{
+  "index": 0,
+  "start_ms": 21090,
+  "end_ms": 26730,
+  "text": "好一朵美麗的茉莉花",
+  "translation": "What a beautiful jasmine flower",
+  "syllables": [
+    {
+      "hanzi": "好",
+      "pinyin": "hǎo",
+      "pinyin_numeric": "hao3",
+      "initial": "h",
+      "final": "ao",
+      "tone": 3,
+      "start_ms": null,
+      "end_ms": null,
+      "index": 0,
+      "word_index": 0
+    },
+    {
+      "hanzi": "一",
+      "pinyin": "yī",
+      "pinyin_numeric": "yi1",
+      "initial": "",
+      "final": "i",
+      "tone": 1,
+      "start_ms": null,
+      "end_ms": null,
+      "index": 1,
+      "word_index": 1
+    },
+    {
+      "hanzi": "朵",
+      "pinyin": "duǒ",
+      "pinyin_numeric": "duo3",
+      "initial": "d",
+      "final": "uo",
+      "tone": 3,
+      "start_ms": null,
+      "end_ms": null,
+      "index": 2,
+      "word_index": 1
+    },
+    {
+      "hanzi": "美",
+      "pinyin": "měi",
+      "pinyin_numeric": "mei3",
+      "initial": "m",
+      "final": "ei",
+      "tone": 3,
+      "start_ms": null,
+      "end_ms": null,
+      "index": 3,
+      "word_index": 2
+    },
+    {
+      "hanzi": "麗",
+      "pinyin": "lì",
+      "pinyin_numeric": "li4",
+      "initial": "l",
+      "final": "i",
+      "tone": 4,
+      "start_ms": null,
+      "end_ms": null,
+      "index": 4,
+      "word_index": 2
+    },
+    {
+      "hanzi": "的",
+      "pinyin": "de",
+      "pinyin_numeric": "de5",
+      "initial": "d",
+      "final": "e",
+      "tone": 5,
+      "start_ms": null,
+      "end_ms": null,
+      "index": 5,
+      "word_index": 3
+    },
+    {
+      "hanzi": "茉",
+      "pinyin": "mò",
+      "pinyin_numeric": "mo4",
+      "initial": "m",
+      "final": "o",
+      "tone": 4,
+      "start_ms": null,
+      "end_ms": null,
+      "index": 6,
+      "word_index": 4
+    },
+    {
+      "hanzi": "莉",
+      "pinyin": "lì",
+      "pinyin_numeric": "li4",
+      "initial": "l",
+      "final": "i",
+      "tone": 4,
+      "start_ms": null,
+      "end_ms": null,
+      "index": 7,
+      "word_index": 4
+    },
+    {
+      "hanzi": "花",
+      "pinyin": "huā",
+      "pinyin_numeric": "hua1",
+      "initial": "h",
+      "final": "ua",
+      "tone": 1,
+      "start_ms": null,
+      "end_ms": null,
+      "index": 8,
+      "word_index": 4
+    }
+  ],
+  "words": [
+    {
+      "index": 0,
+      "text": "好",
+      "syllable_indices": [
+        0
+      ],
+      "gloss": "how (exclamation)",
+      "audio_url": "/media/songs/jasmine-flower/words/hao3.mp3"
+    },
+    {
+      "index": 1,
+      "text": "一朵",
+      "syllable_indices": [
+        1,
+        2
+      ],
+      "gloss": "one (flower)",
+      "audio_url": "/media/songs/jasmine-flower/words/yi1-duo3.mp3"
+    },
+    {
+      "index": 2,
+      "text": "美麗",
+      "syllable_indices": [
+        3,
+        4
+      ],
+      "gloss": "beautiful",
+      "audio_url": "/media/songs/jasmine-flower/words/mei3-li4.mp3"
+    },
+    {
+      "index": 3,
+      "text": "的",
+      "syllable_indices": [
+        5
+      ],
+      "gloss": "(possessive particle)",
+      "audio_url": "/media/songs/jasmine-flower/words/de5.mp3"
+    },
+    {
+      "index": 4,
+      "text": "茉莉花",
+      "syllable_indices": [
+        6,
+        7,
+        8
+      ],
+      "gloss": "jasmine flower",
+      "audio_url": "/media/songs/jasmine-flower/words/mo4-li4-hua1.mp3"
+    }
+  ]
+}

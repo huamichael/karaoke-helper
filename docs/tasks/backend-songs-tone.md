@@ -6,6 +6,16 @@
 
 You own everything about Mandarin text and pitch. First you write the one function that turns Hanzi into syllable records, which both the song pipeline and the grader use. Then you build the pipeline that produces each song's bundle, and prepare the demo songs. Finally you build the tone scorer for Word practice.
 
+## Status
+
+As of 3 October 2026, every deliverable below is built and tested (174 tests), except:
+
+- Tuning `score_tones` on real recordings. Its constants come from synthetic voices.
+- Tone feedback rows in `scoring/feedback.py`, which waits for B to define that file's structure.
+- The fixture recordings in `backend/tests/fixtures/audio/`, which the team records.
+
+The three demo songs are built: 月亮代表我的心, 一剪梅 and 茉莉花. Their `lyrics.yaml` files hold reading fixes, word fixes, translations and glosses.
+
 ## Read first
 
 1. [PROJECT_PLAN.md](../PROJECT_PLAN.md), sections 1, 2 and 4.
@@ -85,20 +95,23 @@ B's matcher is blocked until this exists, so it comes first.
 
 ### `segment_words`
 
-- Use `jieba.cut`. For 我想和你一起 it returns 我 / 想 / 和 / 你 / 一起.
-- Check that the pieces joined together equal the Hanzi of the input.
+- Uses `jieba.cut` with `HMM=False`. For 我想和你一起 it returns 我 / 想 / 和 / 你 / 一起.
+- jieba's dictionary is Simplified, and on Traditional text it splits badly (你問 / 我 / 愛). So each run of Hanzi is converted to Simplified with `zhconv`, segmented, and mapped back onto the original characters.
+- jieba still makes mistakes (白人 for 白 / 人人). Fix them per song in the `words` block of `lyrics.yaml`.
 
 ### `build_song`
 
-- Command line: `uv run python -m pipeline.build_song --id <song_id> --lrc lyrics.lrc --audio track.mp3 --title "..." --artist "..."`.
-- Input lyrics are in LRC format, one `[mm:ss.xx] text` per line. Get them from LRCLIB or time them by hand.
-- A line's `end_ms` is the next line's `start_ms`. Cap it so a line never runs through an instrumental break, and adjust by hand where needed.
+- Command line: `uv run python -m pipeline.build_song --id <song_id>`, or `--all` for every song. It reads `data/songs/<song_id>/lyrics.yaml` and writes `song.json` beside it, then prints a review table of every line's pinyin and words.
+- `--no-clips` skips generating spoken clips, so no internet is needed. `--check` also cuts each line from the track into `check/<line>.wav`, so you can listen to whether the line times are right.
+- Re-running keeps the syllable times `align_track` wrote, for every line whose text, times and readings did not change.
+- The `lyrics.yaml` format is in [data-model.md](../contracts/data-model.md), section 5. Every line carries `start_ms` and `end_ms`; lines with empty `text` mark instrumental gaps and are skipped.
+- Reading fixes go in the song's `readings` block, keyed by phrase: `掩没: yan3 mo4`. `reading_overrides` (done) turns them into per-line positions for `to_syllables`. Songs often sing 的 as "dì" and 了 as "liǎo".
 - For each line: `to_syllables` with that line's overrides, then `segment_words` to fill `word_index` and each word's `syllable_indices`.
-- `overrides.json` holds corrected readings, keyed by line index and character position. Songs often sing 的 as "dì" and 了 as "liǎo".
-- Generate each word's clip with `edge-tts`, using a Mandarin voice such as `zh-CN-XiaoxiaoNeural`. Save it as `words/<line_index>_<word_index>.mp3` and set the word's `audio_url`.
-- `translation` and `gloss` are filled by hand or left `null`.
+- Word clips come from `edge-tts` with the `zh-CN-XiaoxiaoNeural` voice, saved as `words/<reading>.mp3` (for example `yue4-liang4.mp3`) so repeated words and homophones share one clip. Existing clips are reused.
+- edge-tts reads the Hanzi itself and does not know about `readings` fixes. Listen to the clips of fixed words (`yan3-mo4.mp3`, `chang2-liu2.mp3`) to check it says them correctly.
+- `translation` and `gloss` come from the song's `translations` and `glosses` blocks, or are `null`.
 - Validate the output by loading it into the `Song` model before writing. Print a table of Hanzi and pinyin for the human review.
-- If the repository is public, do not commit copyrighted audio.
+- The tracks are copyrighted and the repository is public, so `audio.mp3` is ignored by git and shared through the team folder. `lyrics.yaml` and `song.json` are committed.
 
 ### Pitch
 
@@ -113,20 +126,22 @@ B's matcher is blocked until this exists, so it comes first.
 - The standard tone shapes on the five-level scale are: tone 1 is 55 (high and level), tone 2 is 35 (rising), tone 3 is 214 (dipping), tone 4 is 51 (falling). A third tone that is not the last syllable of the word is usually just low and falling, 21.
 - Turn those levels into semitones. One level is roughly 2 to 3 semitones; the exact figure depends on the speaker and needs tuning.
 - For a one-syllable word there is nothing to compare the height against, so compare shape only: remove the mean from both the contour and the templates.
+- People move their pitch by different amounts, so each template may stretch between 0.5 and 2 times before comparing. Without this, a speaker with a shallow dip was heard as a level first tone.
 - For a longer word, remove the word's median instead, so the relative height of the syllables is kept.
 - `heard` is the nearest template. The score falls as the distance to the expected template grows. Choose the scale so a clearly correct recording scores 85 or more.
 - The expected tone comes from `sandhi_tones`, not from the syllable's lexical tone.
 
 ### `sandhi_tones`
 
-- When two third tones are adjacent, the first is expected as a second tone. pypinyin can do this: `lazy_pinyin(text, style=Style.TONE3, tone_sandhi=True)` turns 你好 into `ni2 hao3`.
+- Applies the 一 and 不 rules, then third-tone sandhi, as listed in [scoring.md](../contracts/scoring.md), tone section. The team chose to include 一 and 不, so a learner who says 一片 as yí piàn is not marked wrong.
+- It works from the syllables' Hanzi and lexical tones, not from pypinyin, because pypinyin already applies some 一 changes inside common words.
 - Return `None` for the neutral tone.
 
 ### Fixtures
 
 - `lines/<name>.json` is one `Line` object.
 - `audio/<name>__<variant>.wav` is 16 kHz mono. The variants are listed in backend-interfaces.md section 6.
-- At kickoff, collect everyone's recordings of the two hand-written lines.
+- Three fixture lines exist, one per demo song: `yueliang`, `yijianmei`, `jasmine`. `backend/tests/fixtures/README.md` lists them and how to record each variant.
 
 ## Out of scope
 
