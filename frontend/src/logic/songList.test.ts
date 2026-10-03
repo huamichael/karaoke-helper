@@ -25,6 +25,10 @@ describe("buildEntries", () => {
     expect(e.filter((x) => x.id === "molihua")).toHaveLength(1);
     expect(e[0]).toMatchObject({ id: "molihua", playable: true, artist: "鳳飛飛" });
   });
+  it("shows the theme's Hanzi title when the backend's title is romanised", () => {
+    const e = buildEntries([{ id: "yueliang", title: "Yue Liang Dai Biao Wo De Xin", artist: "Teresa Teng", line_count: 26 }], themes);
+    expect(e[0]).toMatchObject({ id: "yueliang", title: "月亮代表我的心", playable: true });
+  });
   it("gives a song without a theme the fallback palette", () => {
     const e = buildEntries([{ id: "new", title: "新歌", artist: "Someone", line_count: 3 }], {});
     expect(e[0].theme.palette.c0).toBeTruthy();

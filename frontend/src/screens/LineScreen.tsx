@@ -32,14 +32,15 @@ import { createWheelStepper, type Step } from "../logic/lineSwipe";
 import { canLeave, earnedMark, openPractice, practiceReducer, type Practice, type PracticeEvent } from "../logic/practiceMachine";
 import { fillFractions, recordLimitMs, wordLimitMs } from "../logic/timing";
 
-type Props = { song: Song; mode: Mode; onExit(): void };
+/** title: the song's title as shown (the theme's Hanzi when it has one). */
+type Props = { song: Song; title: string; mode: Mode; onExit(): void };
 
 let hinted = false;
 
 const failure = (e: ApiError, line: boolean) =>
   `${e.message} Your recording is kept${line ? ", so you can send it again" : ""}.`;
 
-export default function LineScreen({ song, mode, onExit }: Props) {
+export default function LineScreen({ song, title, mode, onExit }: Props) {
   const lines = song.lines;
   const [s, dispatch] = useReducer(sessionReducer, lines.length, initSession);
   const [practice, setPractice] = useState<Practice | null>(null);
@@ -94,7 +95,7 @@ export default function LineScreen({ song, mode, onExit }: Props) {
       if (practicePhase === "ready") focus(".dock .rec");
       else if (practicePhase === "success") focus(".dock .btn.primary");
     } else if (practisedWord.current != null) {
-      focus(`.line.active .word:nth-child(${practisedWord.current + 1})`);
+      focus(`.line.active .word[data-w="${practisedWord.current}"]`);
       practisedWord.current = null;
     }
   }, [practicePhase, practiceWord]);
@@ -440,7 +441,7 @@ export default function LineScreen({ song, mode, onExit }: Props) {
       <TopBar
         backLabel={practice ? `Line ${practice.lineIndex + 1}` : "Songs"}
         onBack={() => (practice ? closePractice() : exit())}
-        title={song.title}
+        title={title}
         position={`${i + 1} / ${lines.length}`}
         badge={mode === "singing" ? "Singing accuracy" : "Spoken accuracy"}
         onHover={chrome.setOver}

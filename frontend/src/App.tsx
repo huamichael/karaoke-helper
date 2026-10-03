@@ -93,7 +93,7 @@ export default function App() {
       <div className="grain" aria-hidden />
       <div className="stage">
         {song
-          ? <LineScreen key={song.id} song={song} mode={mode} onExit={exit} />
+          ? <LineScreen key={song.id} song={song} title={entries.find((e) => e.id === song.id)?.title ?? song.title} mode={mode} onExit={exit} />
           : <SongScreen entries={entries} selected={selected} onSelect={setSelected} onTurn={onTurn} onStart={start}
               leaving={leaving} arriving={arriving} error={error} onRetry={() => load()} />}
       </div>

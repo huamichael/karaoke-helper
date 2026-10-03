@@ -15,6 +15,7 @@
 import { motion } from "motion/react";
 import type { CSSProperties, KeyboardEvent } from "react";
 import type { AttemptResult, Line } from "../api/client";
+import { phraseBreaks } from "../logic/phrases";
 import { CheckIcon } from "./icons";
 import { notchOffset, syllablesOf, WordTooltip } from "./WordTooltip";
 
@@ -54,9 +55,10 @@ export function WordTokens({ line, syllables, fill }: { line: Line; syllables: n
 
 export function WordChips({ line, active, result, fresh, practised, fill, clickable, morphWord, awayWord, onWord, onMorphDone }: Props) {
   const suggest = active && result?.next_step.type === "practice_word" ? result.next_step.word_index : null;
+  const breaks = active ? phraseBreaks(line) : [];
   return (
     <div className="words">
-      {line.words.map((w, k) => {
+      {line.words.flatMap((w, k) => {
         const wr = result?.words.find((r) => r.index === w.index) ?? null;
         const status = wr?.status ?? null;
         const detail = result && wr && active ? syllablesOf(result, wr) : [];
@@ -71,9 +73,10 @@ export function WordChips({ line, active, result, fresh, practised, fill, clicka
             ? <motion.span layoutId="pword" className="wcore" onLayoutAnimationComplete={onMorphDone}>{tokens}</motion.span>
             : <span className="wcore">{tokens}</span>;
         const open = (e: { stopPropagation(): void }) => { e.stopPropagation(); onWord(k); };
-        return (
+        const chip = (
           <span
             key={k}
+            data-w={k}
             className={cls}
             role={canClick ? "button" : undefined}
             tabIndex={canClick ? 0 : -1}
@@ -92,6 +95,7 @@ export function WordChips({ line, active, result, fresh, practised, fill, clicka
             {practised.includes(k) && <i className="chk" aria-hidden><CheckIcon /></i>}
           </span>
         );
+        return breaks.includes(k) ? [chip, <span key={`br${k}`} className="row-break" aria-hidden />] : [chip];
       })}
     </div>
   );

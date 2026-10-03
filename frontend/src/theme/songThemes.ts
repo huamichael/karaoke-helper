@@ -6,8 +6,8 @@
  * git ignores), the recording's artist, album and year, how the title splits over
  * two lines on the song screen, and a sample line that grades itself on a loop.
  *
- * A theme without a matching song from the backend shows on the record as
- * "Coming soon" (docs/design/ui.md §5.1), so `title` is only needed for those.
+ * A theme with a title but no matching song from the backend shows on the record
+ * as "Coming soon" (docs/design/ui.md §5.1).
  *
  * Owner: A. Spec: docs/design/ui.md §3.1, §5.1, §9 question 7.
  */
@@ -17,7 +17,7 @@ export type Palette = { c0: string; c1: string; c2: string; c3: string; accent: 
 
 export type SongTheme = {
   palette: Palette;
-  /** Shown only for songs the backend does not serve yet. */
+  /** The title in Hanzi, as shown; wins over the backend's, which may be romanised. */
   title?: string;
   /** The title over two staggered lines: 茉莉 / 花. */
   split?: [string, string?];
@@ -46,7 +46,7 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     artist: "Traditional",
     sample: { hz: "两只老虎", py: "liǎng zhī lǎo hǔ", marks: ["good", "ok", "good", "wrong"] },
   },
-  molihua: {
+  "jasmine-flower": {
     title: "茉莉花",
     palette: { c0: "#0f231a", c1: "#2f6b4f", c2: "#d9e4c4", c3: "#5f9c7a", accent: "#f4f1d6" },
     split: ["茉莉", "花"],
@@ -59,9 +59,9 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     artist: "鳳飛飛",
     album: "鳳飛飛 金賞輯 3",
     year: "1971",
-    sample: { hz: "好一朵美丽的茉莉花", py: "hǎo yì duǒ měi lì de mò lì huā", marks: ["good", "good", "good", "wrong", "good", "good", "good", "ok", "good"] },
+    sample: { hz: "好一朵美麗的茉莉花", py: "hǎo yì duǒ měi lì de mò lì huā", marks: ["good", "good", "good", "wrong", "good", "good", "good", "ok", "good"] },
   },
-  yijianmei: {
+  "yi-jian-mei": {
     title: "一剪梅",
     palette: { c0: "#1d1222", c1: "#7a2f4f", c2: "#e7b8c6", c3: "#4a3a6b", accent: "#f8d3de" },
     split: ["一剪", "梅"],
@@ -76,7 +76,7 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     year: "1983",
     sample: { hz: "一剪梅", py: "yì jiǎn méi", marks: ["good", "ok", "good"] },
   },
-  yueliang: {
+  "yue-liang-dai-biao-wo-de-xin": {
     title: "月亮代表我的心",
     palette: { c0: "#161230", c1: "#3b2f78", c2: "#f2cf7a", c3: "#6b4fa0", accent: "#f7dd99" },
     split: ["月亮代表", "我的心"],
