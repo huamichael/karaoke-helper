@@ -6,3 +6,15 @@ BadAudio when the bytes cannot be decoded.
 
 Owner: B. Spec: docs/contracts/backend-interfaces.md, section 3.
 """
+
+from __future__ import annotations
+
+from app.schemas import Audio
+
+
+class BadAudio(Exception):
+    pass
+
+
+def load_audio(data: bytes) -> Audio:
+    raise NotImplementedError

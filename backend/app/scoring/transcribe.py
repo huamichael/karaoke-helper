@@ -6,3 +6,11 @@ model is loaded once and kept in memory.
 
 Owner: B. Spec: docs/contracts/backend-interfaces.md, section 3.
 """
+
+from __future__ import annotations
+
+from app.schemas import Audio, Transcript
+
+
+def transcribe(audio: Audio) -> Transcript:
+    raise NotImplementedError

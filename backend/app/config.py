@@ -6,3 +6,17 @@ attempt.
 
 Owner: B. Spec: docs/contracts/backend-interfaces.md, section 4.
 """
+
+import os
+from typing import Literal
+
+GRADERS = ("mock", "real")
+
+
+def grader() -> Literal["mock", "real"]:
+    value = os.environ.get("GRADER", "real")
+    if value == "mock":
+        return "mock"
+    if value == "real":
+        return "real"
+    raise ValueError(f"GRADER must be one of {GRADERS}, got {value!r}")

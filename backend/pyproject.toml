@@ -9,7 +9,14 @@
 name = "karaoke-helper-backend"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "fastapi>=0.142.2",
+    "faster-whisper>=1.2.1",
+    "numpy>=2.5.3",
+    "pydantic>=2.13.5",
+    "python-multipart>=0.0.32",
+    "uvicorn>=0.54.0",
+]
 
 # PyTorch: CPU-only builds on Linux (WSL2 and Docker). PyPI's default Linux
 # wheels bundle several GB of CUDA libraries that no team machine can use.
@@ -26,3 +33,9 @@ torchaudio = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+]
