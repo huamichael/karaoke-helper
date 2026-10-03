@@ -53,5 +53,6 @@ Needs Python 3.12, [uv](https://docs.astral.sh/uv/) and Node 22 on your machine.
 cd backend && uv sync && GRADER=mock uv run uvicorn app.main:app --reload --port 8000
 
 # frontend, on http://localhost:5173
-cd frontend && npm install && npm run dev
+cd frontend/prototypes
+python3 -m http.server 5173
 ```
