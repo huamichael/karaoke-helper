@@ -2,7 +2,7 @@
 
 **Keeper:** A. **Used by:** A, and anyone preparing the demo.
 
-**Status:** draft v0.6, 3 October 2026. Follows [PROJECT_PLAN.md](../PROJECT_PLAN.md) revision 5.
+**Status:** draft v0.7, 3 October 2026. Follows [PROJECT_PLAN.md](../PROJECT_PLAN.md) revision 5.
 
 This document holds the frontend's visual design and interaction details. It does not restate behaviour or data. When it disagrees with these files, they win:
 
@@ -16,7 +16,7 @@ Screenshots of the clickable prototype are in [screens/](screens/).
 | Topic | tasks/frontend.md | This document |
 |---|---|---|
 | Look | Not specified | Per-song colour themes, glass surfaces, Hanzi and Pinyin type, motion (section 3) |
-| Song screen | "A list of songs" | One full-screen photograph per song with a huge hairline title, and a tuning dial to turn between songs; the picture dissolves through static between them (section 5.1) |
+| Song screen | "A list of songs" | One full-screen photograph per song with a huge hairline title, and a huge stylized record whose label is the song's album cover. Spinning the record changes songs, three in view at a time, looping; the picture dissolves through static between them (section 5.1) |
 | Word chips | "Each word as a coloured chip" | The lyric's own words are the chips: a status bar under each word, no second row of words (section 5.3) |
 | Line-screen controls | Header, line, buttons | One look. The dock shows only the current step's actions; one **Aa** pill opens every control and option (section 5.3.1) |
 | Moving between lines | Retry, Next line, progress | Also swipe with a trackpad, mouse wheel or touch, one line per gesture (section 5.3.3) |
@@ -87,7 +87,7 @@ Two springs, sampled into CSS `linear()` easings so CSS and JavaScript share the
 
 Moments:
 
-- **Turning the dial (song screen):** the dial follows the wheel, trackpad or drag continuously and settles on a song with a spring when the gesture ends. On the way, the two photos crossfade and blur, the grain thickens into static (and, with sound on, radio static rises), and the title, copy and theme switch when the dial passes halfway. The new title's characters arrive one by one, out of a blur.
+- **Spinning the record (song screen):** the record follows the wheel, trackpad or drag continuously, 40° per song, and settles on a song with a spring when the gesture ends. It also turns slowly while a preview plays. On the way, the two photos crossfade and blur, the grain thickens into static (and, with sound on, radio static rises), and the title, copy and theme switch when the dial passes halfway. The new title's characters arrive one by one, out of a blur.
 - **Starting a song:** the title's characters drift up and blur out, the dial turns away to the right, the photo blurs and darkens into the line screen's background, and the lyric lines rise in one after another, followed by the dock.
 - **Karaoke fill during Listen:** each character fills left to right. Use each syllable's `start_ms` and `end_ms` from `song.json` when the pipeline has aligned the track; until then they are `null`, so split the line's time evenly.
 - **Changing line:** the list moves so the active line sits 40% from the top. The active line's growth and the list's movement animate together, so no other line jumps: measure before and after, then animate the difference with transforms (FLIP).
@@ -108,7 +108,8 @@ Checked on 2026-10-03. We copy behaviour and look, not code, except where the li
 | Look | [surfbryce/beautiful-lyrics](https://github.com/surfbryce/beautiful-lyrics) (~2.4k★) | Colour-matched background, word-synced lyrics, cinema view. **Main visual reference.** | No license: look only |
 | Look | [amll-dev/applemusic-like-lyrics](https://github.com/amll-dev/applemusic-like-lyrics) (~2.2k★) | Apple Music style lyrics with a fluid background | AGPL-3.0: look only |
 | Song screen | Awwwards Sites of the Day, late Sep–Oct 2026: [Tengile Malamala](https://tengilemalamala.com), [White Desert](https://white-desert.com), [Warm & Fuzzy](https://warmnfuzzy.tv) | Full-bleed photography with huge display type laid over it; a thin serif split across two staggered lines; visible film grain; almost no chrome | Look only |
-| Song dial | Awwwards inspiration: [Throwbacks Music circular menu](https://www.awwwards.com/inspiration/circular-menu-navigation-this-is-spotify), [KUROKAWA WONDERLAND clock-like navigation](https://www.awwwards.com/inspiration/clock-like-navigation) | Browsing a small music collection by turning a wheel | Look only |
+| Song record | Awwwards inspiration: [Throwbacks Music circular menu](https://www.awwwards.com/inspiration/circular-menu-navigation-this-is-spotify), [KUROKAWA WONDERLAND clock-like navigation](https://www.awwwards.com/inspiration/clock-like-navigation) | Browsing a small music collection by turning a wheel | Look only |
+| Album covers | Found with the iTunes Search API: 鳳飛飛《鳳飛飛 金賞輯 3》(1971) for 茉莉花, 費玉清《清韻悠揚 精選（一）》(1983) for 一剪梅, 鄧麗君《島國之情歌 第四集 香港之戀》(1977) for 月亮代表我的心 | The cover of the recording we sing along to, as the record's label | Copyrighted. Fine to show in the demo; keep them out of this public repo (section 9, question 7) |
 | Song photos | Unsplash: [Irina Iriser](https://unsplash.com/photos/vB4_CtsfaZ0) (茉莉花), [yamasa-n](https://unsplash.com/photos/SPEUTg0phCg) (一剪梅), [Laura Cleffmann](https://unsplash.com/photos/gRT7o73xua0) (月亮代表我的心) | One photograph per song | Unsplash License: free to use; credit shown on the song screen |
 | Options pill, dock | [ibelick/motion-primitives](https://github.com/ibelick/motion-primitives) (~6.5k★) | `toolbar-expandable` and `toolbar-dynamic`: spring with bounce 0.1 over 0.2–0.25s, measured width, contents fading in | MIT: **use the patterns** |
 | React animation | [motiondivision/motion](https://github.com/motiondivision/motion) (~34k★) | `layout` and `layoutId` for the word-to-centre move and the dock's size changes in the React build | MIT: **use it** |
@@ -126,19 +127,17 @@ Target viewport **1440×900**; must work at **1280×720** (projector). Below 102
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │ ◉ Karaoke Helper                    (full-screen photo)  (Sound on)  │
-│ Learn Mandarin by singing the songs you love.            ╱ ticks     │
-│ 1 Listen  2 Sing it back  3 See every word  4 Practise  ╱            │
-│                                                        │      01     │
-│   茉 莉              ← hairline serif, ~19% of the     │   茉莉花 ──── needle
-│        花               screen height, two staggered   │ Jasmine Flower│
-│        mò lì huā   Jasmine Flower       lines          │ ▂▄▆ Playing   │
-│        A Jiangsu folk song. Slow, with one …           │      02      │
-│        [ Sing 茉莉花 ]  (Spoken accuracy | Singing)     │   一剪梅     │
-│                                                         ╲            │
-│                hǎo yì duǒ měi lì de mò lì huā            ╲ dial      │
+│ Learn Mandarin by singing the songs you love.        ╭───────────────│
+│ 1 Listen  2 Sing it back  3 See every word …      ╭──╯  03 月亮代表… │
+│                                                  │  ring text ╭──────│
+│   茉 莉              ← hairline serif, sized to  │           │ album │
+│        花               stop 72px short of the  │ ── 01 茉莉花 │ cover │
+│        mò lì huā   Jasmine Flower     record     │    鳳飛飛  │ label │
+│        A Jiangsu folk song, as 鳳飛飛 sang it …  │           ╰──────│
+│        [ Sing 茉莉花 ]                            ╰──╮  02 一剪梅     │
+│                                                     ╰───────────────│
 │                好一朵美丽的茉莉花   ← subtitle: live fill + bars       │
-│                Sing a line back and every word gets a colour.        │
-│                                              Photo: Irina Iriser, Unsplash │
+│          Photo: Irina Iriser, Unsplash   Cover: 鳳飛飛《…》, 1971      │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -185,13 +184,16 @@ Target viewport **1440×900**; must work at **1280×720** (projector). Below 102
 ### 5.1 Song screen: tune the dial
 
 - **The photograph is the page.** Each song has one photograph, full screen, slowly pushing in, under a soft left-to-right and bottom shade and the film grain. The theme colours come from the same song.
-- **The title is the bold element.** Noto Serif SC at weight 200, about 19% of the screen height, split over two staggered lines (茉莉 / 花, 月亮代表 / 我的心), sized so it never reaches the dial. Under it, aligned with the second line: pinyin and English, one sentence about the song, then **Sing 茉莉花** and, when `VITE_SHOW_MODE_CHOICE` is on, two inline options: Spoken accuracy and Singing accuracy (each explains itself on hover). Off, the mode is spoken accuracy.
-- **The dial.** On the right, a large ring centred just off the screen, with fine tick marks and a longer tick per song. The songs sit around its left edge: number, title, and (for the selected one) the English title and "Playing a preview". An accent needle marks the selected song. Turn it with the wheel or trackpad, by dragging, with ↑ ↓ ← →, or by clicking a song. One wheel notch or one short swipe moves one song; a long swipe can move several. A song that isn't ready still tunes in, and its button reads "Coming soon".
+- **The title is the bold element.** Noto Serif SC at weight 200, about 19% of the screen height, split over two staggered lines (茉莉 / 花, 月亮代表 / 我的心). It is measured after rendering and its characters (not the indent) shrink until every line ends at least 72px before the record. Under it, aligned with the second line: pinyin and English, one sentence about the song, and **Sing 茉莉花** on its own.
+- **Sing opens into the mode choice.** When `VITE_SHOW_MODE_CHOICE` is on, pressing Sing (or Enter) springs the same pill open into **Spoken accuracy**, **Singing accuracy** and ✕; a line under it explains whichever option the pointer or focus is on. Choosing one starts the song. Esc, ✕ or a click elsewhere closes it again. When the flag is off, Sing starts the song in spoken accuracy.
+- **The record.** On the right, a stylized record about 1.1 screen-heights across, its centre just inside the right edge. Graphic rather than realistic: fine grooves, two track gaps, and a sheen in the song's own colours that stays still while the grooves turn. Its label is the album cover of the recording we use, with a ring of small text around it (artist, album, year, title). The covers crossfade as it turns.
+- **The songs ride the groove band,** between an accent needle on the rim and the label: number, title (sized to fit the band) and artist, plus "Playing a preview" on the selected one. At most three are in view: the selected one at the needle, one above, one below. They loop: after the last song comes the first. Spin it with the wheel or trackpad, by dragging, with ↑ ↓ ← →, or by clicking a song. One wheel notch or one short swipe moves one song; a long swipe can move several. A song that isn't ready still tunes in, and its button reads "Coming soon".
 - **Between songs** the picture dissolves through static (section 3.3). With sound on, a faint vinyl crackle plays on the song screen and radio static rises between songs; both are generated with Web Audio and need no files. Browsers only allow sound after a click or a key press.
 - **The subtitle.** At the bottom centre, like a film subtitle, one line of the song's lyric fills and grades itself on a loop, with "Sing a line back and every word gets a colour." under it.
 - **Preview.** Once the dial settles, about 12 seconds of the song from `audio_url`, faded in and out. See section 9, question 3 for where the clip comes from.
 - **Credit** for the photograph sits small in the bottom-right corner.
-- **Sing** (or Enter) starts the song without a window (section 3.3).
+- **Starting the song** opens no window (section 3.3).
+- **Credits** for the photograph and the album cover sit small in the bottom-right corner.
 
 ### 5.2 Microphone setup (first Record only)
 
@@ -288,7 +290,8 @@ The file split in `frontend/src/` is a starting point (plan section 10). This de
 |---|---|---|
 | `DynamicBackground` | theme, `playing` | Drifting, or static with reduced motion |
 | `PhotoBackdrop`, `Grain` | the songs' photos, dial position | Crossfades and blurs the photos; sharp on the song screen, blurred on the line screen |
-| `SongDial` | `SongSummary[]`, position | Continuous position with a settling spring; wheel, drag, keys, click |
+| `SongRecord` | `SongSummary[]`, covers, position | Unbounded position with a settling spring, shown modulo the song count; wheel, drag, keys, click; at most three names in view |
+| `SingButton` | mode-choice flag | One pill that opens into the two modes |
 | `Ambience`, `PreviewPlayer` | sound on, dial position, a clip URL | Crackle and static generated with Web Audio; the preview with fades |
 | `TopBar` | title, line N of M, mode, controls open | Fades when idle |
 | `OptionsPill` | `showPinyin`, `showTranslation`, open, demo flag | Also the switch for the dock |
@@ -380,7 +383,7 @@ Total is about 24 hours of design work on top of the functional work. P1 alone i
 4. **A coach endpoint, after the MVP.** Proposal: `POST /api/v1/coach` with `attempt_id` and the conversation so far, returning a reply and, optionally, an `audio_url` of the reply spoken. A spoken coach would also fit the ElevenLabs sponsor track.
 5. **Which message goes under the line?** The frontend task lists "one feedback message", and the `Feedback` component header names both "the feedback message" and "the suggested next step". This design shows `next_step.message` under the line and the syllables' `feedback.message` in Word practice. B to confirm.
 6. **Best Design (Figma × MHacks):** does the track require a Figma file? If so, who makes it and when?
-7. **Photos for more songs.** Each song needs a photograph that can be used freely (Unsplash License or our own), stored with the frontend's themes, with a credit. Who picks them?
+7. **Photos and covers for each song.** Each song needs a photograph that can be used freely (Unsplash License or our own) and the album cover of the recording we use. Covers are copyrighted: fine on the demo screen, but they should not be committed to this public repo. Proposal: D adds `cover_url` (and the album, artist and year) to the song bundle and keeps the image out of git, like the track itself. Who picks the photos?
 8. **Dropped from earlier drafts:** a phonetic respelling row ("how" for hǎo), culture notes, an end-of-song results screen, and the mode-choice window. The first three need new fields or summary rules; revisit only after the hour-19 freeze.
 
 ## 10. Demo script (90 seconds)
@@ -403,9 +406,7 @@ Checked in headless Chrome at 1440×900 and 1280×720. Not yet checked by hand: 
 
 | Screen | File |
 |---|---|
-| Song screen | [screens/song-screen.jpg](screens/song-screen.jpg) |
-| Song screen while turning the dial | [screens/song-screen-tuning.jpg](screens/song-screen-tuning.jpg) |
-| Song screen after turning | [screens/song-screen-switched.jpg](screens/song-screen-switched.jpg) |
+| Song screen | Not committed: it shows album covers, which are copyrighted. See the prototype. |
 | Microphone prompt in the dock | [screens/mic-prompt.jpg](screens/mic-prompt.jpg) |
 | Line screen, controls closed | [screens/immersive-result.jpg](screens/immersive-result.jpg) |
 | Line screen, controls open | [screens/controls-open.jpg](screens/controls-open.jpg) |
