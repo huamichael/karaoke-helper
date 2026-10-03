@@ -66,7 +66,7 @@ def word_syllables(line: Line, word_index: int) -> list[LyricSyllable]:
     return [line.syllables[i] for i in get_word(line, word_index).syllable_indices]
 
 
-def _is_hanzi(ch: str) -> bool:
+def is_hanzi(ch: str) -> bool:
     return unicodedata.name(ch, "").startswith("CJK UNIFIED IDEOGRAPH")
 
 
@@ -85,10 +85,10 @@ def _check(song: Song, song_id: str, path: Path) -> None:
         for j, syl in enumerate(line.syllables):
             if syl.index != j:
                 fail(f"{where}, syllable {j} has index {syl.index}")
-            if len(syl.hanzi) != 1 or not _is_hanzi(syl.hanzi):
+            if len(syl.hanzi) != 1 or not is_hanzi(syl.hanzi):
                 fail(f"{where}, syllable {j}: hanzi {syl.hanzi!r} is not one Hanzi character")
         hanzi = "".join(s.hanzi for s in line.syllables)
-        if hanzi != "".join(ch for ch in line.text if _is_hanzi(ch)):
+        if hanzi != "".join(ch for ch in line.text if is_hanzi(ch)):
             fail(f"{where}: syllables spell {hanzi!r}, which does not match text {line.text!r}")
         covered: list[int] = []
         for k, word in enumerate(line.words):

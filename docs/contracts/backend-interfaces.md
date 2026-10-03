@@ -24,6 +24,7 @@ Each file has one owner. Nobody edits another owner's file without asking.
 | `backend/app/mandarin.py` | D | `to_syllables`, `segment_words`, `sandhi_tones` |
 | `backend/app/scoring/pitch.py`, `tone.py` | D | `score_tones` |
 | `backend/pipeline/build_song.py` | D | Builds `song.json` and word clips |
+| `backend/pipeline/whisper_words.py` | B | Isolated-word Whisper experiment |
 | `data/songs/` | D | The demo song bundles |
 | `backend/tests/fixtures/` | D keeps it; everyone adds recordings | Shared test data |
 | `compose.yaml`, `docker/` | B | The Docker dev environment |
@@ -55,7 +56,7 @@ class Part(BaseModel):         # the same shape the API returns
     score: int | None
 
 class SoundScore(BaseModel):
-    initial: Part | None       # None when the syllable has no initial
+    initial: Part | None       # None when the syllable has no initial and none was heard
     final: Part
 
 class ToneGrade(BaseModel):
@@ -84,12 +85,13 @@ Every function that returns a per-syllable list returns **exactly one entry per 
 def load_audio(data: bytes) -> Audio
 ```
 - Decodes webm/opus, mp4 or wav. Resamples to 16 kHz mono. Trims leading and trailing silence, keeping a 150 ms margin.
-- Raises `BadAudio` if the bytes cannot be decoded.
+- Raises `BadAudio` if the bytes cannot be decoded, and `AudioTooLong` (a subclass of `BadAudio`) if the recording is longer than 30 seconds.
 
 ```python
 def transcribe(audio: Audio) -> Transcript
 ```
 - Runs Whisper with the language fixed to Chinese and no prompt.
+- Engine: `mlx-whisper` on macOS, `faster-whisper` elsewhere. Override with `WHISPER_ENGINE=mlx` or `faster`. `mlx` is rejected off macOS. `faster-whisper` uses `beam_size=5` and honours `WHISPER_VAD`. `mlx-whisper` 0.4.3 has no beam search, so it decodes greedily at temperature 0; `WHISPER_VAD` does not apply.
 - Sets `no_speech=True` when Whisper returns nothing or only non-Hanzi text.
 
 ```python
@@ -209,7 +211,7 @@ If `align`, `score_sounds`, `score_rhythm` or `score_tones` raises, the grader l
 - **Stubs first.** At kickoff B commits `schemas.py` and a stub for every function in section 3, with the final signature and a body that raises `NotImplementedError`. Each owner replaces their own stubs. Imports work from the first hour.
 - **Models load once.** Whisper and the CTC model are loaded at startup or on first use and kept in memory. No function loads a model per call.
 - **Pure functions.** Every function in section 3 except `grade` depends only on its arguments. That is what lets each owner test alone.
-- **Time budget.** A graded attempt should return within about 3 seconds on the demo Mac: Whisper up to 2 s, the CTC layer up to 1 s, tone and rhythm negligible. These are targets; nothing is measured yet.
+- **Time budget.** A graded attempt should return within about 3 seconds on the demo Mac: Whisper up to 2 s, the CTC layer up to 1 s, tone and rhythm negligible. These are targets. Measured on an 11-core M-series Mac with a 1.4 s TTS line of 我想和你一起: `mlx-whisper` `large-v3-turbo` 0.63 s (under budget); `faster-whisper` `large-v3-turbo` ~5 s, `medium` ~3.6 s.
 - **Changing a signature.** Edit this file first, tell the owners who call the function, then change the code.
 
 ## 6. Shared test data

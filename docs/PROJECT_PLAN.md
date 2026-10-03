@@ -213,7 +213,7 @@ The switches that implement this table are in [contracts/backend-interfaces.md](
 | Browser audio | `MediaRecorder` (webm/opus); Web Audio for a level meter | Echo cancellation, noise suppression and auto gain turned off. |
 | API | Python 3.12, FastAPI, Uvicorn, Pydantic v2, `uv` for environments | |
 | Audio decoding | PyAV, through `faster_whisper.decode_audio` | Avoids installing ffmpeg on four machines. |
-| Speech-to-text | `faster-whisper` | Runs on Windows and macOS. Start with the `large-v3-turbo` model; drop to `medium`, or switch to `mlx-whisper` on the Mac, if it is too slow. Speed on the demo Mac is not yet measured. |
+| Speech-to-text | `faster-whisper`, plus `mlx-whisper` on macOS | Runs on Windows and macOS. The Mac default is `mlx-whisper` (`large-v3-turbo`, 0.63 s on a 1.4 s line). Docker and Windows use `faster-whisper` (~5 s on the same line). `WHISPER_ENGINE` overrides it. |
 | CTC alignment | `torch` + `torchaudio` (`MMS_FA`, `forced_align`) | Pin versions: `forced_align` was scheduled for removal and then kept. The `ctc-forced-aligner` package is the fallback. |
 | Mandarin text | `pypinyin`, `jieba` | Plus a per-song overrides file for readings. |
 | Pitch | `praat-parselmouth` | For tone. |

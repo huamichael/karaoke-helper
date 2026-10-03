@@ -19,6 +19,7 @@ services:
       - model-cache:/cache               # Whisper and CTC weights, uv download cache
     environment:
       GRADER: ${GRADER:-mock}            # mock needs no models; set GRADER=real to grade
+      WHISPER_ENGINE: ${WHISPER_ENGINE:-faster}  # mlx-whisper is macOS-only; Docker stays on faster-whisper
       ENABLE_CTC: ${ENABLE_CTC:-0}
       ENABLE_RHYTHM: ${ENABLE_RHYTHM:-0}
       ENABLE_TONE: ${ENABLE_TONE:-0}

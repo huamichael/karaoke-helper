@@ -9,6 +9,8 @@ Owner: B. Spec: docs/contracts/api.md.
 
 import logging
 import uuid
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
@@ -19,16 +21,26 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app import config, songs
-from app.audio import BadAudio, load_audio
+from app.audio import AudioTooLong, BadAudio, load_audio
 from app.schemas import AttemptResult, ErrorBody, ErrorDetail, Health, Song, SongSummary
 from app.scoring.grader import grade
 from app.scoring.mock import grade_mock
+from app.scoring.transcribe import warmup
 
 log = logging.getLogger(__name__)
 
 config.grader()  # fail at startup on a bad GRADER value
+config.whisper_engine()
 
-app = FastAPI(title="Karaoke_Helper API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    if config.grader() == "real":
+        warmup()
+    yield
+
+
+app = FastAPI(title="Karaoke_Helper API", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -116,6 +128,8 @@ async def create_attempt(
             return grade_mock(data, song_id, line, target, mode, word_index, attempt_id)
         result = grade(load_audio(data), line, target, mode, word_index)
         return result.model_copy(update={"attempt_id": attempt_id, "song_id": song_id})
+    except AudioTooLong as e:
+        raise ApiError(413, "audio_too_long", str(e)) from e
     except BadAudio as e:
         raise ApiError(422, "bad_audio", str(e) or "The recording could not be decoded.") from e
     except Exception as e:
