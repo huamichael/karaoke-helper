@@ -13,6 +13,7 @@ Each file has one owner. Nobody edits another owner's file without asking.
 | `backend/app/schemas.py` | B keeps it; all three agree changes | Every shared type |
 | `backend/app/main.py`, `config.py`, `songs.py` | B | Routes, layer switches, song loading |
 | `backend/app/audio.py` | B | `load_audio` |
+| `backend/app/attempts.py` | B | Saves each real-graded attempt to `data/attempts/` |
 | `backend/app/scoring/transcribe.py` | B | `transcribe` |
 | `backend/app/scoring/matcher.py` | B | `match`, `score_sounds_base` |
 | `backend/app/scoring/grader.py`, `mock.py` | B | `grade`, the mock grader |
@@ -161,7 +162,7 @@ def score_tones(audio: Audio, expected: list[Syllable], spans: list[Span | None]
 ```python
 def grade(audio, line, target, mode, word_index):
     expected = line.syllables if target == "line" else syllables_of(line, word_index)
-    layers = config.layers_for(target, mode)
+    layers = config.layers_for(target, mode, syllable_count=len(expected))
 
     transcript = transcribe(audio)                           # B
     if transcript.no_speech:
@@ -173,8 +174,8 @@ def grade(audio, line, target, mode, word_index):
     spans = align(audio, expected) if layers.ctc_spans else None            # C
     if layers.ctc_scores:
         sounds = score_sounds(audio, expected, spans)                       # C
-    rhythm = score_rhythm(expected, spans) if layers.rhythm else None       # C
-    tones = score_tones(audio, expected, spans) if layers.tone else None    # D
+    rhythm = score_rhythm(expected, spans) if layers.rhythm and spans else None                     # C
+    tones = score_tones(audio, expected, spans) if layers.tone and (spans or len(expected) == 1) else None  # D
 
     return assemble(expected, observed, sounds, spans, rhythm, tones, transcript)   # B
 ```
@@ -192,7 +193,7 @@ def grade(audio, line, target, mode, word_index):
 | `ENABLE_RHYTHM` | `0`, `1` | Allows `score_rhythm` to run |
 | `ENABLE_TONE` | `0`, `1` | Allows `score_tones` to run |
 
-With a switch on, `layers_for` applies this table:
+With a switch on, `layers_for(target, mode, syllable_count)` applies this table. `syllable_count` selects the word-practice row; it is ignored for a line.
 
 | Context | `ctc_spans` | `ctc_scores` | `rhythm` | `tone` |
 |---|---|---|---|---|
@@ -205,7 +206,7 @@ Checkpoint B can change a cell, for example turning `ctc_scores` off for singing
 
 ### When a layer fails
 
-If `align`, `score_sounds`, `score_rhythm` or `score_tones` raises, the grader logs the error and continues without that layer. The attempt still returns a Whisper-base result, and `engine` reports what actually ran. A layer must never take the request down.
+If `align`, `score_sounds`, `score_rhythm` or `score_tones` raises, or returns a list without exactly one entry per expected syllable, the grader logs the error and continues without that layer. Rhythm, and tone on a word of two or more syllables, need spans; when `align` is off or failed they are skipped. The attempt still returns a Whisper-base result, and `engine` reports what actually ran. A layer must never take the request down.
 
 ## 5. Integration rules
 
