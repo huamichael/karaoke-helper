@@ -92,6 +92,7 @@ The lyric side extends the syllable record with its position in the line:
 
 ```python
 class LyricSyllable(Syllable):
+    tone: int                # 1-5; always known for a lyric, never None
     index: int               # position within the line, from 0
     word_index: int          # which word of the line it belongs to
 
