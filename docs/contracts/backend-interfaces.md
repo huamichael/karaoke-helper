@@ -221,13 +221,19 @@ Everyone tests against the same files, so results are comparable.
 
 ```text
 backend/tests/fixtures/
-├── lines/<name>.json          # a Line object: the expected syllables
-└── audio/<name>__<variant>.wav
+├── lines/<name>.json                      # a Line object: the expected syllables
+├── audio/<name>__<variant>__<speaker>.wav # a recording of that line
+├── tone/<reading>__<variant>__<speaker>.wav  # a single word, for tone
+├── session.py                             # the list of every recording, read by the tools below
+├── prompts.py, prompts/                   # a clip to copy for each recording
+└── check_recordings.py                    # checks names, format and what is still missing
 ```
 
 - Audio is 16 kHz mono WAV.
-- `<variant>` says what the recording contains: `correct`, `error-zh-z` (expected zh, produced z), `missing-3` (syllable 3 left out), `spoken` (said, not sung).
-- At kickoff, everyone records the two hand-written lines once correctly and once with a deliberate error. That gives about 16 recordings before any code exists. Checkpoint B uses this set.
+- `<speaker>` is the recorder's first name in lowercase ASCII letters, so several people's takes of one item can sit side by side.
+- Line `<variant>` says what the recording contains: `correct` (sung), `spoken` (said, not sung), `error-<index>-<expected>-<produced>` (one deliberate error at that syllable, such as `error-4-l-n`: syllable 4 said with n instead of l), `missing-<index>` (that syllable left out).
+- Word `<reading>` is the word's `pinyin_numeric`, such as `xin1`. Its `<variant>` is `correct` or `said-tone<n>` (deliberately said with tone n).
+- The full list, the prompts, and step-by-step instructions are in [docs/recording-session.md](../recording-session.md). Checkpoint B uses the line recordings.
 
 ## 7. Integration schedule
 

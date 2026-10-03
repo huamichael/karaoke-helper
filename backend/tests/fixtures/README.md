@@ -3,9 +3,18 @@
 Shared recordings and expected lines that every backend task tests against.
 
 - `lines/<name>.json`: one `Line` object, the expected syllables.
-- `audio/<name>__<variant>.wav`: a 16 kHz mono recording of that line.
+- `audio/<name>__<variant>__<speaker>.wav`: a 16 kHz mono recording of that line.
+- `tone/<reading>__<variant>__<speaker>.wav`: a single word, for checking tone.
 
-Naming rules and variants: `docs/contracts/backend-interfaces.md`, section 6. Keeper: D.
+Naming rules: `docs/contracts/backend-interfaces.md`, section 6. Keeper: D.
+
+**To record:** follow [docs/recording-session.md](../../../docs/recording-session.md). It has the checklist, a prompt clip for every item, and how to check your files.
+
+| File | Purpose |
+|---|---|
+| `session.py` | The list of every recording. The prompt maker, the checker and the guide follow it. |
+| `prompts.py` | Makes `prompts/`: a clip to copy for every recording. |
+| `check_recordings.py` | Checks names, format and loudness, converts other formats with `--convert`, and lists what each speaker still needs. |
 
 ## Lines
 
@@ -16,17 +25,3 @@ Naming rules and variants: `docs/contracts/backend-interfaces.md`, section 6. Ke
 | `jasmine` | 茉莉花, line 0 | 好一朵美麗的茉莉花 | 一 sandhi; a three-character word; the third tones 好 and 美 |
 
 They are copied from each song's `song.json`. If a song's lyrics.yaml changes, copy the line again.
-
-## Recording
-
-Record each line in each variant, as WAV, 16 kHz, mono:
-
-| Variant | What to do |
-|---|---|
-| `correct` | Sing the line as written |
-| `spoken` | Say the line normally, without melody |
-| `error-<expected>-<produced>` | Sing it with one deliberate error, for example `error-zh-z` |
-| `missing-<index>` | Sing it leaving out the syllable at that index (from 0) |
-
-For example `yueliang__correct.wav`, `yijianmei__error-n-l.wav`. Any recorder works; Audacity can
-convert to the right format (Export Audio: WAV, 16000 Hz, mono).

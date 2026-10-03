@@ -16,6 +16,7 @@ Start here. This folder is the single source of truth for the project. Every doc
 | [tasks/backend-api-whisper.md](tasks/backend-api-whisper.md) | Task B: the API and the Whisper base | You are B |
 | [tasks/backend-ctc-rhythm.md](tasks/backend-ctc-rhythm.md) | Task C: the CTC layer and rhythm | You are C |
 | [tasks/backend-songs-tone.md](tasks/backend-songs-tone.md) | Task D: the song pipeline and tone | You are D |
+| [recording-session.md](recording-session.md) | How to record the test recordings: checklist, prompts, file names | You record test audio |
 
 ## Reading order
 

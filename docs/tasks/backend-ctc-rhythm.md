@@ -118,7 +118,7 @@ Answer four questions and report them to the team:
 ### `eval_ctc.py`
 
 - For every fixture recording, print each syllable's Whisper-base score and CTC score side by side.
-- The file name says what is wrong (`error-zh-z`, `missing-3`), so the script knows which syllable should be flagged.
+- The file name says what is wrong and where (`error-4-l-n`: syllable 4 said with n instead of l; `missing-4`), so the script knows which syllable should be flagged. Naming rules: backend-interfaces.md section 6. Several speakers record each item; their names end the file name.
 - Summarise: errors caught and correct syllables wrongly flagged, for each layer.
 - Write the audio cut at each span to a temporary folder, for listening.
 

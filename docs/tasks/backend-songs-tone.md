@@ -141,7 +141,8 @@ B's matcher is blocked until this exists, so it comes first.
 ### Fixtures
 
 - `lines/<name>.json` is one `Line` object.
-- `audio/<name>__<variant>.wav` is 16 kHz mono. The variants are listed in backend-interfaces.md section 6.
+- `audio/<name>__<variant>__<speaker>.wav` and `tone/<reading>__<variant>__<speaker>.wav` are 16 kHz mono. Naming rules: backend-interfaces.md section 6.
+- [docs/recording-session.md](../recording-session.md) is the guide for the people recording. `session.py` lists every recording; `prompts.py` makes a clip to copy for each; `check_recordings.py` checks the files.
 - Three fixture lines exist, one per demo song: `yueliang`, `yijianmei`, `jasmine`. `backend/tests/fixtures/README.md` lists them and how to record each variant.
 
 ## Out of scope
