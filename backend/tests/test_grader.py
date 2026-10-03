@@ -14,6 +14,7 @@ from app.schemas import (
     Audio, Line, LyricSyllable, Part, RhythmResult, RhythmSyllable, SoundScore, Span, ToneGrade, Transcript, Word,
 )
 from app.scoring import feedback, grader
+from app.scoring.confusions import FINAL_PAIRS, INITIAL_PAIRS
 from app.scoring.matcher import score_sounds_base
 from tests.test_matcher import READINGS, sylls
 from tests.test_schemas import EXAMPLE_RESULT
@@ -192,6 +193,32 @@ def test_feedback_messages_name_the_sounds(monkeypatch):
     added = run(monkeypatch, "果", line=make_line(["我"])).syllables[0].feedback.message
     dropped = run(monkeypatch, "一", line=make_line(["你"])).syllables[0].feedback.message
     assert '"g"' in added and '"n"' in dropped
+
+
+def directional_codes() -> list[tuple[str, str, str]]:
+    out = []
+    for prefix, pairs in (("INITIAL", INITIAL_PAIRS), ("FINAL", FINAL_PAIRS)):
+        for a, b in pairs:
+            out += [(f"{prefix}_{a.upper()}_{b.upper()}", a, b), (f"{prefix}_{b.upper()}_{a.upper()}", b, a)]
+    return out
+
+
+@pytest.mark.parametrize("code, expected, heard", directional_codes())
+def test_every_confused_pair_has_a_message_naming_both_sounds(code, expected, heard):
+    message = feedback.MESSAGES[code]
+    assert message.startswith(f'Sounded closer to "{heard}". For "{expected}", ')
+
+
+def test_catalogue_has_no_codes_outside_the_confusion_table():
+    pair_codes = {code for code, _, _ in directional_codes()}
+    sound_codes = {c for c in feedback.MESSAGES if c.startswith(("INITIAL_", "FINAL_"))}
+    assert sound_codes == pair_codes
+
+
+@pytest.mark.parametrize("expected, said, code", [("知", "资", "INITIAL_ZH_Z"), ("安", "昂", "FINAL_AN_ANG")])
+def test_confused_pair_gets_its_catalogue_message(monkeypatch, expected, said, code):
+    fb = run(monkeypatch, said, line=make_line([expected])).syllables[0].feedback
+    assert (fb.code, fb.message) == (code, feedback.MESSAGES[code])
 
 
 def test_tone_feedback_only_when_sounds_are_right():

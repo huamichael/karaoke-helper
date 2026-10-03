@@ -7,14 +7,16 @@ Owner: B.
 
 import io
 import json
+import re
 import wave
 
+import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from app import main, songs
+from app import attempts, main, songs
 from app.audio import BadAudio
-from app.schemas import AttemptResult, ErrorBody
+from app.schemas import AttemptResult, ErrorBody, LineStep, Scores
 
 AUDIO = ("take.webm", b"\0" * 4096, "audio/webm")
 LINE_FORM = {"song_id": "demo", "line_index": "0", "target": "line", "mode": "spoken"}
@@ -22,7 +24,14 @@ WORD_FORM = {"song_id": "demo", "line_index": "0", "target": "word", "word_index
 
 
 @pytest.fixture
-def client(monkeypatch):
+def saved(monkeypatch, tmp_path):
+    folder = tmp_path / "attempts"
+    monkeypatch.setattr(attempts, "ATTEMPTS_DIR", folder)
+    return folder
+
+
+@pytest.fixture
+def client(monkeypatch, saved):
     monkeypatch.setenv("GRADER", "mock")
     monkeypatch.setenv("WHISPER_ENGINE", "faster")
     return TestClient(main.app, raise_server_exceptions=False)
@@ -200,6 +209,87 @@ def test_real_grader_failure_is_grading_failed(client, monkeypatch):
 
     monkeypatch.setattr(main, "grade", explode)
     assert_error(post(client, LINE_FORM, audio=silent_wav(1)), 500, "grading_failed")
+
+
+# --- saved attempts --------------------------------------------------------------
+
+
+def fake_result(status="ok") -> AttemptResult:
+    return AttemptResult(
+        attempt_id="", song_id="", line_index=0, word_index=None, target="line", mode="spoken",
+        status=status, engine="whisper",
+        scores=Scores(overall=None, pronunciation=None, completeness=None, rhythm=None, tone=None, melody=None),
+        words=[], syllables=[], heard=None, next_step=LineStep(type="retry_line", message="again"),
+    )
+
+
+def tone_wav(seconds: float, amplitude: float = 0.5) -> tuple[str, bytes, str]:
+    t = np.arange(int(16000 * seconds)) / 16000
+    pcm = (amplitude * np.sin(2 * np.pi * 220 * t) * 32767).astype("<i2")
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16000)
+        w.writeframes(pcm.tobytes())
+    return ("take.wav", buf.getvalue(), "audio/wav")
+
+
+@pytest.mark.parametrize("status", ["ok", "no_speech"])
+def test_real_attempt_is_saved_as_wav_and_json(client, monkeypatch, saved, status):
+    monkeypatch.setenv("GRADER", "real")
+    monkeypatch.setattr(main, "grade", lambda *args: fake_result(status))
+    r = post(client, LINE_FORM, audio=tone_wav(1))
+    assert r.status_code == 200, r.text
+    body = r.json()
+    attempt_id = body["attempt_id"]
+    assert re.fullmatch(r"att_[0-9a-f]{12}", attempt_id)
+    assert body["song_id"] == "demo"
+    assert sorted(p.name for p in saved.iterdir()) == [f"{attempt_id}.json", f"{attempt_id}.wav"]
+
+    record = json.loads((saved / f"{attempt_id}.json").read_text(encoding="utf-8"))
+    assert record["result"] == body
+    assert record["trim_offset_ms"] == 0
+    with wave.open(str(saved / f"{attempt_id}.wav")) as w:
+        assert (w.getnchannels(), w.getsampwidth(), w.getframerate(), w.getnframes()) == (1, 2, 16000, 16000)
+
+
+def test_mock_attempt_is_not_saved(client, saved):
+    assert post(client, LINE_FORM).status_code == 200
+    assert not saved.exists()
+
+
+def test_undecodable_upload_is_not_saved(client, monkeypatch, saved):
+    monkeypatch.setenv("GRADER", "real")
+    assert_error(post(client, LINE_FORM), 422, "bad_audio")
+    assert not saved.exists()
+
+
+def test_grading_failure_is_not_saved(client, monkeypatch, saved):
+    monkeypatch.setenv("GRADER", "real")
+    monkeypatch.setattr(main, "grade", lambda *args: (_ for _ in ()).throw(RuntimeError("bug")))
+    assert_error(post(client, LINE_FORM, audio=tone_wav(1)), 500, "grading_failed")
+    assert not saved.exists()
+
+
+def test_save_failure_still_returns_the_grade(client, monkeypatch, tmp_path):
+    monkeypatch.setenv("GRADER", "real")
+    blocker = tmp_path / "not-a-folder"
+    blocker.write_text("x")
+    monkeypatch.setattr(attempts, "ATTEMPTS_DIR", blocker)
+    monkeypatch.setattr(main, "grade", lambda *args: fake_result())
+    r = post(client, LINE_FORM, audio=tone_wav(1))
+    assert r.status_code == 200
+    assert r.json()["status"] == "ok"
+
+
+def test_saved_wav_clips_out_of_range_samples(tmp_path):
+    from app.schemas import Audio
+    audio = Audio(samples=np.array([-2.0, -1.0, 0.0, 0.5, 2.0], dtype=np.float32), sample_rate=16000, trim_offset_ms=0)
+    attempts.write_wav(tmp_path / "x.wav", audio)
+    with wave.open(str(tmp_path / "x.wav")) as w:
+        values = np.frombuffer(w.readframes(5), dtype="<i2").tolist()
+    assert values == [-32767, -32767, 0, 16383, 32767]
 
 
 def test_media_does_not_expose_attempts(client):

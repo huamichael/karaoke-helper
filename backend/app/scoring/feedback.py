@@ -9,10 +9,48 @@ Owner: B; C and D add the rows for their own codes. Spec: docs/contracts/scoring
 from app.schemas import Feedback, Part, SoundScore, ToneGrade
 from app.scoring.confusions import final_partners, initial_partners
 
+_CURL = "curl your tongue tip up and back toward the roof of your mouth"
+_FLAT = "keep your tongue flat, with the tip just behind your top teeth"
+_PALATAL = "keep your tongue tip down behind your bottom teeth, raise the middle of your tongue, and spread your lips"
+_LIFT = "lift your tongue tip and curl it back, keeping the middle of your tongue low"
+_FRONT = "end with your tongue tip touching just behind your top teeth"
+_BACK = 'end at the back of your mouth, as in "song", with your tongue tip resting low'
+
+
+def _tip(heard: str, expected: str, how: str) -> str:
+    return f'Sounded closer to "{heard}". For "{expected}", {how}.'
+
+
 MESSAGES: dict[str, str] = {
     "MISSING": "We didn't hear this syllable.",
     "INITIAL_N_L": ('Sounded closer to "l". For "n", keep the tongue tip behind your top teeth '
                     "and let the air go through your nose."),
+    "INITIAL_L_N": _tip("n", "l", "touch your tongue tip behind your top teeth and let the air flow around its sides, "
+                                  "not through your nose"),
+    "INITIAL_ZH_Z": _tip("z", "zh", _CURL),
+    "INITIAL_Z_ZH": _tip("zh", "z", _FLAT),
+    "INITIAL_CH_C": _tip("c", "ch", f"{_CURL}, with a puff of air"),
+    "INITIAL_C_CH": _tip("ch", "c", f"{_FLAT}, with a puff of air"),
+    "INITIAL_SH_S": _tip("s", "sh", _CURL),
+    "INITIAL_S_SH": _tip("sh", "s", _FLAT),
+    "INITIAL_J_ZH": _tip("zh", "j", _PALATAL),
+    "INITIAL_ZH_J": _tip("j", "zh", _LIFT),
+    "INITIAL_Q_CH": _tip("ch", "q", f"{_PALATAL}, with a puff of air"),
+    "INITIAL_CH_Q": _tip("q", "ch", f"{_LIFT}, with a puff of air"),
+    "INITIAL_X_SH": _tip("sh", "x", _PALATAL),
+    "INITIAL_SH_X": _tip("x", "sh", _LIFT),
+    "FINAL_AN_ANG": _tip("ang", "an", _FRONT),
+    "FINAL_ANG_AN": _tip("an", "ang", _BACK),
+    "FINAL_EN_ENG": _tip("eng", "en", _FRONT),
+    "FINAL_ENG_EN": _tip("en", "eng", _BACK),
+    "FINAL_IN_ING": _tip("ing", "in", _FRONT),
+    "FINAL_ING_IN": _tip("in", "ing", _BACK),
+    "FINAL_IAN_IANG": _tip("iang", "ian", _FRONT),
+    "FINAL_IANG_IAN": _tip("ian", "iang", _BACK),
+    "FINAL_UAN_UANG": _tip("uang", "uan", _FRONT),
+    "FINAL_UANG_UAN": _tip("uan", "uang", _BACK),
+    "FINAL_UEN_UENG": _tip("ueng", "uen", _FRONT),
+    "FINAL_UENG_UEN": _tip("uen", "ueng", _BACK),
 }
 
 
