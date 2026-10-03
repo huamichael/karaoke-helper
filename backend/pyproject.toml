@@ -1,0 +1,16 @@
+# Backend project file, managed with uv.
+#
+# Declares the Python version and dependencies for the API, the grading layers
+# and the song pipeline. Each owner adds the packages their task needs.
+#
+# Owner: B; C and D add their own dependencies. Spec: docs/PROJECT_PLAN.md, section 6.
+
+[project]
+name = "karaoke-helper-backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

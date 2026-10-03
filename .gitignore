@@ -1,0 +1,24 @@
+# Files git should not track: dependencies, caches, model downloads, secrets,
+# and the recordings saved for tuning.
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+
+# Environment and editor
+.env
+.env.local
+.DS_Store
+
+# Saved attempt recordings (kept locally for threshold tuning)
+data/attempts/*
+!data/attempts/.gitkeep
+
+# Uncomment if the repository is public and the tracks are copyrighted
+# data/songs/*/audio.*
