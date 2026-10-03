@@ -24,6 +24,8 @@ type Props = {
   practised: number[];
   fill: number[] | null;
   note: string | null;
+  /** Words can be clicked: not while recording, grading or practising. */
+  interactive: boolean;
   morphWord: number | null;
   awayWord: number | null;
   onWord(index: number): void;
@@ -31,7 +33,7 @@ type Props = {
   onMorphDone(): void;
 };
 
-export function LyricLine({ line, index, activeIndex, phase, result, fresh, practised, fill, note, morphWord, awayWord, onWord, onLine, onMorphDone }: Props) {
+export function LyricLine({ line, index, activeIndex, phase, result, fresh, practised, fill, note, interactive, morphWord, awayWord, onWord, onLine, onMorphDone }: Props) {
   const active = index === activeIndex;
   const cls = ["line", active && "active", index < activeIndex && "past", active && fill && "filling", active && phase === "grading" && "grading"]
     .filter(Boolean).join(" ");
@@ -44,7 +46,7 @@ export function LyricLine({ line, index, activeIndex, phase, result, fresh, prac
         fresh={active && fresh}
         practised={practised}
         fill={active ? fill : null}
-        clickable={phase !== "recording" && phase !== "grading"}
+        clickable={interactive}
         morphWord={active ? morphWord : null}
         awayWord={active ? awayWord : null}
         onWord={onWord}

@@ -84,6 +84,21 @@ export default function LineScreen({ song, mode, onExit }: Props) {
     };
   }, [song.audio_url]);
 
+  // Keyboard focus follows practice: Record on open, Sing the line again on success, the word on close.
+  const practisedWord = useRef<number | null>(null);
+  const practicePhase = practice?.phase ?? null, practiceWord = practice?.wordIndex ?? null;
+  useEffect(() => {
+    const focus = (sel: string) => setTimeout(() => root.current?.querySelector<HTMLElement>(sel)?.focus({ preventScroll: true }), 80);
+    if (practiceWord != null) {
+      practisedWord.current = practiceWord;
+      if (practicePhase === "ready") focus(".dock .rec");
+      else if (practicePhase === "success") focus(".dock .btn.primary");
+    } else if (practisedWord.current != null) {
+      focus(`.line.active .word:nth-child(${practisedWord.current + 1})`);
+      practisedWord.current = null;
+    }
+  }, [practicePhase, practiceWord]);
+
   // ---- playback ----
   const stopPlayback = () => {
     playback.current?.stop();
@@ -408,6 +423,7 @@ export default function LineScreen({ song, mode, onExit }: Props) {
               practised={s.practised[k] ?? []}
               fill={k === i ? fill : null}
               note={k === i ? s.note : null}
+              interactive={!practice && s.phase !== "recording" && s.phase !== "grading"}
               morphWord={morph}
               awayWord={practice?.wordIndex ?? null}
               onWord={openWord}
