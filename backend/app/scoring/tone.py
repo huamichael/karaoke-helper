@@ -6,3 +6,11 @@ score. Never used on sung lines.
 
 Owner: D. Spec: docs/contracts/scoring.md.
 """
+
+from __future__ import annotations
+
+from app.schemas import Audio, Span, Syllable, ToneGrade
+
+
+def score_tones(audio: Audio, expected: list[Syllable], spans: list[Span | None] | None) -> list[ToneGrade | None]:
+    raise NotImplementedError

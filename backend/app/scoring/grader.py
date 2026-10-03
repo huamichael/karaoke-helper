@@ -7,3 +7,11 @@ is skipped, so the Whisper-base result is always returned.
 
 Owner: B. Spec: docs/contracts/backend-interfaces.md, section 4; docs/contracts/scoring.md.
 """
+
+from __future__ import annotations
+
+from app.schemas import AttemptResult, Audio, Line
+
+
+def grade(audio: Audio, line: Line, target: str, mode: str | None, word_index: int | None) -> AttemptResult:
+    raise NotImplementedError
