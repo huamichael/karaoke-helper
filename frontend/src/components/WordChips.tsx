@@ -16,6 +16,7 @@ import { motion } from "motion/react";
 import type { CSSProperties, KeyboardEvent } from "react";
 import type { AttemptResult, Line } from "../api/client";
 import { CheckIcon } from "./icons";
+import { notchOffset, syllablesOf, WordTooltip } from "./WordTooltip";
 
 type Props = {
   line: Line;
@@ -56,7 +57,10 @@ export function WordChips({ line, active, result, fresh, practised, fill, clicka
   return (
     <div className="words">
       {line.words.map((w, k) => {
-        const status = result?.words.find((r) => r.index === w.index)?.status ?? null;
+        const wr = result?.words.find((r) => r.index === w.index) ?? null;
+        const status = wr?.status ?? null;
+        const detail = result && wr && active ? syllablesOf(result, wr) : [];
+        const notch = notchOffset(detail);
         const canClick = active && clickable;
         const cls = ["word", status && `s-${status}`, canClick && "clickable", suggest === k && "suggest", suggest === k && fresh && "pulse"]
           .filter(Boolean).join(" ");
@@ -80,10 +84,11 @@ export function WordChips({ line, active, result, fresh, practised, fill, clicka
             {core}
             <i
               key={result?.attempt_id ?? "none"}
-              className={`mark${status ? " show" : ""}${fresh ? " fresh" : ""}`}
-              style={{ "--d": `${k * 0.06}s` } as CSSProperties}
+              className={`mark${status ? " show" : ""}${fresh ? " fresh" : ""}${notch ? " notched" : ""}`}
+              style={{ "--d": `${k * 0.06}s`, "--notch": notch ?? undefined } as CSSProperties}
             />
             <span className="tip">Practise</span>
+            {canClick && <WordTooltip syllables={detail} />}
             {practised.includes(k) && <i className="chk" aria-hidden><CheckIcon /></i>}
           </span>
         );

@@ -1,5 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { fillFractions, recordLimitMs, wordLimitMs } from "./timing";
+import { fillFractions, notchPosition, recordLimitMs, wordLimitMs } from "./timing";
+
+describe("notchPosition", () => {
+  it("has no notch until the backend sends offset_ms", () => {
+    expect(notchPosition([null, null])).toBeNull();
+    expect(notchPosition([])).toBeNull();
+  });
+  it("sits at the centre when on time", () => {
+    expect(notchPosition([0])).toBe(50);
+  });
+  it("sits left of centre when early and right when late, by the word's mean offset", () => {
+    expect(notchPosition([-120, null])).toBe(38);
+    expect(notchPosition([100, 200])).toBe(65);
+  });
+  it("stays on the bar however far off", () => {
+    expect(notchPosition([-5000])).toBe(20);
+    expect(notchPosition([5000])).toBe(80);
+  });
+});
 import { LINE } from "./testFixtures";
 
 describe("recordLimitMs", () => {

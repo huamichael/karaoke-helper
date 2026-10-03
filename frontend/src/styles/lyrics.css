@@ -55,6 +55,16 @@
 .chk svg { width: 12px; height: 12px; }
 .line:not(.active) .chk svg { width: 8px; height: 8px; }
 
+/* hovering a graded word: expected and heard sounds per syllable, and early or late (ui.md §5.3.3) */
+.wtip { position: absolute; top: calc(100% + 10px); left: 50%; z-index: 3; display: flex; flex-direction: column; gap: 6px; padding: 11px 15px; border-radius: 14px; background: rgba(14,14,24,.9); border: 1px solid var(--glass-line); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); color: var(--text-2); font-size: 14px; line-height: 1.4; white-space: nowrap; text-align: left; box-shadow: 0 14px 40px rgba(0,0,0,.45); opacity: 0; transform: translate(-50%, -4px); pointer-events: none; transition: opacity .2s, transform .25s var(--ease); }
+.line.active .word.clickable:hover .wtip { opacity: 1; transform: translate(-50%, 0); transition-delay: .35s; }
+.wtip-row { display: flex; align-items: baseline; gap: 10px; }
+.wtip-row b { font-family: var(--serif); font-size: 18px; color: #fff; }
+.wtip-py { color: var(--text-3); }
+.wtip-time { color: var(--accent); }
+.mark.notched { position: relative; }
+.mark.notched::after { content: ''; position: absolute; top: -3px; bottom: -3px; left: var(--notch); width: 2px; margin-left: -1px; border-radius: 1px; background: #fff; }
+
 /* under the active line */
 .meta { display: none; flex-direction: column; align-items: center; gap: 10px; margin-top: 14px; max-width: 660px; text-align: center; }
 .line.active .meta { display: flex; }

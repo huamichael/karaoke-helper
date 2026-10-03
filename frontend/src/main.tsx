@@ -12,12 +12,17 @@ import "@fontsource/noto-serif-sc/700.css";
 import "@fontsource/noto-serif-sc/900.css";
 import "./styles/index.css";
 
+import { MotionConfig } from "motion/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 
+// reducedMotion="user": with prefers-reduced-motion, Motion's moves (the word to the centre,
+// the dock's width) happen without movement, like the CSS ones (ui.md §3.3).
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <MotionConfig reducedMotion="user">
+      <App />
+    </MotionConfig>
   </StrictMode>,
 );

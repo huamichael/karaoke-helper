@@ -28,6 +28,18 @@ export function wordLimitMs(line: Line, word: Word): number {
 }
 
 /**
+ * Where a word's early/late notch sits on its bar, in percent from the left: the
+ * mean of its syllables' timing.offset_ms, 10 ms per percent, kept within 20–80%.
+ * Null until the backend sends offsets. (ui.md §5.3.3, "Early or late")
+ */
+export function notchPosition(offsets: (number | null | undefined)[]): number | null {
+  const offs = offsets.filter((x): x is number => x != null);
+  if (!offs.length) return null;
+  const mean = offs.reduce((a, b) => a + b, 0) / offs.length;
+  return 50 + Math.max(-30, Math.min(30, mean / 10));
+}
+
+/**
  * How much of each syllable is filled at track time tMs, from 0 to 1. Uses each
  * syllable's start_ms and end_ms once the pipeline has aligned the track; until
  * then they are null, so the line's time is split evenly.
