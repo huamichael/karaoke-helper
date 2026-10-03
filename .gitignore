@@ -26,7 +26,18 @@ frontend/prototype/assets/covers/
 # ... and the app loads them from here (see frontend/src/theme/songThemes.ts)
 frontend/public/covers/
 
-# Song tracks are copyrighted and the repository is public: share them outside git
+# Song tracks are copyrighted and the repository is public: share them outside git.
+# Ignored wherever a song folder lands, not only under data/songs/.
 data/songs/*/audio.*
+audio.mp3
+audio.m4a
+audio.wav
+audio.flac
+audio.ogg
 # Line cuts written by build_song --check: also copyrighted
 data/songs/*/check/
+/*/check/
+# Song bundles from the team share belong in data/songs/<song_id>/, not at the repo root
+/jasmine-flower/
+/yi-jian-mei/
+/yue-liang-dai-biao-wo-de-xin/
