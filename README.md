@@ -4,7 +4,7 @@ A karaoke app that grades Mandarin pronunciation. The user hears a line of a son
 
 ## Status
 
-Skeleton only. Every source file holds a header describing its purpose; the code is not written yet. Until the kickoff deliverables exist, `docker compose up` starts both containers, but the backend reports that it has no app yet and the frontend waits to be scaffolded.
+Skeleton only. Every source file holds a header describing its purpose; the code is not written yet. Until the kickoff deliverables exist, `docker compose up` starts both containers, but each prints what is missing and waits: the backend for its dependencies and routes, the frontend to be scaffolded.
 
 ## Where to look
 

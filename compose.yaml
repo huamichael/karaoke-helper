@@ -12,12 +12,14 @@ services:
     build:
       context: docker
       dockerfile: backend.Dockerfile
+    user: "${UID:-1000}:${GID:-1000}"   # files written into the repo belong to you, not root
     working_dir: /workspace/backend
     volumes:
       - .:/workspace
       - backend-venv:/opt/venv           # Linux venv, kept apart from any host .venv
       - model-cache:/cache               # Whisper and CTC weights, uv download cache
     environment:
+      HOME: /tmp                         # the host user has no home directory in the image
       GRADER: ${GRADER:-mock}            # mock needs no models; set GRADER=real to grade
       WHISPER_ENGINE: ${WHISPER_ENGINE:-faster}  # mlx-whisper is macOS-only; Docker stays on faster-whisper
       ENABLE_CTC: ${ENABLE_CTC:-0}
@@ -30,11 +32,13 @@ services:
     build:
       context: docker
       dockerfile: frontend.Dockerfile
+    user: "${UID:-1000}:${GID:-1000}"   # files written into the repo belong to you, not root
     working_dir: /workspace/frontend
     volumes:
       - .:/workspace
       - frontend-node-modules:/workspace/frontend/node_modules   # Linux builds, kept apart from the host's
     environment:
+      HOME: /tmp
       VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}       # read by the browser, so it stays localhost
       VITE_SHOW_MODE_CHOICE: ${VITE_SHOW_MODE_CHOICE:-0}
     ports:
