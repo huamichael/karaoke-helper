@@ -2,7 +2,7 @@
 
 **Keeper:** A. **Used by:** A, and anyone preparing the demo.
 
-**Status:** draft v0.9, 3 October 2026. Follows [PROJECT_PLAN.md](../PROJECT_PLAN.md) revision 5.
+**Status:** draft v0.10, 3 October 2026. Follows [PROJECT_PLAN.md](../PROJECT_PLAN.md) revision 5.
 
 This document holds the frontend's visual design and interaction details. It does not restate behaviour or data. When it disagrees with these files, they win:
 
@@ -187,7 +187,7 @@ Target viewport **1440×900**; must work at **1280×720** (projector). Below 102
 - **The title is the bold element.** Noto Serif SC at weight 200, about 19% of the screen height, split over two staggered lines (茉莉 / 花, 月亮代表 / 我的心). It is measured after rendering and its characters (not the indent) shrink until every line ends at least 72px before the record. Under it, aligned with the second line: pinyin and English, one sentence about the song, and **Sing 茉莉花** on its own.
 - **Sing opens into the mode choice.** When `VITE_SHOW_MODE_CHOICE` is on, pressing Sing (or Enter) springs the same pill open into **Spoken accuracy**, **Singing accuracy** and ✕; a line under it explains whichever option the pointer or focus is on. Choosing one starts the song. Esc, ✕ or a click elsewhere closes it again. When the flag is off, Sing starts the song in spoken accuracy.
 - **The record.** On the right, a stylized record about 1.1 screen-heights across, its centre just inside the right edge. Graphic rather than realistic: fine grooves, two track gaps, and a sheen in the song's own colours that stays still while the grooves turn.
-- **Collage where the record meets the photo.** The record is a torn-paper cut-out pasted onto the photograph: a torn edge (SVG turbulence masks), a fringe of off-white paper with a paper shadow, and three scraps overlapping the rim: two details cut from the song's photo, one from the album cover, one held by a strip of translucent tape. The photo seems to run onto the record. Its label is the album cover of the recording we use, with a ring of small text around it (artist, album, year, title). The covers crossfade as it turns.
+- **Collage where the record meets the photo.** The record is a torn-paper cut-out pasted onto the photograph: a torn edge (SVG turbulence masks), a fringe of off-white paper with a paper shadow, and three scraps overlapping the rim, all cut from the song's own photo and each a different shape: a wide torn piece held by a strip of translucent tape, a narrow torn strip, and a round cut that echoes the record. Each shows an enlarged detail of the photo (a flower, part of the moon). The photo seems to run onto the record. Its label is the album cover of the recording we use, with a ring of small text around it (artist, album, year, title). The covers crossfade as it turns.
 - **The songs ride the groove band,** between an accent needle on the rim and the label: number, title (sized to fit the band) and artist, plus "Playing a preview" on the selected one. Each name is tilted to the record's angle at its position, as if printed on it, and turns with it. At most three are in view: the selected one at the needle (level, 0°), one above at 45° and one below at −45°, measured from the record's centre. They loop: after the last song comes the first. Spin it with the wheel or trackpad, by dragging, with ↑ ↓ ← →, or by clicking a song. One wheel notch or one short swipe moves one song; a long swipe can move several. A song that isn't ready still tunes in, and its button reads "Coming soon".
 - **Between songs** the picture dissolves through static (section 3.3). With sound on, a faint vinyl crackle plays on the song screen and radio static rises between songs; both are generated with Web Audio and need no files. Browsers only allow sound after a click or a key press.
 - **The subtitle.** At the bottom centre, like a film subtitle, one line of the song's lyric fills and grades itself on a loop, with "Sing a line back and every word gets a colour." under it.
@@ -199,7 +199,8 @@ Target viewport **1440×900**; must work at **1280×720** (projector). Below 102
   - Stop: the arm lifts, swings back and sets down on its rest; then the platter slows to a stop. The cover shows a large pause sign; while it plays there is none.
   - Changing songs while it plays lifts the arm on the cue lever; it sets down again when the record settles.
   - On first load the record starts like a real one: the arm moves from its rest onto the record.
-- **Sound** on and off, and the photo and cover credits, sit in the bottom-left corner; the tonearm has the top right.
+- **Sound** on and off is the cap on the tonearm's pivot, with a speaker icon (or `M`). Clicking anywhere else on the arm plays or stops the record.
+- **Credits** for the photo and the cover sit small in the bottom-left corner.
 - **Starting the song** opens no window (section 3.3).
 
 ### 5.2 Microphone setup (first Record only)
