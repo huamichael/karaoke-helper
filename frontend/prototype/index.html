@@ -80,15 +80,18 @@ body.singing .grain { opacity: .07; }
    Turning the dial dissolves one song into static and the next one out of it. */
 #home { overflow: hidden; }
 .h-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(0,0,0,.68) 0%, rgba(0,0,0,.34) 46%, rgba(0,0,0,.42) 100%), linear-gradient(0deg, rgba(0,0,0,.62) 0%, transparent 36%), linear-gradient(180deg, rgba(0,0,0,.42) 0%, transparent 24%); }
-.h-top { position: absolute; top: 28px; left: 7vw; right: 40px; z-index: 3; display: flex; justify-content: space-between; align-items: flex-start; transition: opacity .4s; }
+.h-top { position: absolute; top: 28px; left: 7vw; right: 40px; z-index: 3; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; transition: opacity .4s; }
+.h-top > * { pointer-events: auto; }
 .wordmark { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; }
 .wordmark .vinyl { width: 26px; height: 26px; box-shadow: none; }
 .h-tag { margin-top: 16px; font-size: 15px; color: rgba(255,255,255,.82); }
 .steps { display: flex; gap: 18px; margin-top: 8px; list-style: none; font-size: 13px; color: var(--text-3); }
 .steps b { font-family: var(--serif); font-weight: 700; color: var(--accent); margin-right: 6px; }
-.sound { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(0,0,0,.18); backdrop-filter: blur(10px); color: var(--text-2); font-size: 13.5px; cursor: pointer; transition: background .2s, color .2s; }
-.sound:hover { color: #fff; background: rgba(0,0,0,.3); }
-.sound svg { width: 16px; height: 16px; }
+/* The sound switch is the cap on the tonearm's pivot. The rest of the arm plays and stops the record. */
+.arm-sound { position: absolute; z-index: 4; width: 32px; height: 32px; margin: -16px 0 0 -16px; display: grid; place-items: center; border: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #3b3b43, #121216 72%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 1px 3px rgba(0,0,0,.5); color: #fff; cursor: pointer; transition: transform .2s var(--ease), color .25s; }
+.arm-sound svg { width: 15px; height: 15px; }
+.arm-sound:hover { transform: scale(1.1); }
+.arm-sound[aria-pressed="false"] { color: rgba(255,255,255,.45); }
 .h-main { position: absolute; left: 7vw; top: 50%; z-index: 2; transform: translateY(-54%); }
 .h-title { font-family: var(--serif); font-weight: 200; font-size: var(--ts, 170px); line-height: 1.02; letter-spacing: .02em; text-shadow: 0 10px 60px rgba(0,0,0,.28); }
 .h-line { display: block; width: max-content; white-space: nowrap; }
@@ -126,14 +129,26 @@ body.singing .grain { opacity: .07; }
    the songs ride its groove band, three at a time, and loop round as it turns. */
 .dial { position: absolute; top: 0; right: 0; bottom: 0; z-index: 2; width: 52vw; touch-action: none; cursor: grab; transition: transform .8s var(--ease), opacity .5s; }
 .dial.grabbing { cursor: grabbing; }
-.disc { position: absolute; border-radius: 50%; pointer-events: none; }
+.disc { position: absolute; pointer-events: none; }
+/* Collage: the record is a torn-paper cut-out pasted onto the photograph. Its edge is torn, a fringe of off-white
+   paper shows round it with a paper shadow, and scraps cut from the photo and the cover overlap the rim, so the
+   photo and the record run into each other. The torn outlines are SVG masks generated in JS. */
+.disc-paper { position: absolute; inset: 0; filter: drop-shadow(0 18px 34px rgba(0,0,0,.5)) drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+.disc-paper i { position: absolute; inset: 0; background: #ebe4d6; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+.disc-body { position: absolute; inset: 0; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+.scraps { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.scrap { position: absolute; transform: var(--t); filter: drop-shadow(0 9px 14px rgba(0,0,0,.42)) drop-shadow(0 1px 2px rgba(0,0,0,.3)); animation: scrapIn .7s var(--ease) both; }
+.scrap-paper, .scrap-img { position: absolute; inset: 0; }
+.scrap-paper { background: #ece5d8; }
+.scrap-img { background-repeat: no-repeat; }
+.tape { position: absolute; width: 78px; height: 24px; background: rgba(250,246,232,.42); box-shadow: 0 1px 2px rgba(0,0,0,.12); clip-path: polygon(0 12%, 6% 0, 14% 10%, 22% 0, 30% 8%, 100% 0, 96% 30%, 100% 55%, 95% 82%, 100% 100%, 8% 100%, 0 88%, 4% 60%, 0 36%); }
+@keyframes scrapIn { from { opacity: 0; transform: var(--t) scale(.94) translateY(6px); } }
 .disc-spin { position: absolute; inset: 0; border-radius: 50%; will-change: transform; }
 .disc-grooves { position: absolute; inset: 0; border-radius: 50%;
   background:
     radial-gradient(circle, transparent 61.5%, rgba(0,0,0,.7) 61.5% 62.2%, transparent 62.2% 79%, rgba(0,0,0,.7) 79% 79.7%, transparent 79.7%),
     repeating-radial-gradient(circle, rgba(255,255,255,.055) 0 1px, transparent 1px 4px),
-    radial-gradient(circle, #18181e 0%, #0b0b0f 66%, #060608 100%);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.12), inset 0 0 0 12px rgba(0,0,0,.4), 0 60px 160px rgba(0,0,0,.7); }
+    radial-gradient(circle, #18181e 0%, #0d0d11 62%, #0a0a0d 100%); }
 /* a holographic sheen in the song's own colours; it stays still while the grooves turn */
 .disc-sheen { position: absolute; inset: 0; border-radius: 50%; mix-blend-mode: screen; opacity: .75;
   background: conic-gradient(from 205deg, transparent 0deg, color-mix(in srgb, var(--accent) 55%, transparent) 12deg, transparent 32deg, transparent 150deg, color-mix(in srgb, var(--c2) 50%, transparent) 172deg, color-mix(in srgb, var(--c3) 45%, transparent) 186deg, transparent 210deg);
@@ -143,6 +158,22 @@ body.singing .grain { opacity: .07; }
 .disc-label { position: absolute; left: 50%; top: 50%; width: calc(var(--rl) * 2); height: calc(var(--rl) * 2); margin: calc(var(--rl) * -1) 0 0 calc(var(--rl) * -1); border-radius: 50%; overflow: hidden; background: #111; box-shadow: 0 0 0 2px rgba(255,255,255,.14), 0 0 0 7px rgba(0,0,0,.45), 0 12px 50px rgba(0,0,0,.55); }
 .cover { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; }
 .disc-hole { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px; border-radius: 50%; background: #08080a; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 75%, transparent), 0 0 0 10px rgba(0,0,0,.35); }
+.arm-canvas { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; }
+#home.on-arm, #home.on-arm * { cursor: pointer; }
+/* The cover is also the play / stop switch, like a video player. Stopped: the label dims and shows play.
+   Playing: nothing, until the pointer is on the label; then it dims and shows pause. The glyph morphs between the two.
+   Hovering the glyph only brightens it; it never grows. */
+.cover-btn { position: absolute; z-index: 2; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(0,0,0,0); cursor: pointer; transition: background .3s cubic-bezier(0,0,.2,1); }
+.cover-btn svg { width: 96px; height: 96px; color: #fff; opacity: 0; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)); transition: opacity .25s cubic-bezier(0,0,.2,1), filter .25s cubic-bezier(0,0,.2,1); }
+.cover-btn path { stroke: currentColor; stroke-width: 1.2; stroke-linejoin: round; }
+.cover-btn.paused, .cover-btn:focus-visible { background: rgba(0,0,0,.34); }
+.cover-btn.paused svg, .cover-btn:focus-visible svg { opacity: .8; }
+@media (hover: hover) {
+  .cover-btn:hover { background: rgba(0,0,0,.34); }
+  .cover-btn:hover svg { opacity: .8; }
+  .cover-btn svg:hover { opacity: 1; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)) drop-shadow(0 0 14px rgba(255,255,255,.35)); }
+}
+.cover-btn:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(255,255,255,.55); }
 .needle { position: absolute; width: 36px; height: 2px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 16px var(--accent); transform: translate(-50%, -50%); pointer-events: none; }
 .dn { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 10px; border: 0; background: none; text-align: center; white-space: nowrap; cursor: pointer; text-shadow: 0 2px 16px rgba(0,0,0,.7); }
 .dn-n { font-size: 11.5px; letter-spacing: .14em; color: var(--text-3); font-variant-numeric: tabular-nums; }
@@ -155,7 +186,7 @@ body.singing .grain { opacity: .07; }
 .eq i:nth-child(2) { animation-delay: -.3s; } .eq i:nth-child(3) { animation-delay: -.55s; }
 @keyframes eq { to { height: 12px; } }
 
-.subtitle { position: absolute; left: 50%; bottom: 6.5vh; z-index: 2; display: flex; flex-direction: column; align-items: center; transform: translateX(-50%); pointer-events: none; animation: riseIn .8s var(--ease) .35s both; transition: opacity .4s; }
+.subtitle { position: absolute; left: 40vw; bottom: 6.5vh; z-index: 2; display: flex; flex-direction: column; align-items: center; transform: translateX(-50%); pointer-events: none; animation: riseIn .8s var(--ease) .35s both; transition: opacity .4s; }
 .lyric-demo { display: flex; gap: 8px; }
 .lyric-demo .tok { display: flex; flex-direction: column; align-items: center; }
 .lyric-demo .py { height: 18px; font-size: 13px; color: rgba(255,255,255,.6); }
@@ -165,7 +196,7 @@ body.singing .grain { opacity: .07; }
 @keyframes demofill { 0% { clip-path: inset(0 100% 0 0); } 12%, 88% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 0); opacity: 0; } }
 @keyframes demomark { 0% { opacity: 0; transform: scaleX(.2); } 6%, 70% { opacity: 1; transform: none; } 80%, 100% { opacity: 0; transform: scaleX(.2); } }
 .sub-cap { margin-top: 10px; font-size: 13px; color: rgba(255,255,255,.55); }
-.credit { position: absolute; right: 28px; bottom: 20px; z-index: 3; font-size: 11.5px; color: rgba(255,255,255,.45); }
+.credit { position: absolute; left: 28px; bottom: 20px; z-index: 3; font-size: 11.5px; color: rgba(255,255,255,.45); }
 .credit a { color: inherit; text-decoration: none; }
 .credit a:hover { color: #fff; }
 .credit i { display: inline-block; width: 18px; }
@@ -416,6 +447,7 @@ kbd { font-family: inherit; font-size: 12px; padding: 1px 6px; margin-right: 3px
   .mark.show { transition: none; }
 }
 </style>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/" } }</script>
 </head>
 <body>
 <div id="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="photos" id="photos"></div></div>
@@ -432,7 +464,6 @@ kbd { font-family: inherit; font-size: 12px; padding: 1px 6px; margin-right: 3px
         <p class="h-tag">Learn Mandarin by singing the songs you love.</p>
         <ol class="steps"><li><b>1</b>Listen to a line</li><li><b>2</b>Sing it back</li><li><b>3</b>See every word</li><li><b>4</b>Practise the ones you missed</li></ol>
       </div>
-      <button class="sound" id="soundBtn" aria-pressed="true"></button>
     </header>
     <div class="h-main" id="hMain">
       <h1 class="h-title" id="hTitle"></h1>
@@ -440,6 +471,8 @@ kbd { font-family: inherit; font-size: 12px; padding: 1px 6px; margin-right: 3px
     </div>
     <div class="dial" id="dial" role="listbox" aria-label="Songs">
       <div class="disc" id="disc">
+        <div class="disc-paper"><i id="discPaper"></i></div>
+        <div class="disc-body" id="discBody">
         <div class="disc-spin" id="discSpin">
           <div class="disc-grooves"></div>
           <svg class="disc-ring" viewBox="0 0 200 200" aria-hidden="true"><defs><path id="ringPath" d="M100,100 m-90,0 a90,90 0 1,1 180,0 a90,90 0 1,1 -180,0"/></defs><text><textPath href="#ringPath" id="ringText" textLength="560" lengthAdjust="spacing"></textPath></text></svg>
@@ -447,9 +480,14 @@ kbd { font-family: inherit; font-size: 12px; padding: 1px 6px; margin-right: 3px
           <i class="disc-hole"></i>
         </div>
         <div class="disc-sheen"></div>
+        </div>
       </div>
+      <div class="scraps" id="scraps"></div>
       <div id="dialLabels"></div>
       <i class="needle" id="needle"></i>
+      <button class="cover-btn" id="coverBtn" data-act="homeToggle" aria-label="Stop the record"><svg viewBox="0 0 36 36" fill="currentColor" aria-hidden="true"><path id="cvA" d="M12.6 25.4 15.4 25.4 15.4 10.6 12.6 10.6z"/><path id="cvB" d="M20.6 25.4 23.4 25.4 23.4 10.6 20.6 10.6z"/></svg></button>
+      <canvas class="arm-canvas" id="armCanvas" aria-hidden="true"></canvas>
+      <button class="arm-sound" id="armSound" aria-pressed="true" aria-label="Sound on" title="Sound on (M)"></button>
     </div>
     <div class="subtitle" id="hSub" aria-hidden="true"></div>
     <p class="credit" id="credit"></p>
@@ -702,15 +740,15 @@ function micDone(ok){
 /* ================= home: tune the dial ================= */
 const STAGE = {
   molihua: { split:['茉莉','花'], photo:'assets/molihua.jpg', credit:['Irina Iriser','https://unsplash.com/photos/vB4_CtsfaZ0'],
-    cover:'assets/covers/molihua.jpg', artist:'鳳飛飛', album:'鳳飛飛 金賞輯 3', year:'1971',
+    cover:'assets/covers/molihua.jpg', focus:['72% 22%', '46% 38%', '30% 72%'], artist:'鳳飛飛', album:'鳳飛飛 金賞輯 3', year:'1971',
     blurb:'A Jiangsu folk song, as 鳳飛飛 sang it in 1971. Slow, with one syllable per note, so every word is easy to hear.',
     demo:{ hz:'好一朵美丽的茉莉花', py:'hǎo yì duǒ měi lì de mò lì huā', marks:['good','good','good','wrong','good','good','good','ok','good'] } },
   yijianmei: { split:['一剪','梅'], photo:'assets/yijianmei.jpg', credit:['yamasa-n','https://unsplash.com/photos/SPEUTg0phCg'],
-    cover:'assets/covers/yijianmei.jpg', artist:'費玉清', album:'清韻悠揚 精選（一）', year:'1983',
+    cover:'assets/covers/yijianmei.jpg', focus:['34% 30%', '52% 64%', '68% 58%'], artist:'費玉清', album:'清韻悠揚 精選（一）', year:'1983',
     blurb:'Fei Yu-ching\'s ballad. Long held notes that test how cleanly you finish each word.',
     demo:{ hz:'一剪梅', py:'yì jiǎn méi', marks:['good','ok','good'] } },
   yueliang: { split:['月亮代表','我的心'], photo:'assets/yueliang.jpg', credit:['Laura Cleffmann','https://unsplash.com/photos/gRT7o73xua0'],
-    cover:'assets/covers/yueliang.jpg', artist:'鄧麗君', album:'島國之情歌 第四集 香港之戀', year:'1977',
+    cover:'assets/covers/yueliang.jpg', focus:['42% 40%', '58% 52%', '50% 47%'], artist:'鄧麗君', album:'島國之情歌 第四集 香港之戀', year:'1977',
     blurb:'Teresa Teng\'s best-known love song, sung all over the world.',
     demo:{ hz:'月亮代表我的心', py:'yuè liàng dài biǎo wǒ de xīn', marks:['good','good','good','ok','good','good','wrong'] } },
 };
@@ -719,8 +757,8 @@ const ICON_SOUND = {
   off:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
 };
 const MODE_CHOICE = true;   // VITE_SHOW_MODE_CHOICE in the app (off by default); on here to show the design
-let homeIdx = 0, homeSound = true, previewT, spinRaf = 0;
-const STEP = 40;            // degrees of record per song: nine slots round the record, so the songs loop
+let homeIdx = 0, homeSound = true, homePlaying = true, previewT;
+const STEP = 45;            // degrees of record per song; the names are spaced the same, so they turn with it
 const DIAL = { u:0, v:0, target:0, raf:0, last:0, g:null, raw:0, wheeling:false, wheelStart:0, wheelT:0, drag:null, spin:0 };
 const mod = (a, n) => ((a % n) + n) % n;
 
@@ -780,8 +818,9 @@ function singPick(open){
 document.addEventListener('pointerdown', e => { if ($('#sing.picking') && !e.target.closest('#sing')) singPick(false); });
 ['mouseover', 'focusin'].forEach(ev => $('#hCopy').addEventListener(ev, e => { const m = e.target.closest('[data-mode]'); if (m && $('#singHint')) $('#singHint').textContent = MODE_HINT[m.dataset.mode]; }));
 function renderSound(){
-  const b = $('#soundBtn');
-  b.innerHTML = (homeSound ? ICON_SOUND.on : ICON_SOUND.off) + (homeSound ? 'Sound on' : 'Sound off');
+  const b = $('#armSound'), label = homeSound ? 'Sound on' : 'Sound off';
+  b.innerHTML = homeSound ? ICON_SOUND.on : ICON_SOUND.off;
+  b.setAttribute('aria-label', label); b.title = `${label} (M)`;
   b.setAttribute('aria-pressed', homeSound);
 }
 
@@ -798,7 +837,50 @@ function buildDial(){
   disc.style.setProperty('--rl', g.rl + 'px');
   $('#dialLabels').innerHTML = '';
   const n = $('#needle'); n.style.left = (g.cx - R + 22) + 'px'; n.style.top = g.cy + 'px';
+  Object.assign($('#coverBtn').style, { left:g.cx - rl + 'px', top:g.cy - rl + 'px', width:2 * rl + 'px', height:2 * rl + 'px' });
+  Object.assign($('#armSound').style, { left:$('#dial').clientWidth - 72 + 'px', top:'82px' });
+  window.TONEARM?.layout();
+  renderScraps();
   renderDial();
+}
+/* ---------- collage: a torn-paper record and scraps that bridge the record and the photo ---------- */
+const torn = (seed, r, scale) => `url("data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 1000'><filter id='t' x='-8%' y='-8%' width='116%' height='116%'><feTurbulence type='fractalNoise' baseFrequency='.016' numOctaves='5' seed='${seed}'/><feDisplacementMap in='SourceGraphic' scale='${scale}' xChannelSelector='R' yChannelSelector='G'/></filter><circle cx='500' cy='500' r='${r}' fill='#fff' filter='url(#t)'/></svg>`)}")`;
+const setMask = (el, m) => { el.style.webkitMaskImage = m; el.style.maskImage = m; };
+setMask($('#discBody'), torn(4, 476, 26));
+setMask($('#discPaper'), torn(9, 492, 34));
+// a: angle on the record (180° = the needle), r: distance from the centre as a share of R, sizes at R = 504px
+// three different cuts, all from the song's photo: a wide torn piece held by tape, a narrow torn strip,
+// and a round cut that echoes the record. a: angle on the record (180° = the needle), r: share of R, sizes at R = 504px
+const roundCut = (n = 30) => Array.from({ length:n }, (_, k) => {
+  const t = k / n * Math.PI * 2, f = 1 + .035 * Math.sin(3 * t) + .02 * Math.sin(7 * t + 1);
+  return [50 + 49 * Math.cos(t) * f, 50 + 49 * Math.sin(t) * f];
+});
+const SCRAPS = [
+  { i:0, a:212, r:1.0, w:196, h:124, rot:-5, zoom:1.5, tape:[60, -10, 8],
+    poly:[[2,10],[18,2],[41,7],[63,0],[88,5],[99,22],[95,48],[100,77],[90,97],[64,93],[38,100],[13,94],[0,71],[5,42]] },
+  { i:1, a:168, r:1.04, w:50, h:138, rot:8, zoom:1.7,
+    poly:[[8,0],[52,3],[96,0],[100,14],[92,30],[100,47],[94,63],[100,80],[96,100],[50,97],[4,100],[0,82],[7,64],[0,45],[6,27],[0,10]] },
+  { i:2, a:154, r:.99, w:118, h:112, rot:-4, zoom:1.8, poly:roundCut() },
+];
+const PHOTO_SIZE = {};
+SONGS.forEach(s => { const im = new Image(); im.onload = () => { PHOTO_SIZE[s.id] = [im.naturalWidth, im.naturalHeight]; if (SONGS[homeIdx] === s) renderScraps(); }; im.src = STAGE[s.id].photo; });
+function renderScraps(){
+  const g = DIAL.g; if (!g) return;
+  const s = SONGS[homeIdx], st = STAGE[s.id], box = $('#dial').getBoundingClientRect(), k = g.R / 504;
+  const W = innerWidth, H = innerHeight, size = PHOTO_SIZE[s.id];
+  $('#scraps').innerHTML = SCRAPS.map(sc => {
+    const t = sc.a * Math.PI / 180, w = sc.w * k, h = sc.h * k;
+    const x = g.cx + g.R * sc.r * Math.cos(t) - w / 2, y = g.cy + g.R * sc.r * Math.sin(t) - h / 2;
+    const poly = sc.poly.map(([px, py]) => `${px}% ${py}%`).join(','), inner = sc.poly.map(([px, py]) => `${50 + (px - 50) * .93}% ${50 + (py - 50) * .91}%`).join(',');
+    let img;
+    if (size){
+      // a detail cut from the song's photo, a little larger than in the background: the collage trick
+      const f = Math.max(W * 1.06 / size[0], H * 1.06 / size[1]) * sc.zoom, focus = (st.focus || [])[sc.i] || '50% 50%';
+      img = `background-image:url(${st.photo}); background-size:${(size[0] * f).toFixed(0)}px ${(size[1] * f).toFixed(0)}px; background-position:${focus}`;
+    } else img = `background-image:url(${st.photo}); background-size:260%; background-position:${(st.focus || [])[sc.i] || '50% 50%'}`;
+    const tape = sc.tape ? `<i class="tape" style="left:${sc.tape[0]}%; top:${sc.tape[1]}px; transform:rotate(${sc.tape[2]}deg)"></i>` : '';
+    return `<div class="scrap" style="left:${x.toFixed(0)}px; top:${y.toFixed(0)}px; width:${w.toFixed(0)}px; height:${h.toFixed(0)}px; --t:rotate(${sc.rot}deg)"><div class="scrap-paper" style="clip-path:polygon(${poly})"></div><div class="scrap-img" style="clip-path:polygon(${inner}); ${img}"></div>${tape}</div>`;
+  }).join('');
 }
 function turnDisc(){ $('#discSpin').style.transform = `rotate(${(DIAL.u * STEP + DIAL.spin).toFixed(2)}deg)`; }
 function renderDial(){
@@ -817,7 +899,8 @@ function renderDial(){
       el = wrap.lastElementChild;
     }
     const t = (180 - (j - u) * STEP) * Math.PI / 180, x = g.cx + g.rn * Math.cos(t), y = g.cy + g.rn * Math.sin(t);
-    el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -50%) scale(${(1 - Math.min(d, 1) * .22).toFixed(3)})`;
+    // tilted to the record's angle at that point, as if printed on it
+    el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -50%) rotate(${(-(j - u) * STEP).toFixed(2)}deg) scale(${(1 - Math.min(d, 1) * .2).toFixed(3)})`;
     el.style.opacity = (d <= 1 ? 1 - d * .4 : Math.max(0, .6 * (1.5 - d) / .5)).toFixed(3);
     el.setAttribute('aria-selected', j === base);
   }
@@ -835,10 +918,10 @@ function renderDial(){
   document.documentElement.style.setProperty('--grain', (.1 + .34 * between).toFixed(3));
   ambSet(between);
   const k = mod(base, n);
-  if (k !== homeIdx){ homeIdx = k; setPalette(SONGS[k].palette); renderCopy(); stopPreview(); }
+  if (k !== homeIdx){ homeIdx = k; setPalette(SONGS[k].palette); renderCopy(); renderScraps(); stopPreview(); window.TONEARM?.setAccent(SONGS[k].palette.accent); }
 }
 function dialTo(t){
-  DIAL.target = t; stopPreview();
+  DIAL.target = t; cueUp();
   if (reduced()){ DIAL.u = t; DIAL.v = 0; renderDial(); settle(); return; }
   if (!DIAL.raf){ DIAL.last = performance.now(); DIAL.raf = requestAnimationFrame(dialStep); }
 }
@@ -848,24 +931,74 @@ function dialStep(now){
   if (Math.abs(DIAL.target - DIAL.u) < .0008 && Math.abs(DIAL.v) < .003){ DIAL.u = DIAL.target; DIAL.v = 0; DIAL.raf = 0; renderDial(); settle(); return; }
   renderDial(); DIAL.raf = requestAnimationFrame(dialStep);
 }
-function settle(){ clearTimeout(previewT); previewT = setTimeout(startPreview, 450); }
-/* The real app plays a slice of the song's audio_url here, faded in and out, while the record spins.
-   The prototype has no audio files, so it only spins. */
+/* ---------- the turntable: arm on the record = playing; arm on its rest = stopped ----------
+   Play: the platter spins up, the arm lifts off its rest, swings over the record's edge and sets down; then the
+   preview starts. Stop: the arm lifts, swings back and sets down on its rest; then the platter slows to a stop.
+   Changing songs while it plays lifts the arm on the cue lever; it sets down again once the record settles. */
+const PLATTER = { speed:0, target:0, raf:0 }, SPIN = 30;     // degrees a second: slower than a real 33⅓, for calm
+function platter(on){
+  PLATTER.target = on && !reduced() ? SPIN : 0;
+  if (PLATTER.raf) return;
+  let last = performance.now();
+  const f = now => {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    PLATTER.speed += (PLATTER.target - PLATTER.speed) * Math.min(1, dt / (PLATTER.target > PLATTER.speed ? .5 : .7));
+    if (PLATTER.target === 0 && PLATTER.speed < .4) PLATTER.speed = 0;
+    DIAL.spin += PLATTER.speed * dt; turnDisc();
+    PLATTER.raf = PLATTER.target === 0 && PLATTER.speed === 0 ? 0 : requestAnimationFrame(f);
+  };
+  PLATTER.raf = requestAnimationFrame(f);
+}
+// the tonearm lives in a module that loads three.js; until it is ready, requests wait for it
+function armGo(where, done){
+  if (window.TONEARM) TONEARM.go(where, done);
+  else { window.ARM_PENDING = [where, done]; if (window.ARM_FAILED && done) done(); }
+}
+setTimeout(() => { if (!window.TONEARM){ window.ARM_FAILED = true; const p = window.ARM_PENDING; if (p && p[1]) p[1](); } }, 5000);
+function cueUp(){ stopPreview(); clearTimeout(previewT); if (homePlaying) armGo('cue'); }
+function settle(){ clearTimeout(previewT); if (homePlaying) previewT = setTimeout(() => armGo('play', startPreview), 220); }
+/* The real app plays a slice of the song's audio_url here, faded in and out. The prototype has no audio files. */
 function startPreview(){
-  clearTimeout(previewT);
-  if (!homeSound || !$('#home').classList.contains('active') || !SONGS[homeIdx].playable) return;
+  if (!homePlaying || !$('#home').classList.contains('active') || !SONGS[homeIdx].playable) return;
   $('#dialLabels [aria-selected="true"]')?.classList.add('playing');
-  if (!spinRaf && !reduced()){
-    let last = performance.now();
-    const f = now => { DIAL.spin += (now - last) / 1000 * 36; last = now; turnDisc(); spinRaf = requestAnimationFrame(f); };
-    spinRaf = requestAnimationFrame(f);
-  }
-  previewT = setTimeout(stopPreview, 12000);
+  ambSet();
 }
-function stopPreview(){
-  document.querySelectorAll('.dn.playing').forEach(el => el.classList.remove('playing'));
-  cancelAnimationFrame(spinRaf); spinRaf = 0;
+function stopPreview(){ document.querySelectorAll('.dn.playing').forEach(el => el.classList.remove('playing')); }
+// The cover glyph: the two pause bars fold into the two halves of the play triangle, like a video player.
+const GLYPH = {
+  pause: [[[12.6,25.4],[15.4,25.4],[15.4,10.6],[12.6,10.6]], [[20.6,25.4],[23.4,25.4],[23.4,10.6],[20.6,10.6]]],
+  play:  [[[12.6,25],[18.25,21.5],[18.25,14.5],[12.6,11]], [[18.25,21.5],[23.9,18],[23.9,18],[18.25,14.5]]],
+  t: 0, raf: 0,                                   // t: 0 = pause bars, 1 = play triangle
+};
+function drawGlyph(t){
+  GLYPH.t = t;
+  ['#cvA', '#cvB'].forEach((id, k) => {
+    const pts = GLYPH.pause[k].map(([x, y], i) => { const [X, Y] = GLYPH.play[k][i]; return `${(x + (X - x) * t).toFixed(2)} ${(y + (Y - y) * t).toFixed(2)}`; });
+    $(id).setAttribute('d', 'M' + pts.join(' ') + 'z');
+  });
 }
+function morphGlyph(toPlay){
+  cancelAnimationFrame(GLYPH.raf);
+  const from = GLYPH.t, to = toPlay ? 1 : 0, t0 = performance.now(), dur = 240;
+  if (reduced() || from === to) return drawGlyph(to);
+  const tick = now => {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    drawGlyph(from + (to - from) * e);
+    if (k < 1) GLYPH.raf = requestAnimationFrame(tick);
+  };
+  GLYPH.raf = requestAnimationFrame(tick);
+}
+function setHomePlaying(on){
+  homePlaying = on; clearTimeout(previewT);
+  const c = $('#coverBtn'); c.classList.toggle('paused', !on); c.setAttribute('aria-label', on ? 'Stop the record' : 'Play the record');
+  morphGlyph(!on);                                // stopped shows play, playing shows pause
+  if (on){ platter(true); armGo('play', startPreview); }
+  else { stopPreview(); armGo('rest', () => { if (!homePlaying) platter(false); }); }
+  ambSet();
+}
+function homeToggle(){ setHomePlaying(!homePlaying); }
+// a mouse click should not leave keyboard focus on the cover, or a later Space press keeps it dimmed while playing
+$('#coverBtn').addEventListener('click', e => { if (e.detail) e.currentTarget.blur(); });
 const stopDial = () => { cancelAnimationFrame(DIAL.raf); DIAL.raf = 0; DIAL.v = 0; };
 
 // wheel or trackpad spins the record continuously; when the gesture ends it settles on a song
@@ -873,7 +1006,7 @@ $('#home').addEventListener('wheel', e => {
   if (e.ctrlKey) return;
   e.preventDefault();
   const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-  if (!DIAL.wheeling){ DIAL.wheeling = true; stopDial(); DIAL.wheelStart = Math.round(DIAL.u); DIAL.raw = DIAL.u; stopPreview(); singPick(false); }
+  if (!DIAL.wheeling){ DIAL.wheeling = true; stopDial(); DIAL.wheelStart = Math.round(DIAL.u); DIAL.raw = DIAL.u; cueUp(); singPick(false); }
   DIAL.raw += d * (e.deltaMode === 1 ? 16 : 1) / 420;
   DIAL.u = DIAL.raw; renderDial();
   clearTimeout(DIAL.wheelT);
@@ -890,7 +1023,7 @@ $('#dial').addEventListener('pointerdown', e => {
 });
 $('#dial').addEventListener('pointermove', e => {
   const dr = DIAL.drag; if (!dr || e.pointerId !== dr.id) return;
-  if (!dr.moved && Math.abs(e.clientY - dr.y0) > 4){ dr.moved = true; $('#dial').setPointerCapture(e.pointerId); $('#dial').classList.add('grabbing'); stopPreview(); singPick(false); }
+  if (!dr.moved && Math.abs(e.clientY - dr.y0) > 4){ dr.moved = true; $('#dial').setPointerCapture(e.pointerId); $('#dial').classList.add('grabbing'); cueUp(); singPick(false); }
   if (!dr.moved) return;
   const now = performance.now();
   dr.v = (dr.lastY - e.clientY) / 150 / Math.max(1, now - dr.lastT) * 1000; dr.lastY = e.clientY; dr.lastT = now;
@@ -904,11 +1037,14 @@ function endDialDrag(e){
 $('#dial').addEventListener('pointerup', endDialDrag);
 $('#dial').addEventListener('pointercancel', endDialDrag);
 $('#dialLabels').addEventListener('click', e => { const b = e.target.closest('.dn'); if (b) dialTo(+b.dataset.j); });
-$('#soundBtn').onclick = () => { homeSound = !homeSound; renderSound(); ambSet(); homeSound ? startPreview() : stopPreview(); };
+const toggleSound = () => { homeSound = !homeSound; renderSound(); ambSet(); };
+$('#armSound').onclick = toggleSound;
 document.addEventListener('keydown', e => {
   if (!$('#home').classList.contains('active') || $('#home').classList.contains('leaving')) return;
   const next = () => Math.round(DIAL.raf ? DIAL.target : DIAL.u);
   if (e.key === 'Escape'){ singPick(false); return; }
+  if (e.key === ' ' && !(e.target.closest && e.target.closest('button'))){ e.preventDefault(); homeToggle(); return; }
+  if (e.key === 'm' || e.key === 'M'){ toggleSound(); return; }
   if ($('#sing.picking') && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
   if (e.key === 'ArrowDown' || e.key === 'ArrowRight'){ e.preventDefault(); dialTo(next() + 1); }
   else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft'){ e.preventDefault(); dialTo(next() - 1); }
@@ -943,7 +1079,7 @@ function ambSet(level = AMB.level){
   AMB.level = level;
   if (!AMB.ctx) return;
   const on = homeSound && $('#home').classList.contains('active') && !$('#home').classList.contains('leaving'), t = AMB.ctx.currentTime;
-  AMB.crack.gain.setTargetAtTime(on ? .6 : 0, t, .2);
+  AMB.crack.gain.setTargetAtTime(on && homePlaying ? .6 : 0, t, .2);
   AMB.stat.gain.setTargetAtTime(on ? level * .08 : 0, t, .03);
 }
 ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, ambStart, { once:true }));
@@ -954,7 +1090,7 @@ async function enterSong(mode = 'spoken'){
   if (!s.playable || home.classList.contains('leaving')) return;
   state.song = s; state.accuracy = mode;
   stopPreview(); clearTimeout(previewT);
-  home.classList.add('leaving'); document.body.classList.add('singing'); ambSet(0);
+  home.classList.add('leaving'); document.body.classList.add('singing'); ambSet(0); platter(false);
   await sleep(reduced() ? 0 : 560);
   home.classList.remove('leaving');
   startSong();
@@ -1589,7 +1725,7 @@ function goHome(){
   document.body.classList.remove('singing');
   showScreen('home'); setPalette(SONGS[homeIdx].palette);
   const home = $('#home'); home.classList.add('arriving'); setTimeout(() => home.classList.remove('arriving'), 1000);
-  buildDial(); renderCopy(); ambSet(); settle();
+  buildDial(); renderCopy(); ambSet(); if (homePlaying) platter(true); settle();
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-act], [data-line]');
@@ -1611,6 +1747,7 @@ document.addEventListener('click', e => {
     else if (act === 'singStart') MODE_CHOICE ? singPick(true) : enterSong('spoken');
     else if (act === 'singMode') enterSong(b.dataset.mode);
     else if (act === 'singBack') singPick(false);
+    else if (act === 'homeToggle') homeToggle();
     else if (act === 'micAllow') enableMic();
     else if (act === 'micSim'){ micMode = 'sim'; renderControls(); }
     else if (act === 'micGo') micDone(true);
@@ -1680,7 +1817,201 @@ sing.addEventListener('dblclick', e => {
 
 setPalette(SONGS[0].palette);
 renderHome();
+platter(true);
 settle();
 </script>
+<script type="module">
+/* The tonearm, rendered with three.js over the record. The camera looks straight down (orthographic), so the arm
+   lines up with the flat record; depth comes from metal materials, a key and a fill light, a soft cast shadow and a
+   contact shadow. Built like a real S-shaped arm: gimbal base, anti-skate dial, cue lever, S-tube, headshell with a
+   cartridge and finger lift, a knurled counterweight, and an arm rest. It moves like one too: lift on the cue lever,
+   swing, set down; while playing, the stylus creeps slowly inward along the groove. */
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const canvas = document.getElementById('armCanvas'), home = document.getElementById('home'), dial = document.getElementById('dial');
+const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .03).texture;
+scene.environmentIntensity = .85;
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 4000);
+camera.up.set(0, 0, -1); camera.position.set(0, 2000, 0); camera.lookAt(0, 0, 0);   // screen x = world x, screen y = world z
+
+scene.add(new THREE.HemisphereLight(0xf4f6ff, 0x1a1a22, .45));
+const key = new THREE.DirectionalLight(0xfff4e6, 2.6);
+key.position.set(-380, 820, -300); key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 7; key.shadow.bias = -.0003; key.shadow.normalBias = .6;
+const fill = new THREE.DirectionalLight(0xdde6ff, .7); fill.position.set(420, 380, 320);
+scene.add(key, key.target, fill);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), new THREE.ShadowMaterial({ opacity:.4 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+const brushed = new THREE.MeshPhysicalMaterial({ color:0xc9cbd1, metalness:1, roughness:.34, clearcoat:.25, clearcoatRoughness:.5 });
+const polished = new THREE.MeshStandardMaterial({ color:0xc4c7ce, metalness:1, roughness:.16 });
+const satin = new THREE.MeshStandardMaterial({ color:0x25252b, metalness:.75, roughness:.42 });
+const matte = new THREE.MeshStandardMaterial({ color:0x0f0f12, metalness:.2, roughness:.7 });
+const accent = new THREE.MeshStandardMaterial({ color:new THREE.Color(SONGS[homeIdx].palette.accent), metalness:.25, roughness:.4 });
+const cast = (...ms) => ms.forEach(m => { m.castShadow = true; });
+const mesh = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); return m; };
+const alongX = m => { m.rotation.z = Math.PI / 2; return m; };
+
+// a soft contact shadow, as a texture
+const cs = document.createElement('canvas'); cs.width = cs.height = 128;
+const cg = cs.getContext('2d'), grad = cg.createRadialGradient(64, 64, 0, 64, 64, 64);
+grad.addColorStop(0, 'rgba(0,0,0,.55)'); grad.addColorStop(1, 'rgba(0,0,0,0)'); cg.fillStyle = grad; cg.fillRect(0, 0, 128, 128);
+const contactMat = new THREE.MeshBasicMaterial({ map:new THREE.CanvasTexture(cs), transparent:true, depthWrite:false });
+const contact = size => { const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), contactMat); m.rotation.x = -Math.PI / 2; m.position.y = .5; return m; };
+
+// ---- the base
+const base = new THREE.Group(); scene.add(base);
+const plinth = mesh(new THREE.CylinderGeometry(46, 49, 7, 96), satin, 0, 3.5);
+const plinthRim = mesh(new THREE.TorusGeometry(46.5, 1, 8, 96), polished, 0, 7); plinthRim.rotation.x = Math.PI / 2;
+const housing = mesh(new THREE.CylinderGeometry(25, 27, 24, 72), brushed, 0, 19);
+const housingCap = mesh(new THREE.CylinderGeometry(19, 22, 5, 72), polished, 0, 33.5);
+const accentRing = mesh(new THREE.TorusGeometry(34, 1.3, 10, 96), accent, 0, 7.6); accentRing.rotation.x = Math.PI / 2;
+const skate = new THREE.Group(); skate.position.set(-31, 0, 31);
+skate.add(mesh(new THREE.CylinderGeometry(9, 9.5, 12, 40), matte, 0, 13), mesh(new THREE.CylinderGeometry(7, 7, 1.4, 40), polished, 0, 19.6), mesh(new THREE.BoxGeometry(1.4, .8, 6), accent, 0, 20.4, -3));
+const cue = new THREE.Group(); cue.position.set(31, 0, 31);
+const cueLever = new THREE.Group(); cueLever.position.y = 21;
+cueLever.add(mesh(new THREE.BoxGeometry(24, 3, 5), polished, 12), mesh(new THREE.SphereGeometry(3.6, 20, 16), matte, 24));
+cue.add(mesh(new THREE.CylinderGeometry(5, 6, 14, 32), satin, 0, 14), cueLever);
+base.add(contact(170), plinth, plinthRim, housing, housingCap, accentRing, skate, cue);
+cast(plinth, housing, housingCap, ...skate.children, ...cue.children, ...cueLever.children);
+
+// ---- the arm rest, where the arm sits while the record is stopped (placed in layout)
+const rest = new THREE.Group(); scene.add(rest);
+const restClip = mesh(new THREE.TorusGeometry(6, 1.3, 8, 24, Math.PI), polished, 0, 24); restClip.rotation.y = Math.PI / 2;
+rest.add(contact(46), mesh(new THREE.CylinderGeometry(4.5, 5.5, 16, 32), satin, 0, 8), mesh(new THREE.BoxGeometry(8, 5, 20), matte, 0, 18), restClip);
+cast(...rest.children.slice(1));
+
+// ---- the arm: yaw swings it about the pivot, pitch tilts it up on the cue lever
+const TUBE_Y = 22;
+const yaw = new THREE.Group(); yaw.position.y = TUBE_Y; base.add(yaw);
+const pitch = new THREE.Group(); yaw.add(pitch);
+const gimbal = mesh(new THREE.BoxGeometry(20, 14, 28), brushed);
+const pins = alongX(mesh(new THREE.CylinderGeometry(3.2, 3.2, 36, 24), polished)); pins.rotation.set(Math.PI / 2, 0, 0);
+pitch.add(gimbal, pins); cast(gimbal, pins);
+// counterweight, behind the pivot
+const stub = alongX(mesh(new THREE.CylinderGeometry(3.2, 3.2, 64, 24), polished, 40));
+const weight = alongX(mesh(new THREE.CylinderGeometry(17, 17, 32, 64), matte, 54));
+const knurl = [0, 1, 2, 3, 4].map(i => alongX(mesh(new THREE.CylinderGeometry(17.6, 17.6, 1.6, 64), brushed, 41 + i * 6.5)));
+const index = alongX(mesh(new THREE.CylinderGeometry(13.5, 13.5, 2, 48), accent, 37));
+pitch.add(stub, weight, index, ...knurl); cast(stub, weight, ...knurl);
+// headshell, built round the stylus tip at its origin
+function roundedRect(w, h, r){
+  const s = new THREE.Shape();
+  s.moveTo(-w / 2 + r, -h / 2); s.lineTo(w / 2 - r, -h / 2); s.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
+  s.lineTo(w / 2, h / 2 - r); s.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2); s.lineTo(-w / 2 + r, h / 2);
+  s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r); s.lineTo(-w / 2, -h / 2 + r); s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
+  return s;
+}
+const head = new THREE.Group(); pitch.add(head);
+const shell = mesh(new THREE.ExtrudeGeometry(roundedRect(52, 22, 5), { depth:3, bevelEnabled:true, bevelThickness:1, bevelSize:1, bevelSegments:3 }), brushed, 20, 15);
+shell.rotation.x = -Math.PI / 2;
+const cart = mesh(new THREE.BoxGeometry(24, 11, 17), matte, 13, 8);
+const cartStripe = mesh(new THREE.BoxGeometry(24.4, 2.6, 17.4), accent, 13, 12);
+const guard = mesh(new THREE.BoxGeometry(7, 5, 12), accent, 1, 3);
+const finger = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(6, 16, 10), new THREE.Vector3(-4, 17, 17), new THREE.Vector3(-14, 20, 19)]), 20, 1.6, 10), polished);
+const collar = alongX(mesh(new THREE.CylinderGeometry(5.6, 5.6, 12, 28), polished, 48, 17));
+head.add(shell, cart, cartStripe, guard, finger, collar); cast(shell, cart, guard, finger, collar);
+head.rotation.y = .38;                                   // the headshell's offset angle
+let tube = null, grip = null;
+const gripMat = new THREE.MeshBasicMaterial({ visible:false });
+
+const ST = { phi:0, lift:0, phiE:0, phiR:0, L:400, LIFT:.05, creep:0, creepT:0, raf:0, token:null, hover:false };
+function pose(){
+  yaw.rotation.y = Math.PI - (ST.phi - ST.creep);        // screen angle of the arm → rotation about y
+  pitch.rotation.z = -ST.lift;                           // the front rises on the cue lever
+  cueLever.rotation.y = .55 * ST.lift / ST.LIFT;
+}
+const render = () => renderer.render(scene, camera);
+function layout(){
+  const g = DIAL.g; if (!g) return;
+  const w = dial.clientWidth, h = dial.clientHeight;
+  renderer.setSize(w, h, false);
+  Object.assign(camera, { left:-w / 2, right:w / 2, top:h / 2, bottom:-h / 2 }); camera.updateProjectionMatrix();
+  Object.assign(key.shadow.camera, { left:-w, right:w, top:h, bottom:-h, near:1, far:3000 }); key.shadow.camera.updateProjectionMatrix();
+  const px = w - 72, py = 82;                                                          // the pivot, top right
+  const a = 190 * Math.PI / 180, tx = g.cx + g.R * .86 * Math.cos(a), ty = g.cy + g.R * .86 * Math.sin(a);   // the record's lead-in, between the names
+  base.position.set(px - w / 2, 0, py - h / 2);
+  ST.L = Math.hypot(tx - px, ty - py);
+  ST.phiE = Math.atan2(ty - py, tx - px);
+  ST.phiR = 184 * Math.PI / 180;                                                       // on the rest: along the top, off the record
+  ST.LIFT = 24 / ST.L;
+  head.position.set(-ST.L, 4 - TUBE_Y, 0);
+  // the S-shaped tube, from the gimbal to the headshell collar
+  head.updateMatrix();
+  const c = new THREE.Vector3(48, 17, 0).applyMatrix4(head.matrix);
+  const L = ST.L, curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-8, 0, 0), new THREE.Vector3(-L * .3, 0, -L * .03), new THREE.Vector3(-L * .62, 0, L * .008),
+    new THREE.Vector3(c.x + 26, c.y * .6, c.z + L * .03), c]);
+  if (tube){ pitch.remove(tube, grip); tube.geometry.dispose(); grip.geometry.dispose(); }
+  tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 220, 3.8, 28), polished); tube.castShadow = true;
+  grip = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 14, 8), gripMat);           // a fatter, invisible target for clicks
+  pitch.add(tube, grip);
+  const r = { x: px + Math.cos(ST.phiR) * L * .5, y: py + Math.sin(ST.phiR) * L * .5 };
+  rest.position.set(r.x - w / 2, 0, r.y - h / 2); rest.rotation.y = Math.PI - ST.phiR;
+  pose(); render();
+}
+const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+function tween(prop, to, dur, ease = easeInOut){
+  const from = ST[prop], t0 = performance.now();
+  return new Promise(res => {
+    cancelAnimationFrame(ST.raf);
+    const f = now => {
+      const t = reducedMotion() ? 1 : Math.min(1, (now - t0) / dur);
+      ST[prop] = from + (to - from) * ease(t); pose(); render();
+      if (t < 1) ST.raf = requestAnimationFrame(f); else res();
+    };
+    ST.raf = requestAnimationFrame(f);
+  });
+}
+// while the stylus is in the groove, it creeps inward very slowly
+function creep(on){
+  clearInterval(ST.creepT);
+  if (!on) return;
+  ST.creepT = setInterval(() => { ST.creep = Math.min(5 * Math.PI / 180, ST.creep + .05 * Math.PI / 180 * .1); pose(); render(); }, 100);
+}
+async function go(where, done){
+  const token = {}; ST.token = token; const live = () => ST.token === token;
+  creep(false);
+  if (where === 'cue'){ await tween('lift', ST.LIFT, 320, easeOut); return; }
+  const target = where === 'rest' ? ST.phiR : ST.phiE;
+  if (ST.lift < ST.LIFT * .98){ await tween('lift', ST.LIFT, 340, easeOut); if (!live()) return; }
+  if (ST.creep){ ST.phi -= ST.creep; ST.creep = 0; }
+  if (Math.abs(ST.phi - target) > .002){ await tween('phi', target, 380 + Math.abs(ST.phi - target) * 1500); if (!live()) return; }
+  await tween('lift', 0, 560, easeOut); if (!live()) return;
+  if (where === 'play') creep(true);
+  if (done) done();
+}
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function hit(x, y){
+  const r = canvas.getBoundingClientRect();
+  if (x < r.left || x > r.right || y < r.top || y > r.bottom) return false;
+  ndc.set((x - r.left) / r.width * 2 - 1, -(y - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  return ray.intersectObjects([base, rest], true).length > 0;
+}
+// the arm is drawn above everything on the right, so wherever it is visible it takes the click
+const onCap = e => e.target.closest && e.target.closest('#armSound');
+home.addEventListener('pointerdown', e => { if (!onCap(e) && hit(e.clientX, e.clientY)){ e.stopImmediatePropagation(); e.preventDefault(); homeToggle(); } }, true);
+home.addEventListener('pointermove', e => {
+  const on = !onCap(e) && hit(e.clientX, e.clientY); if (on === ST.hover) return;
+  ST.hover = on; home.classList.toggle('on-arm', on);
+  accent.emissive.setRGB(on ? .16 : 0, on ? .16 : 0, on ? .16 : 0); render();
+});
+window.TONEARM = { layout, go, setAccent: c => { accent.color.set(c); render(); } };
+ST.phi = 184 * Math.PI / 180; ST.lift = 0;                // start on the rest; the record then starts like a real one
+layout();
+const pending = window.ARM_PENDING; window.ARM_PENDING = null;
+if (pending) go(...pending); else if (homePlaying) go('play', startPreview);
+</script>
+</body></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 
 **Keeper:** A. **Used by:** A, and anyone preparing the demo.
 
-**Status:** draft v0.7, 3 October 2026. Follows [PROJECT_PLAN.md](../PROJECT_PLAN.md) revision 5.
+**Status:** draft v0.11, 3 October 2026. Follows [PROJECT_PLAN.md](../PROJECT_PLAN.md) revision 5.
 
 This document holds the frontend's visual design and interaction details. It does not restate behaviour or data. When it disagrees with these files, they win:
 
@@ -87,7 +87,7 @@ Two springs, sampled into CSS `linear()` easings so CSS and JavaScript share the
 
 Moments:
 
-- **Spinning the record (song screen):** the record follows the wheel, trackpad or drag continuously, 40° per song, and settles on a song with a spring when the gesture ends. It also turns slowly while a preview plays. On the way, the two photos crossfade and blur, the grain thickens into static (and, with sound on, radio static rises), and the title, copy and theme switch when the dial passes halfway. The new title's characters arrive one by one, out of a blur.
+- **Spinning the record (song screen):** the record follows the wheel, trackpad or drag continuously, 45° per song, and settles on a song with a spring when the gesture ends. It also turns slowly while a preview plays. On the way, the two photos crossfade and blur, the grain thickens into static (and, with sound on, radio static rises), and the title, copy and theme switch when the dial passes halfway. The new title's characters arrive one by one, out of a blur.
 - **Starting a song:** the title's characters drift up and blur out, the dial turns away to the right, the photo blurs and darkens into the line screen's background, and the lyric lines rise in one after another, followed by the dock.
 - **Karaoke fill during Listen:** each character fills left to right. Use each syllable's `start_ms` and `end_ms` from `song.json` when the pipeline has aligned the track; until then they are `null`, so split the line's time evenly.
 - **Changing line:** the list moves so the active line sits 40% from the top. The active line's growth and the list's movement animate together, so no other line jumps: measure before and after, then animate the difference with transforms (FLIP).
@@ -186,14 +186,22 @@ Target viewport **1440×900**; must work at **1280×720** (projector). Below 102
 - **The photograph is the page.** Each song has one photograph, full screen, slowly pushing in, under a soft left-to-right and bottom shade and the film grain. The theme colours come from the same song.
 - **The title is the bold element.** Noto Serif SC at weight 200, about 19% of the screen height, split over two staggered lines (茉莉 / 花, 月亮代表 / 我的心). It is measured after rendering and its characters (not the indent) shrink until every line ends at least 72px before the record. Under it, aligned with the second line: pinyin and English, one sentence about the song, and **Sing 茉莉花** on its own.
 - **Sing opens into the mode choice.** When `VITE_SHOW_MODE_CHOICE` is on, pressing Sing (or Enter) springs the same pill open into **Spoken accuracy**, **Singing accuracy** and ✕; a line under it explains whichever option the pointer or focus is on. Choosing one starts the song. Esc, ✕ or a click elsewhere closes it again. When the flag is off, Sing starts the song in spoken accuracy.
-- **The record.** On the right, a stylized record about 1.1 screen-heights across, its centre just inside the right edge. Graphic rather than realistic: fine grooves, two track gaps, and a sheen in the song's own colours that stays still while the grooves turn. Its label is the album cover of the recording we use, with a ring of small text around it (artist, album, year, title). The covers crossfade as it turns.
-- **The songs ride the groove band,** between an accent needle on the rim and the label: number, title (sized to fit the band) and artist, plus "Playing a preview" on the selected one. At most three are in view: the selected one at the needle, one above, one below. They loop: after the last song comes the first. Spin it with the wheel or trackpad, by dragging, with ↑ ↓ ← →, or by clicking a song. One wheel notch or one short swipe moves one song; a long swipe can move several. A song that isn't ready still tunes in, and its button reads "Coming soon".
+- **The record.** On the right, a stylized record about 1.1 screen-heights across, its centre just inside the right edge. Graphic rather than realistic: fine grooves, two track gaps, and a sheen in the song's own colours that stays still while the grooves turn.
+- **Collage where the record meets the photo.** The record is a torn-paper cut-out pasted onto the photograph: a torn edge (SVG turbulence masks), a fringe of off-white paper with a paper shadow, and three scraps overlapping the rim, all cut from the song's own photo and each a different shape: a wide torn piece held by a strip of translucent tape, a narrow torn strip, and a round cut that echoes the record. Each shows an enlarged detail of the photo (a flower, part of the moon). The photo seems to run onto the record. Its label is the album cover of the recording we use, with a ring of small text around it (artist, album, year, title). The covers crossfade as it turns.
+- **The songs ride the groove band,** between an accent needle on the rim and the label: number, title (sized to fit the band) and artist, plus "Playing a preview" on the selected one. Each name is tilted to the record's angle at its position, as if printed on it, and turns with it. At most three are in view: the selected one at the needle (level, 0°), one above at 45° and one below at −45°, measured from the record's centre. They loop: after the last song comes the first. Spin it with the wheel or trackpad, by dragging, with ↑ ↓ ← →, or by clicking a song. One wheel notch or one short swipe moves one song; a long swipe can move several. A song that isn't ready still tunes in, and its button reads "Coming soon".
 - **Between songs** the picture dissolves through static (section 3.3). With sound on, a faint vinyl crackle plays on the song screen and radio static rises between songs; both are generated with Web Audio and need no files. Browsers only allow sound after a click or a key press.
 - **The subtitle.** At the bottom centre, like a film subtitle, one line of the song's lyric fills and grades itself on a loop, with "Sing a line back and every word gets a colour." under it.
 - **Preview.** Once the dial settles, about 12 seconds of the song from `audio_url`, faded in and out. See section 9, question 3 for where the clip comes from.
-- **Credit** for the photograph sits small in the bottom-right corner.
+- **The tonearm** is rendered with three.js, built like a real S-shaped arm: gimbal base, anti-skate dial, cue lever, S-tube, headshell with cartridge and finger lift, knurled counterweight, arm rest. A top-down orthographic camera keeps it aligned with the flat record; brushed and polished metal, a key and a fill light, a cast shadow and contact shadows give it depth. Its accent parts take the song's accent colour, and it lights up under the pointer.
+- **It behaves like a real turntable.** Arm on the record = playing; arm on its rest = stopped.
+  - Play (click the arm, the cover or `Space`): the platter spins up, the arm lifts on the cue lever, swings to the record's lead-in just above the selected song, and sets down; then the preview and the crackle start. While it plays, the stylus creeps slowly inward.
+  - Stop: the arm lifts, swings back and sets down on its rest; then the platter slows to a stop.
+  - The cover works like a video player's play button. Stopped, it is dimmed and shows ▶. Playing, it shows nothing until the pointer is on it; then it dims and shows ⏸. The sign always shows the action a click will take. Pointing at the sign brightens it; it never grows. On a toggle the sign morphs: the two pause bars fold into the two halves of the triangle in about 240 ms, as on YouTube.
+  - Changing songs while it plays lifts the arm on the cue lever; it sets down again when the record settles.
+  - On first load the record starts like a real one: the arm moves from its rest onto the record.
+- **Sound** on and off is the cap on the tonearm's pivot, with a speaker icon (or `M`). Clicking anywhere else on the arm plays or stops the record.
+- **Credits** for the photo and the cover sit small in the bottom-left corner.
 - **Starting the song** opens no window (section 3.3).
-- **Credits** for the photograph and the album cover sit small in the bottom-right corner.
 
 ### 5.2 Microphone setup (first Record only)
 
@@ -292,6 +300,7 @@ The file split in `frontend/src/` is a starting point (plan section 10). This de
 | `PhotoBackdrop`, `Grain` | the songs' photos, dial position | Crossfades and blurs the photos; sharp on the song screen, blurred on the line screen |
 | `SongRecord` | `SongSummary[]`, covers, position | Unbounded position with a settling spring, shown modulo the song count; wheel, drag, keys, click; at most three names in view |
 | `SingButton` | mode-choice flag | One pill that opens into the two modes |
+| `Tonearm` | playing, record geometry, accent colour | three.js (or @react-three/fiber) canvas over the record; swing with lift; hit-testing by raycast |
 | `Ambience`, `PreviewPlayer` | sound on, dial position, a clip URL | Crackle and static generated with Web Audio; the preview with fades |
 | `TopBar` | title, line N of M, mode, controls open | Fades when idle |
 | `OptionsPill` | `showPinyin`, `showTranslation`, open, demo flag | Also the switch for the dock |
@@ -370,6 +379,8 @@ Every item ships if time allows. The tiers set the build order: finish a tier be
 | | | Loading and grading states | 0.5 h |
 | | | Microphone prompt in the dock | 0.5 h |
 | | | Crackle and static ambience | 0.5 h |
+| | | Tonearm (three.js) and real turntable behaviour | 2.5 h |
+| | | Collage edge: torn paper, scraps, tape | 1 h |
 | | | Optional: early or late notches from `timing.offset_ms` | 1 h |
 | **Beyond the MVP** | after the freeze, or after the event | Coach drawer and conversation | not estimated |
 
