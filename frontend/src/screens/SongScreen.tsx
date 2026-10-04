@@ -1,8 +1,8 @@
 /**
  * Song screen: the song list and the mode choice.
  *
- * The user picks a song and, when VITE_SHOW_MODE_CHOICE is on, spoken or singing
- * accuracy, then starts at line 1.
+ * The user picks a song and how closely to grade it (spoken or singing accuracy;
+ * singing waits for the backend), then starts at line 1.
  *
  * The design (ui.md §5.1): each song's photograph is the page, its title is set
  * huge in a hairline serif, and the songs ride a huge record on the right, pasted
@@ -22,12 +22,12 @@ import { Credit } from "../components/song/Credit";
 import { HomeHeader } from "../components/song/HomeHeader";
 import { LyricSubtitle } from "../components/song/LyricSubtitle";
 import { Scraps } from "../components/song/Scraps";
-import { MODE_HINT, SingButton } from "../components/song/SingButton";
+import { MODE_HINT, SingButton, type ModeHint } from "../components/song/SingButton";
 import { SongRecord, type SongRecordHandle } from "../components/song/SongRecord";
 import { SongTitle } from "../components/song/SongTitle";
 import { SoundCap } from "../components/song/SoundCap";
 import { Tonearm, type ArmPlace, type CapPlace, type TonearmHandle } from "../components/song/Tonearm";
-import { SHOW_MODE_CHOICE } from "../config";
+import { SINGING_READY } from "../config";
 import { useLatest } from "../hooks/useLatest";
 import { useWindowSize } from "../hooks/useWindowSize";
 import { betweenAmount, wheelGeometry } from "../logic/recordWheel";
@@ -65,7 +65,7 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
   const settleTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const playingNow = useRef(recordOn); // read by async arm callbacks before React re-renders
   const [picking, setPicking] = useState(false);
-  const [hint, setHint] = useState<Mode | "none">("none");
+  const [hint, setHint] = useState<ModeHint>("none");
   const [sound, setSound] = useState(soundOn);
   const [playing, setPlaying] = useState(recordOn);
   const [spinning, setSpinning] = useState(recordOn);
@@ -204,7 +204,8 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
     else if (e.key === "Enter" && !onButton) {
       e.preventDefault();
       if (!entry?.playable) return;
-      if (SHOW_MODE_CHOICE) { setHint("none"); setPicking(true); } else start("spoken");
+      setHint("none");
+      setPicking(true);
     }
   });
   useEffect(() => {
@@ -229,7 +230,7 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
             {t?.blurb && <p className="h-blurb">{t.blurb}</p>}
             <div className="h-cta">
               {entry.playable
-                ? <SingButton title={entry.title} showChoice={SHOW_MODE_CHOICE} picking={picking} onPicking={setPicking} onHint={setHint} onStart={start} />
+                ? <SingButton title={entry.title} singingReady={SINGING_READY} picking={picking} onPicking={setPicking} onHint={setHint} onStart={start} />
                 : <><button className="btn" disabled>Coming soon</button><span className="h-meta">This song isn't on the server yet</span></>}
             </div>
             <p className="sing-hint" aria-live="polite">{picking ? MODE_HINT[hint] : ""}</p>
