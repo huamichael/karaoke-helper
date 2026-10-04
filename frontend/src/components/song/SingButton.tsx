@@ -10,8 +10,8 @@
  */
 import { useEffect, useRef, type CSSProperties } from "react";
 import type { Mode } from "../../api/client";
+import { useWidthMorph } from "../../hooks/useWidthMorph";
 import { CloseIcon } from "../icons";
-import { MeasuredPill } from "../MeasuredPill";
 
 export type ModeHint = Mode | "none" | "notReady";
 
@@ -34,6 +34,9 @@ type Props = {
 
 export function SingButton({ title, singingReady, picking, onPicking, onHint, onStart }: Props) {
   const box = useRef<HTMLDivElement>(null);
+  const pill = useRef<HTMLDivElement>(null);
+  // Opening and closing spring the pill's width, a little slower than the dock, as in the prototype.
+  useWidthMorph(pill, picking, 120);
 
   // A click anywhere else closes the choice.
   useEffect(() => {
@@ -58,7 +61,7 @@ export function SingButton({ title, singingReady, picking, onPicking, onHint, on
 
   return (
     <div ref={box}>
-      <MeasuredPill className={`sing-pill${picking ? " picking" : ""}`} innerClassName="sing-inner" contentKey={picking ? "pick" : "go"} border={0}>
+      <div ref={pill} className={`sing-pill${picking ? " picking" : ""}`}>
         {picking ? (
           <div className="sing-pick" role="group" aria-label="How should we grade you?">
             {pick("spoken", 0)}
@@ -68,7 +71,7 @@ export function SingButton({ title, singingReady, picking, onPicking, onHint, on
         ) : (
           <button className="sing-go" onClick={() => { onHint("none"); onPicking(true); }}>Sing {title}</button>
         )}
-      </MeasuredPill>
+      </div>
     </div>
   );
 }
