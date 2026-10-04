@@ -88,10 +88,12 @@ body.singing .grain { opacity: .07; }
 .steps { display: flex; gap: 18px; margin-top: 8px; list-style: none; font-size: 13px; color: var(--text-3); }
 .steps b { font-family: var(--serif); font-weight: 700; color: var(--accent); margin-right: 6px; }
 /* The sound switch is the cap on the tonearm's pivot. The rest of the arm plays and stops the record. */
-.arm-sound { position: absolute; z-index: 4; width: 32px; height: 32px; margin: -16px 0 0 -16px; display: grid; place-items: center; border: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #3b3b43, #121216 72%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 1px 3px rgba(0,0,0,.5); color: #fff; cursor: pointer; transition: transform .2s var(--ease), color .25s; }
+.arm-sound { position: absolute; z-index: 4; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #3b3b43, #121216 72%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 1px 3px rgba(0,0,0,.5); color: #d4d4da; cursor: pointer; transform: translate(-50%, -50%); transition: color .2s; }
+.arm-sound:not(.placed) { visibility: hidden; }        /* until the tonearm says where its cap is */
 .arm-sound svg { width: 15px; height: 15px; }
-.arm-sound:hover { transform: scale(1.1); }
-.arm-sound[aria-pressed="false"] { color: rgba(255,255,255,.45); }
+.arm-sound:hover { color: #fff; }
+.arm-sound[aria-pressed="false"] { color: #74747c; }
+.arm-sound[aria-pressed="false"]:hover { color: #a8a8b0; }
 .h-main { position: absolute; left: 7vw; top: 50%; z-index: 2; transform: translateY(-54%); }
 .h-title { font-family: var(--serif); font-weight: 200; font-size: var(--ts, 170px); line-height: 1.02; letter-spacing: .02em; text-shadow: 0 10px 60px rgba(0,0,0,.28); }
 .h-line { display: block; width: max-content; white-space: nowrap; }
@@ -130,10 +132,10 @@ body.singing .grain { opacity: .07; }
 .dial { position: absolute; top: 0; right: 0; bottom: 0; z-index: 2; width: 52vw; touch-action: none; cursor: grab; transition: transform .8s var(--ease), opacity .5s; }
 .dial.grabbing { cursor: grabbing; }
 .disc { position: absolute; pointer-events: none; }
-/* Collage: the record is a torn-paper cut-out pasted onto the photograph. Its edge is torn, a fringe of off-white
-   paper shows round it with a paper shadow, and scraps cut from the photo and the cover overlap the rim, so the
+/* Collage: the record is a torn-paper cut-out pasted onto the photograph. Its edge is torn and a fringe of off-white
+   paper shows round it, pasted flat with no shadow; scraps cut from the photo and the cover overlap the rim, so the
    photo and the record run into each other. The torn outlines are SVG masks generated in JS. */
-.disc-paper { position: absolute; inset: 0; filter: drop-shadow(0 18px 34px rgba(0,0,0,.5)) drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+.disc-paper { position: absolute; inset: 0; }
 .disc-paper i { position: absolute; inset: 0; background: #ebe4d6; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
 .disc-body { position: absolute; inset: 0; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
 .scraps { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
@@ -162,16 +164,23 @@ body.singing .grain { opacity: .07; }
 #home.on-arm, #home.on-arm * { cursor: pointer; }
 /* The cover is also the play / stop switch, like a video player. Stopped: the label dims and shows play.
    Playing: nothing, until the pointer is on the label; then it dims and shows pause. The glyph morphs between the two.
-   Hovering the glyph only brightens it; it never grows. */
-.cover-btn { position: absolute; z-index: 2; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(0,0,0,0); cursor: pointer; transition: background .3s cubic-bezier(0,0,.2,1); }
-.cover-btn svg { width: 96px; height: 96px; color: #fff; opacity: 0; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)); transition: opacity .25s cubic-bezier(0,0,.2,1), filter .25s cubic-bezier(0,0,.2,1); }
+   The glyph is solid and never overlaps the spindle: on the way in the spindle leaves first and then the glyph fades in;
+   on the way out the glyph leaves first and then the spindle comes back. Pointing at the glyph turns the glyph itself
+   from off-white to white; nothing round it lights up, and it never grows. */
+.cover-btn { position: absolute; z-index: 2; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.cover-btn::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle, rgba(0,0,0,.5) 0, rgba(0,0,0,.42) 22%, rgba(0,0,0,.36) 100%); opacity: 0; transition: opacity .25s cubic-bezier(0,0,.2,1); }
+.cover-btn svg { position: relative; width: 54px; height: 54px; color: #cfcbc4; opacity: 0; transition: opacity .12s cubic-bezier(.4,0,1,1), color .2s; }
 .cover-btn path { stroke: currentColor; stroke-width: 1.2; stroke-linejoin: round; }
-.cover-btn.paused, .cover-btn:focus-visible { background: rgba(0,0,0,.34); }
-.cover-btn.paused svg, .cover-btn:focus-visible svg { opacity: .8; }
+.disc-hole { transition: opacity .16s cubic-bezier(0,0,.2,1) .12s; }
+/* shown: while stopped, under the pointer, or focused from the keyboard */
+.cover-btn.paused::before, .cover-btn:focus-visible::before { opacity: 1; }
+.cover-btn.paused svg, .cover-btn:focus-visible svg { opacity: 1; transition: opacity .16s cubic-bezier(0,0,.2,1) .1s, color .2s; }
+.dial:has(.cover-btn.paused) .disc-hole, .dial:has(.cover-btn:focus-visible) .disc-hole { opacity: 0; transition: opacity .1s linear; }
 @media (hover: hover) {
-  .cover-btn:hover { background: rgba(0,0,0,.34); }
-  .cover-btn:hover svg { opacity: .8; }
-  .cover-btn svg:hover { opacity: 1; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)) drop-shadow(0 0 14px rgba(255,255,255,.35)); }
+  .cover-btn:hover::before { opacity: 1; }
+  .cover-btn:hover svg { opacity: 1; transition: opacity .16s cubic-bezier(0,0,.2,1) .1s, color .2s; }
+  .dial:has(.cover-btn:hover) .disc-hole { opacity: 0; transition: opacity .1s linear; }
+  .cover-btn svg:hover { color: #fff; }
 }
 .cover-btn:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(255,255,255,.55); }
 .needle { position: absolute; width: 36px; height: 2px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 16px var(--accent); transform: translate(-50%, -50%); pointer-events: none; }
@@ -485,7 +494,7 @@ kbd { font-family: inherit; font-size: 12px; padding: 1px 6px; margin-right: 3px
       <div class="scraps" id="scraps"></div>
       <div id="dialLabels"></div>
       <i class="needle" id="needle"></i>
-      <button class="cover-btn" id="coverBtn" data-act="homeToggle" aria-label="Stop the record"><svg viewBox="0 0 36 36" fill="currentColor" aria-hidden="true"><path id="cvA" d="M12.6 25.4 15.4 25.4 15.4 10.6 12.6 10.6z"/><path id="cvB" d="M20.6 25.4 23.4 25.4 23.4 10.6 20.6 10.6z"/></svg></button>
+      <button class="cover-btn" id="coverBtn" data-act="homeToggle" aria-label="Stop the record"><svg viewBox="8 8 20 20" fill="currentColor" aria-hidden="true"><path id="cvA" d="M12.6 25.4 15.4 25.4 15.4 10.6 12.6 10.6z"/><path id="cvB" d="M20.6 25.4 23.4 25.4 23.4 10.6 20.6 10.6z"/></svg></button>
       <canvas class="arm-canvas" id="armCanvas" aria-hidden="true"></canvas>
       <button class="arm-sound" id="armSound" aria-pressed="true" aria-label="Sound on" title="Sound on (M)"></button>
     </div>
@@ -753,8 +762,8 @@ const STAGE = {
     demo:{ hz:'月亮代表我的心', py:'yuè liàng dài biǎo wǒ de xīn', marks:['good','good','good','ok','good','good','wrong'] } },
 };
 const ICON_SOUND = {
-  on:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
-  off:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
+  on:'<svg viewBox=".74 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
+  off:'<svg viewBox="1 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
 };
 const MODE_CHOICE = true;   // VITE_SHOW_MODE_CHOICE in the app (off by default); on here to show the design
 let homeIdx = 0, homeSound = true, homePlaying = true, previewT;
@@ -838,7 +847,6 @@ function buildDial(){
   $('#dialLabels').innerHTML = '';
   const n = $('#needle'); n.style.left = (g.cx - R + 22) + 'px'; n.style.top = g.cy + 'px';
   Object.assign($('#coverBtn').style, { left:g.cx - rl + 'px', top:g.cy - rl + 'px', width:2 * rl + 'px', height:2 * rl + 'px' });
-  Object.assign($('#armSound').style, { left:$('#dial').clientWidth - 72 + 'px', top:'82px' });
   window.TONEARM?.layout();
   renderScraps();
   renderDial();
@@ -954,7 +962,11 @@ function armGo(where, done){
   if (window.TONEARM) TONEARM.go(where, done);
   else { window.ARM_PENDING = [where, done]; if (window.ARM_FAILED && done) done(); }
 }
-setTimeout(() => { if (!window.TONEARM){ window.ARM_FAILED = true; const p = window.ARM_PENDING; if (p && p[1]) p[1](); } }, 5000);
+setTimeout(() => {
+  if (window.TONEARM) return;
+  window.ARM_FAILED = true; const p = window.ARM_PENDING; if (p && p[1]) p[1]();
+  const s = $('#armSound'); Object.assign(s.style, { left:'calc(100% - 72px)', top:'82px', width:'32px', height:'32px' }); s.classList.add('placed');
+}, 5000);
 function cueUp(){ stopPreview(); clearTimeout(previewT); if (homePlaying) armGo('cue'); }
 function settle(){ clearTimeout(previewT); if (homePlaying) previewT = setTimeout(() => armGo('play', startPreview), 220); }
 /* The real app plays a slice of the song's audio_url here, faded in and out. The prototype has no audio files. */
@@ -1871,7 +1883,8 @@ const base = new THREE.Group(); scene.add(base);
 const plinth = mesh(new THREE.CylinderGeometry(46, 49, 7, 96), satin, 0, 3.5);
 const plinthRim = mesh(new THREE.TorusGeometry(46.5, 1, 8, 96), polished, 0, 7); plinthRim.rotation.x = Math.PI / 2;
 const housing = mesh(new THREE.CylinderGeometry(25, 27, 24, 72), brushed, 0, 19);
-const housingCap = mesh(new THREE.CylinderGeometry(19, 22, 5, 72), polished, 0, 33.5);
+const CAP = { top:19, h:5 };
+const housingCap = mesh(new THREE.CylinderGeometry(CAP.top, 22, CAP.h, 72), polished, 0, 33.5);
 const accentRing = mesh(new THREE.TorusGeometry(34, 1.3, 10, 96), accent, 0, 7.6); accentRing.rotation.x = Math.PI / 2;
 const skate = new THREE.Group(); skate.position.set(-31, 0, 31);
 skate.add(mesh(new THREE.CylinderGeometry(9, 9.5, 12, 40), matte, 0, 13), mesh(new THREE.CylinderGeometry(7, 7, 1.4, 40), polished, 0, 19.6), mesh(new THREE.BoxGeometry(1.4, .8, 6), accent, 0, 20.4, -3));
@@ -1956,6 +1969,17 @@ function layout(){
   const r = { x: px + Math.cos(ST.phiR) * L * .5, y: py + Math.sin(ST.phiR) * L * .5 };
   rest.position.set(r.x - w / 2, 0, r.y - h / 2); rest.rotation.y = Math.PI - ST.phiR;
   pose(); render();
+  placeSound(w, h);
+}
+// the sound button sits on the gimbal's polished cap: project the cap's top face to the screen and centre the button on it
+function placeSound(w, h){
+  scene.updateMatrixWorld();
+  const toPx = v => { const p = v.clone().project(camera); return { x:(p.x + 1) / 2 * w, y:(1 - p.y) / 2 * h }; };
+  const top = housingCap.localToWorld(new THREE.Vector3(0, CAP.h / 2, 0)), at = toPx(top);
+  const edge = toPx(housingCap.localToWorld(new THREE.Vector3(CAP.top, CAP.h / 2, 0))), r = Math.hypot(edge.x - at.x, edge.y - at.y);
+  const d = 2 * r - 8;                                   // leave an even ring of polished metal round it
+  const btn = document.getElementById('armSound');
+  Object.assign(btn.style, { left:at.x + 'px', top:at.y + 'px', width:d + 'px', height:d + 'px' }); btn.classList.add('placed');
 }
 const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 const easeOut = t => 1 - Math.pow(1 - t, 3);
@@ -2012,6 +2036,5 @@ layout();
 const pending = window.ARM_PENDING; window.ARM_PENDING = null;
 if (pending) go(...pending); else if (homePlaying) go('play', startPreview);
 </script>
-</body></script>
 </body>
 </html>
