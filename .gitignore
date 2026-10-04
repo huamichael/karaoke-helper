@@ -41,3 +41,5 @@ data/songs/*/check/
 /jasmine-flower/
 /yi-jian-mei/
 /yue-liang-dai-biao-wo-de-xin/
+# Sung prompt clips for the recording session, cut from the tracks: also copyrighted
+backend/tests/fixtures/prompts/lines/*__sung.wav

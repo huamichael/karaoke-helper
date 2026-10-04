@@ -22,6 +22,8 @@ dependencies = [
     "pydantic>=2.13.5",         # B: shared types
     "pypinyin>=0.55",           # D: Hanzi to pinyin
     "python-multipart>=0.0.32", # B
+    "torch==2.11.*",           # C: local CPU acoustic model
+    "torchaudio==2.11.*",      # C: MMS_FA and forced_align
     "pyyaml>=6",                # D: lyrics.yaml
     "uvicorn>=0.54.0",          # B
     "zhconv>=1.4",              # D: Traditional to Simplified, for segmentation

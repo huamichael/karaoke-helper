@@ -24,7 +24,8 @@ Every score is an integer from 0 to 100.
 - Commonly confused pairs: zh/z, ch/c, sh/s, j/zh, q/ch, x/sh, n/l, an/ang, en/eng, in/ing, ian/iang, uan/uang, uen/ueng. The table lives in `scoring/confusions.py` and both layers import it.
 - Syllable score = 0.43 × initial + 0.57 × final. If the syllable has no initial, the score is the final alone.
 - If the syllable has no initial but one was heard (果 guǒ for 我 wǒ), the initial is scored as an other mismatch (20) against an empty expected initial, and the weights above apply.
-- Status: `good` at 85 or above, `ok` from 70 to 84, `wrong` below 70, and `missing`.
+- Status: `good` at 85 or above, `ok` from 70 to 84, `wrong` below 70, and `missing`. These bands apply to the sound score. A syllable that would be `good` on sound, but whose heard tone differs from the expected tone, takes the status of its tone score instead, and is never `good`: a tone score still at 85 or above becomes `ok`. A wrong tone is capped at 60, so in practice the status is `wrong`. The syllable's own score stays the sound score. An unmeasured tone (`heard` null) does not change the status.
+- Rhythm is checked after tone, and only pulls a syllable that is still `good`. A rhythm score below 85 takes the status of that score. On the rhythm formula, 85 is about 65 ms early or late. An offset of 0 ms has no direction and does not change the status.
 
 On the Whisper base, those thresholds work out as follows:
 
@@ -83,6 +84,7 @@ Compare when the user starts each syllable with when the original singer does.
 - The user sings unaccompanied, so tempo and starting point are removed first: fit a straight line from the original times to the user's times and score what is left over.
 - Each syllable scores 100 × e^(−error / 400 ms), the formula from our research notes. The rhythm score is the mean.
 - Lines with fewer than three aligned syllables get no rhythm score.
+- A syllable whose rhythm score is below 85 is early when `offset_ms` is negative and late when it is positive. That is what `RHYTHM_EARLY` and `RHYTHM_LATE` report. Sound and tone messages still come first.
 
 ### Tone (stage 3, Word practice, owner D)
 

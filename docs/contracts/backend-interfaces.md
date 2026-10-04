@@ -13,6 +13,7 @@ Each file has one owner. Nobody edits another owner's file without asking.
 | `backend/app/schemas.py` | B keeps it; all three agree changes | Every shared type |
 | `backend/app/main.py`, `config.py`, `songs.py` | B | Routes, layer switches, song loading |
 | `backend/app/audio.py` | B | `load_audio` |
+| `backend/app/attempts.py` | B | Saves each real-graded attempt to `data/attempts/` |
 | `backend/app/scoring/transcribe.py` | B | `transcribe` |
 | `backend/app/scoring/matcher.py` | B | `match`, `score_sounds_base` |
 | `backend/app/scoring/grader.py`, `mock.py` | B | `grade`, the mock grader |
@@ -115,7 +116,7 @@ def grade(audio: Audio, line: Line, target: str, mode: str | None, word_index: i
 def align(audio: Audio, expected: list[Syllable]) -> list[Span | None]
 ```
 - Forced-aligns the expected syllables to the audio. `None` for a syllable that has no usable span.
-- Uses only `initial` and `final` of each expected syllable. Ignores tone.
+- Uses standard spelling from `pinyin_numeric` with the tone digit removed for alignment. Uses strict `initial` and `final` fields to construct confused-sound variants and label component scores. Ignores tone.
 - Must work on a user recording and on a segment of the original song track. `align_track` calls it for the second case.
 
 ```python
@@ -161,7 +162,7 @@ def score_tones(audio: Audio, expected: list[Syllable], spans: list[Span | None]
 ```python
 def grade(audio, line, target, mode, word_index):
     expected = line.syllables if target == "line" else syllables_of(line, word_index)
-    layers = config.layers_for(target, mode)
+    layers = config.layers_for(target, mode, syllable_count=len(expected))
 
     transcript = transcribe(audio)                           # B
     if transcript.no_speech:
@@ -173,8 +174,8 @@ def grade(audio, line, target, mode, word_index):
     spans = align(audio, expected) if layers.ctc_spans else None            # C
     if layers.ctc_scores:
         sounds = score_sounds(audio, expected, spans)                       # C
-    rhythm = score_rhythm(expected, spans) if layers.rhythm else None       # C
-    tones = score_tones(audio, expected, spans) if layers.tone else None    # D
+    rhythm = score_rhythm(expected, spans) if layers.rhythm and spans else None                     # C
+    tones = score_tones(audio, expected, spans) if layers.tone and (spans or len(expected) == 1) else None  # D
 
     return assemble(expected, observed, sounds, spans, rhythm, tones, transcript)   # B
 ```
@@ -192,7 +193,7 @@ def grade(audio, line, target, mode, word_index):
 | `ENABLE_RHYTHM` | `0`, `1` | Allows `score_rhythm` to run |
 | `ENABLE_TONE` | `0`, `1` | Allows `score_tones` to run |
 
-With a switch on, `layers_for` applies this table:
+With a switch on, `layers_for(target, mode, syllable_count)` applies this table. `syllable_count` selects the word-practice row; it is ignored for a line.
 
 | Context | `ctc_spans` | `ctc_scores` | `rhythm` | `tone` |
 |---|---|---|---|---|
@@ -205,7 +206,7 @@ Checkpoint B can change a cell, for example turning `ctc_scores` off for singing
 
 ### When a layer fails
 
-If `align`, `score_sounds`, `score_rhythm` or `score_tones` raises, the grader logs the error and continues without that layer. The attempt still returns a Whisper-base result, and `engine` reports what actually ran. A layer must never take the request down.
+If `align`, `score_sounds`, `score_rhythm` or `score_tones` raises, or returns a list without exactly one entry per expected syllable, the grader logs the error and continues without that layer. Rhythm, and tone on a word of two or more syllables, need spans; when `align` is off or failed they are skipped. The attempt still returns a Whisper-base result, and `engine` reports what actually ran. A layer must never take the request down.
 
 ## 5. Integration rules
 
@@ -221,13 +222,19 @@ Everyone tests against the same files, so results are comparable.
 
 ```text
 backend/tests/fixtures/
-├── lines/<name>.json          # a Line object: the expected syllables
-└── audio/<name>__<variant>.wav
+├── lines/<name>.json                      # a Line object: the expected syllables
+├── audio/<name>__<variant>__<speaker>.wav # a recording of that line
+├── tone/<reading>__<variant>__<speaker>.wav  # a single word, for tone
+├── session.py                             # the list of every recording, read by the tools below
+├── prompts.py, prompts/                   # a clip to copy for each recording
+└── check_recordings.py                    # checks names, format and what is still missing
 ```
 
 - Audio is 16 kHz mono WAV.
-- `<variant>` says what the recording contains: `correct`, `error-zh-z` (expected zh, produced z), `missing-3` (syllable 3 left out), `spoken` (said, not sung).
-- At kickoff, everyone records the two hand-written lines once correctly and once with a deliberate error. That gives about 16 recordings before any code exists. Checkpoint B uses this set.
+- `<speaker>` is the recorder's first name in lowercase ASCII letters, so several people's takes of one item can sit side by side.
+- Line `<variant>` says what the recording contains: `correct` (sung), `spoken` (said, not sung), `error-<index>-<expected>-<produced>` (one deliberate error at that syllable, such as `error-4-l-n`: syllable 4 said with n instead of l), `missing-<index>` (that syllable left out).
+- Word `<reading>` is the word's `pinyin_numeric`, such as `xin1`. Its `<variant>` is `correct` or `said-tone<n>` (deliberately said with tone n).
+- The full list, the prompts, and step-by-step instructions are in [docs/recording-session.md](../recording-session.md). Checkpoint B uses the line recordings.
 
 ## 7. Integration schedule
 
