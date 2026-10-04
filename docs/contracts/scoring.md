@@ -45,7 +45,7 @@ On the Whisper base, those thresholds work out as follows:
 
 ## Per attempt
 
-- Pronunciation = mean syllable score over the syllables that were not missing.
+- Pronunciation = mean syllable score over all expected syllables, a missing syllable counting 0. It is `null` when every syllable is missing. Averaging only the syllables that were heard let a line with 茉莉花 left out score 90 overall; counting them gives 67.
 - Completeness = percentage of expected syllables that were not missing.
 - A `null` component drops out of an overall score and the remaining weights are rescaled.
 
@@ -104,6 +104,7 @@ Extract the pitch contour inside each syllable's span and express it in semitone
 - In a word of two or more syllables, a syllable's pitch is read from the start of its span to the start of the next syllable's span. CTC spans mark only where a syllable is recognised, often under half of it. The last syllable, and one followed by a syllable without a span, is read to the last voiced frame, for at most 400 ms.
 - A single syllable is compared by shape only. In a longer word, three quarters of each syllable's own mean pitch is removed from it and from the shapes, so shape counts most and height relative to the recording's median still counts a little. This lets a low, flat third tone inside a word (雨 in 雨天) be told apart from a level first tone.
 - On synthetic speech these two rules raised correctly recognised syllables in two-syllable words from 22% to 59%. In whole spoken lines the figure rose from 39% to 74%, and to 66% on voices not used to choose the numbers. On our own spoken line takes the tone checker is still near chance, so tone is not scored on lines.
+- Spoken lines are therefore tone-blind, a known limitation. Whisper also corrects a wrong tone inside a line from context (a prompt did not stop it), so a line said with wrong tones can still score full marks. Tone is checked in Word practice.
 
 ## Feedback
 

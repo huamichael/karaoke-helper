@@ -193,6 +193,13 @@ def grade(audio, line, target, mode, word_index):
 | `ENABLE_RHYTHM` | `0`, `1` | Allows `score_rhythm` to run |
 | `ENABLE_TONE` | `0`, `1` | Allows `score_tones` to run |
 
+Experiments for manual testing, off by default. They are not part of the contract and may be removed:
+
+| Variable | Values | Effect |
+|---|---|---|
+| `WHISPER_PROMPT` | text | Passed to Whisper as `initial_prompt`. A test found it made no difference to auto-correction (22 vs 23 of 45 mistakes kept). |
+| `TONE_REFERENCE` | `0`, `1` | The tone check uses each word's reference clip in place of the expected tone's textbook shape (`score_tones_with_references`). |
+
 With a switch on, `layers_for(target, mode, syllable_count)` applies this table. `syllable_count` selects the word-practice row; it is ignored for a line.
 
 | Context | `ctc_spans` | `ctc_scores` | `rhythm` | `tone` |

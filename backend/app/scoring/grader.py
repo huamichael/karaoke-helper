@@ -13,13 +13,17 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable, Sequence
 
+import numpy as np
+
 from app import config, songs
+from app.audio import load_audio
 from app.schemas import (
     AttemptResult,
     Audio,
     Heard,
     Line,
     LineStep,
+    LyricSyllable,
     Part,
     PracticeWordStep,
     RhythmResult,
@@ -39,7 +43,7 @@ from app.scoring import feedback
 from app.scoring.ctc import align, score_sounds
 from app.scoring.matcher import match, score_sounds_base
 from app.scoring.rhythm import score_rhythm
-from app.scoring.tone import score_tones
+from app.scoring.tone import score_tones, score_tones_with_references, syllable_contours
 from app.scoring.transcribe import transcribe
 
 log = logging.getLogger(__name__)
@@ -76,7 +80,11 @@ def grade(audio: Audio, line: Line, target: str, mode: str | None, word_index: i
         rhythm = _optional("score_rhythm", n, score_rhythm, expected, spans)
     tones = None
     if layers.tone and (spans is not None or n == 1):
-        tones = _optional("score_tones", n, score_tones, audio, expected, spans)
+        if config.flag("TONE_REFERENCE"):
+            references = _optional("reference_contours", n, _reference_contours, line, expected)
+            tones = _optional("score_tones", n, score_tones_with_references, audio, expected, spans, references)
+        else:
+            tones = _optional("score_tones", n, score_tones, audio, expected, spans)
     return assemble(expected, observed, sounds, spans, rhythm, tones, transcript,
                     word_specs=word_specs, engine="whisper+ctc" if spans is not None else "whisper",
                     trim_offset_ms=audio.trim_offset_ms, **context)
@@ -93,6 +101,26 @@ def _optional(name: str, n: int, fn: Callable, *args):
     except Exception:
         log.exception("%s failed; continuing without it", name)
         return None
+
+
+_CLIP_CONTOURS: dict[str, list[np.ndarray | None]] = {}
+
+
+def _reference_contours(line: Line, expected: list[LyricSyllable]) -> list[np.ndarray | None]:
+    """TONE_REFERENCE experiment: each expected syllable's pitch contour in its word's reference clip."""
+    out: list[np.ndarray | None] = []
+    for s in expected:
+        word = line.words[s.word_index]
+        if word.audio_url is None:
+            out.append(None)
+            continue
+        if word.audio_url not in _CLIP_CONTOURS:
+            clip = load_audio((songs.SONGS_DIR / word.audio_url.removeprefix("/media/songs/")).read_bytes())
+            word_syllables: list[Syllable] = [line.syllables[i] for i in word.syllable_indices]
+            clip_spans = None if len(word_syllables) == 1 else align(clip, word_syllables)
+            _CLIP_CONTOURS[word.audio_url] = syllable_contours(clip, word_syllables, clip_spans)
+        out.append(_CLIP_CONTOURS[word.audio_url][word.syllable_indices.index(s.index)])
+    return out
 
 
 def no_speech_result(*, line_index: int, target: str, mode: str | None, word_index: int | None) -> AttemptResult:
@@ -139,7 +167,7 @@ def assemble(
     words = [_word_result(idx, text, indices, expected, syllables) for idx, text, indices in word_specs]
 
     sung = [s for s in syllables if s.status != "missing"]
-    pronunciation = _mean([s.score or 0 for s in sung]) if sung else None
+    pronunciation = _mean([s.score or 0 for s in syllables]) if sung else None
     completeness = round_half_up(100 * len(sung) / n) if n else None
     tone_scores = [t.score for t in (tones or []) if t is not None and t.score is not None]
     components = {

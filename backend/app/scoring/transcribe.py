@@ -124,6 +124,7 @@ def _heard_faster(audio: Audio) -> str:
         condition_on_previous_text=False,
         vad_filter=os.environ.get("WHISPER_VAD", "1") != "0",
         suppress_tokens=list(_faster_suppress()),
+        initial_prompt=config.whisper_prompt(),
     )
     return "".join(segment.text for segment in segments)
 
@@ -139,6 +140,7 @@ def _heard_mlx(audio: Audio) -> str:
         condition_on_previous_text=False,
         verbose=None,
         suppress_tokens=list(_mlx_suppress()),
+        initial_prompt=config.whisper_prompt(),
     )
     return result.get("text", "")
 

@@ -47,28 +47,29 @@ def score_tones(audio: Audio, expected: list[Syllable], spans: list[Span | None]
     (the neutral tone), or a ToneGrade whose heard and score are None when no
     clear pitch was found.
     """
-    if spans is None:
-        if len(expected) != 1:
-            raise ValueError("spans can be omitted only for a one-syllable word")
-    elif len(spans) != len(expected):
-        raise ValueError("spans must have one entry per expected syllable")
+    return score_tones_with_references(audio, expected, spans, None)
 
-    times_ms, semitones = pitch_track(audio.samples, audio.sample_rate)
-    if spans is None:
-        spans = [_voiced_span(times_ms, semitones)]
-    else:
-        spans = _syllable_regions(spans, times_ms, semitones)
 
+def score_tones_with_references(audio: Audio, expected: list[Syllable], spans: list[Span | None] | None,
+                                references: list[np.ndarray | None] | None) -> list[ToneGrade | None]:
+    """score_tones for the TONE_REFERENCE experiment.
+
+    references gives each syllable's contour in its word's reference clip, from
+    syllable_contours. Where one is given it replaces the textbook shape of the
+    expected tone.
+    """
+    if references is not None and len(references) != len(expected):
+        raise ValueError("references must have one entry per expected syllable")
+    contours = syllable_contours(audio, expected, spans)
     targets = sandhi_tones(expected)
     # One syllable has nothing to compare its height against: compare shape only.
     # In a longer word, height (relative to the recording's median) still counts a little.
     shape_weight = 1.0 if len(expected) == 1 else SHAPE_WEIGHT
     grades: list[ToneGrade | None] = []
-    for position, (target, span) in enumerate(zip(targets, spans)):
+    for position, (target, contour) in enumerate(zip(targets, contours)):
         if target is None:
             grades.append(None)
             continue
-        contour = _contour(times_ms, semitones, span)
         if contour is None:
             grades.append(ToneGrade(expected=target, heard=None, score=None))
             continue
@@ -76,6 +77,9 @@ def score_tones(audio: Audio, expected: list[Syllable], spans: list[Span | None]
         word_final = position == len(expected) - 1
         contour = contour - shape_weight * contour.mean()
         templates = {tone: (t := _template(tone, word_final)) - shape_weight * t.mean() for tone in TONE_SHAPES}
+        reference = references[position] if references is not None else None
+        if reference is not None:
+            templates[target] = reference - shape_weight * reference.mean()
         distances = {tone: _distance(contour, t) for tone, t in templates.items()}
 
         heard = min(distances, key=distances.__getitem__)
@@ -84,6 +88,22 @@ def score_tones(audio: Audio, expected: list[Syllable], spans: list[Span | None]
             score = min(score, WRONG_TONE_MAX)
         grades.append(ToneGrade(expected=target, heard=heard, score=score))
     return grades
+
+
+def syllable_contours(audio: Audio, expected: list[Syllable], spans: list[Span | None] | None) -> list[np.ndarray | None]:
+    """Each syllable's pitch at five points, in semitones from the recording's median, or None if too little is voiced."""
+    if spans is None:
+        if len(expected) != 1:
+            raise ValueError("spans can be omitted only for a one-syllable word")
+    elif len(spans) != len(expected):
+        raise ValueError("spans must have one entry per expected syllable")
+
+    times_ms, semitones = pitch_track(audio.samples, audio.sample_rate)
+    if spans is None:
+        regions = [_voiced_span(times_ms, semitones)]
+    else:
+        regions = _syllable_regions(spans, times_ms, semitones)
+    return [_contour(times_ms, semitones, region) for region in regions]
 
 
 def _distance(contour: np.ndarray, template: np.ndarray) -> float:
