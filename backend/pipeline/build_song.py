@@ -31,6 +31,7 @@ VOICE = "zh-CN-XiaoxiaoNeural"          # edge-tts voice for the spoken word cli
 RATE = "-30%"                           # slower than her default, easier to learn from
 MAX_LINE_MS = 30_000                    # a user recording is capped at 30 s
 LONG_LINE_MS = 12_000                   # longer lines are hard to sing back and grade
+ALIGN_CONTEXT_MS = 200                  # align_track looks this far before a line's start
 _SONG_ID = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 
 
@@ -347,7 +348,13 @@ def _generate_clips(out_dir: Path, clips: dict[str, str]) -> None:
 
 
 def _keep_aligned_times(song: Song, path: Path) -> None:
-    """Copy syllable times from the existing song.json for lines that did not change."""
+    """Copy syllable times from the existing song.json to the same lines in the rebuilt song.
+
+    Lines are matched by their text and which occurrence of that text they are (a chorus line
+    sung three times is three lines), so moving or trimming a line in lyrics.yaml keeps its
+    times without running align_track again. A line whose readings changed loses its times,
+    and so does any syllable that no longer starts inside its line.
+    """
     if not path.exists():
         return
     try:
@@ -355,13 +362,24 @@ def _keep_aligned_times(song: Song, path: Path) -> None:
     except ValueError:
         _warn(f"{path} could not be read; syllable times from align_track are not kept")
         return
-    previous = {(l.text, l.start_ms, l.end_ms): l for l in old.lines}
-    for line in song.lines:
-        match = previous.get((line.text, line.start_ms, line.end_ms))
+    previous = dict(zip(_occurrence_keys(old.lines), old.lines))
+    for key, line in zip(_occurrence_keys(song.lines), song.lines):
+        match = previous.get(key)
         if match is None or [s.pinyin_numeric for s in match.syllables] != [s.pinyin_numeric for s in line.syllables]:
             continue
         for new, kept in zip(line.syllables, match.syllables):
-            new.start_ms, new.end_ms = kept.start_ms, kept.end_ms
+            if kept.start_ms is not None and line.start_ms - ALIGN_CONTEXT_MS <= kept.start_ms < line.end_ms:
+                new.start_ms, new.end_ms = kept.start_ms, min(kept.end_ms, line.end_ms)
+
+
+def _occurrence_keys(lines: list[Line]) -> list[tuple[str, int]]:
+    """(text, n) for each line: the nth time this exact text appears in the song."""
+    seen: dict[str, int] = {}
+    keys = []
+    for line in lines:
+        seen[line.text] = seen.get(line.text, 0) + 1
+        keys.append((line.text, seen[line.text]))
+    return keys
 
 
 def _fixed_positions(folder: Path) -> set[tuple[int, int]]:

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fillFractions, notchPosition, recordLimitMs, wordLimitMs } from "./timing";
+import { FILL_LEAD_MS, FILL_MAX_MS, fillFractions, syllableStarts, notchPosition, recordLimitMs, wordLimitMs } from "./timing";
 
 describe("notchPosition", () => {
   it("has no notch until the backend sends offset_ms", () => {
@@ -62,19 +62,42 @@ describe("fillFractions", () => {
   it("is full after the line ends", () => {
     expect(fillFractions(four, 9000)).toEqual([1, 1, 1, 1]);
   });
-  it("follows each syllable's own time once aligned", () => {
-    const aligned = {
-      start_ms: 0, end_ms: 4000,
-      syllables: [
-        { ...LINE.syllables[0], start_ms: 0, end_ms: 1000 },
-        { ...LINE.syllables[1], start_ms: 1500, end_ms: 2000 },
-      ],
-    };
-    expect(fillFractions(aligned, 1750)).toEqual([1, 0.5]);
-    expect(fillFractions(aligned, 1200)).toEqual([1, 0]);
+  const at = (i: number, start_ms: number | null, end_ms: number | null = start_ms == null ? null : start_ms + 100) =>
+    ({ ...LINE.syllables[i], start_ms, end_ms });
+
+  it("fills each aligned character quickly as its syllable is sung", () => {
+    const line = { start_ms: 0, end_ms: 4000, syllables: [at(0, 1000), at(1, 2000), at(2, 3000)] };
+    expect(fillFractions(line, 1000 - FILL_LEAD_MS)).toEqual([0, 0, 0]);
+    expect(fillFractions(line, 1000 + FILL_MAX_MS)).toEqual([1, 0, 0]);
+    const half = 1000 - FILL_LEAD_MS + (FILL_MAX_MS + FILL_LEAD_MS) / 2;
+    expect(fillFractions(line, half)[0]).toBeCloseTo(0.5);
   });
-  it("falls back to the even split if any syllable is unaligned", () => {
-    const partial = { start_ms: 0, end_ms: 2000, syllables: [{ ...LINE.syllables[0], start_ms: 0, end_ms: 100 }, LINE.syllables[1]] };
-    expect(fillFractions(partial, 500)).toEqual([0.5, 0]);
+  it("finishes a character by the time the next syllable starts", () => {
+    const line = { start_ms: 0, end_ms: 4000, syllables: [at(0, 1000), at(1, 1200)] };
+    expect(fillFractions(line, 1200)[0]).toBe(1);
+  });
+  it("keeps a held note full instead of filling slowly across it", () => {
+    const line = { start_ms: 0, end_ms: 15000, syllables: [at(0, 0), at(1, 1000)] };
+    expect(fillFractions(line, 1000 + FILL_MAX_MS)).toEqual([1, 1]);
+    expect(fillFractions(line, 9000)).toEqual([1, 1]);
+  });
+  it("spaces a syllable the aligner missed between its timed neighbours", () => {
+    const line = { start_ms: 0, end_ms: 4000, syllables: [at(0, 0), at(1, null), at(2, 2000)] };
+    expect(syllableStarts(line)).toEqual([0, 1000, 2000]);
+    expect(fillFractions(line, 1000 + FILL_MAX_MS)).toEqual([1, 1, 0]);
+  });
+  it("starts a leading missed syllable at the line start and spaces trailing ones to the line end", () => {
+    const line = { start_ms: 1000, end_ms: 4000, syllables: [at(0, null), at(1, 2000), at(2, null)] };
+    expect(syllableStarts(line)).toEqual([1000, 2000, 3000]);
+  });
+  it("ignores a start outside the line and keeps starts in order", () => {
+    const line = { start_ms: 1000, end_ms: 4000, syllables: [at(0, 1000), at(1, 900), at(2, 2500), at(3, 2000)] };
+    const starts = syllableStarts(line)!;
+    expect(starts[1]).toBeGreaterThanOrEqual(starts[0]);
+    expect(starts.every((s, i) => i === 0 || s >= starts[i - 1])).toBe(true);
+  });
+  it("splits the line evenly when no syllable is aligned", () => {
+    expect(syllableStarts(four)).toBeNull();
+    expect(fillFractions(four, 2500)).toEqual([1, 0.5, 0, 0]);
   });
 });
