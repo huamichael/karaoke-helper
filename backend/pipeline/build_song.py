@@ -28,7 +28,7 @@ from app.schemas import Line, LyricSyllable, Song, Word
 SONGS_DIR = Path(__file__).resolve().parents[2] / "data" / "songs"
 MEDIA_PREFIX = "/media/songs"           # B serves data/songs/ at this path
 VOICE = "zh-CN-XiaoxiaoNeural"          # edge-tts voice for the spoken word clips
-RATE = "-40%"                           # slower than her default, easier to learn from
+RATE = "-30%"                           # slower than her default, easier to learn from
 MAX_LINE_MS = 30_000                    # a user recording is capped at 30 s
 LONG_LINE_MS = 12_000                   # longer lines are hard to sing back and grade
 _SONG_ID = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
