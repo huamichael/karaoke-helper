@@ -28,6 +28,7 @@ from app.schemas import Line, LyricSyllable, Song, Word
 SONGS_DIR = Path(__file__).resolve().parents[2] / "data" / "songs"
 MEDIA_PREFIX = "/media/songs"           # B serves data/songs/ at this path
 VOICE = "zh-CN-XiaoxiaoNeural"          # edge-tts voice for the spoken word clips
+RATE = "-20%"                           # slower than her default, easier to learn from
 MAX_LINE_MS = 30_000                    # a user recording is capped at 30 s
 LONG_LINE_MS = 12_000                   # longer lines are hard to sing back and grade
 _SONG_ID = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
@@ -333,7 +334,7 @@ def _generate_clips(out_dir: Path, clips: dict[str, str]) -> None:
         path = out_dir / f"{key}.mp3"
         async with limit:
             try:
-                await edge_tts.Communicate(text, VOICE).save(str(path))
+                await edge_tts.Communicate(text, VOICE, rate=RATE).save(str(path))
             except Exception as error:  # network or service failure: keep going without this clip
                 path.unlink(missing_ok=True)
                 _warn(f"could not generate the clip for {text!r}: {error}")
@@ -341,7 +342,7 @@ def _generate_clips(out_dir: Path, clips: dict[str, str]) -> None:
     async def run() -> None:
         await asyncio.gather(*(one(key, text) for key, text in missing.items()))
 
-    print(f"generating {len(missing)} spoken word clips with {VOICE} ...", file=sys.stderr)
+    print(f"generating {len(missing)} spoken word clips with {VOICE} at {RATE} ...", file=sys.stderr)
     asyncio.run(run())
 
 
