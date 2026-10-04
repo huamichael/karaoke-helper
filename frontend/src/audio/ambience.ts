@@ -7,8 +7,8 @@
  */
 
 /** Loudness of the crackle while the record plays, and of the static halfway between two songs (0–1). */
-const CRACKLE_LEVEL = 0.3;
-const STATIC_LEVEL = 0.08;
+const CRACKLE_LEVEL = 0.05;
+const STATIC_LEVEL = 0.05;
 
 let ctx: AudioContext | null = null;
 let crackle: GainNode | null = null;
