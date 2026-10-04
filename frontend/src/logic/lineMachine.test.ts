@@ -29,11 +29,27 @@ describe("line session", () => {
     expect(s.fresh).toBe(b.attempt_id);
   });
 
-  it("no_speech says so and returns to ready without storing a result", () => {
-    const s = run([{ type: "listen" }, { type: "listenEnd" }, { type: "record" }, { type: "recorded", audio }, { type: "graded", result: noSpeech() }]);
+  it("no_speech says so and returns to ready without displaying a score", () => {
+    const r = noSpeech();
+    const s = run([{ type: "listen" }, { type: "listenEnd" }, { type: "record" }, { type: "recorded", audio }, { type: "graded", result: r }]);
     expect(s.phase).toBe("ready");
     expect(s.note).toBe(NO_SPEECH_LINE);
-    expect(s.results[0] ?? []).toEqual([]);
+    expect(s.results[0]).toEqual([r]);
+    expect(latestResult(s)).toBeNull();
+  });
+
+  it("a no_speech retry replaces the previous score and chips, including when revisiting the line", () => {
+    const good = lineResult(["good"]), empty = noSpeech();
+    const s = run([{ type: "listen" }, { type: "listenEnd" }, { type: "record" }, { type: "recorded", audio }, { type: "graded", result: good },
+      { type: "practiced", wordIndex: 0 }, { type: "record" }, { type: "recorded", audio: blob() }, { type: "graded", result: empty }]);
+    expect(s).toMatchObject({ phase: "ready", note: NO_SPEECH_LINE, pending: null, fresh: null });
+    expect(s.results[0]).toEqual([good, empty]);
+    expect(s.practiced[0]).toEqual([]);
+    expect(latestResult(s)).toBeNull();
+    const revisited = run([{ type: "goto", index: 1 }, { type: "goto", index: 0 }], s);
+    expect(latestResult(revisited)).toBeNull();
+    const recovered = run([{ type: "listen" }, { type: "listenEnd" }, { type: "record" }, { type: "recorded", audio }, { type: "graded", result: good }], revisited);
+    expect(latestResult(recovered)).toBe(good);
   });
 
   it("a failed request keeps the recording so it can be sent again", () => {

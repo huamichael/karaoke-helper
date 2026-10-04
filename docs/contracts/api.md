@@ -96,9 +96,10 @@ type AttemptResult = {
 
 type WordResult = {
   index: number; text: string; pinyin: string;
-  status: "good" | "ok" | "wrong" | "missing";   // show as green / yellow / red / grey
+  status: "good" | "ok" | "wrong" | "missing";   // show as green / yellow / red / grey; pronunciation only, never rhythm
   score: Score;
   syllable_indices: number[];         // which entries of syllables[] belong to this word
+  // rhythm: "early" | "late" | "on_time" | null;  // DISABLED: see "Rhythm marker (disabled)" below
 };
 
 type SyllableResult = {
@@ -181,6 +182,18 @@ The user chose spoken-accuracy mode, sang 我想和你一起, and pronounced 你
 ```
 
 The same attempt in singing-accuracy mode would report `"engine": "whisper+ctc"`, a `timing` object on every syllable and, from stage 3, a `rhythm` score.
+
+## Rhythm marker (disabled)
+
+Word colour shows pronunciation only, in both modes. A separate early/late marker under each word in singing mode is written but commented out. To enable it, uncomment all five parts in one commit:
+
+1. `backend/app/schemas.py`: the `rhythm` field on `WordResult`.
+2. `backend/app/scoring/grader.py`: the `_word_rhythm` function, and `rhythm=_word_rhythm(parts),` in `_word_result`.
+3. `frontend/src/components/WordChips.tsx`: the marker under the word.
+4. `frontend/src/styles/lyrics.css`: the `.word .rhythm` styles.
+5. This file: the `rhythm` line in `WordResult` above.
+
+Then regenerate `frontend/src/api/types.ts` (`scripts/gen-types.sh`) and add a grader test. A word's rhythm comes from its worst-timed syllable: `on_time` when that syllable's rhythm score is 85 or above, otherwise `early` or `late` by the sign of its offset. It is `null` in spoken mode and Word practice, where rhythm is not scored.
 
 ## Rules
 

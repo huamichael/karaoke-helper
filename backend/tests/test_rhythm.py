@@ -73,13 +73,14 @@ def grading(monkeypatch):
     return line, recording
 
 
-def test_rhythm_switch_reaches_api_result_and_good_pronunciation_feedback(grading):
+def test_rhythm_switch_reaches_api_result_and_keeps_pronunciation_colour(grading):
     line, recording = grading
     result = grader.grade(recording, line, "line", "singing", None)
     assert result.scores.rhythm < 100 and result.scores.overall < 100
+    # Colour is pronunciation only: an early syllable said correctly stays good.
     assert result.syllables[2].score == 100
-    assert result.syllables[2].status == "wrong"
-    assert result.syllables[2].feedback.code == "RHYTHM_EARLY"
+    assert (result.syllables[2].status, result.syllables[2].feedback) == ("good", None)
+    assert result.syllables[2].timing.offset_ms < 0  # early
     assert result.syllables[2].timing.start_ms == 1750
 
 

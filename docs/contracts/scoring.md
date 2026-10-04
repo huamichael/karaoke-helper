@@ -25,7 +25,7 @@ Every score is an integer from 0 to 100.
 - Syllable score = 0.43 × initial + 0.57 × final. If the syllable has no initial, the score is the final alone.
 - If the syllable has no initial but one was heard (果 guǒ for 我 wǒ), the initial is scored as an other mismatch (20) against an empty expected initial, and the weights above apply.
 - Status: `good` at 85 or above, `ok` from 70 to 84, `wrong` below 70, and `missing`. These bands apply to the sound score. A syllable that would be `good` on sound, but whose heard tone differs from the expected tone, takes the status of its tone score instead, and is never `good`: a tone score still at 85 or above becomes `ok`. A wrong tone is capped at 60, so in practice the status is `wrong`. The syllable's own score stays the sound score. An unmeasured tone (`heard` null) does not change the status.
-- Rhythm is checked after tone, and only pulls a syllable that is still `good`. A rhythm score below 85 takes the status of that score. On the rhythm formula, 85 is about 65 ms early or late. An offset of 0 ms has no direction and does not change the status.
+- Rhythm never changes a syllable's status, in either mode, so word colour is pronunciation only (and tone in Word practice). Rhythm is reported in `scores.rhythm`, which counts toward the singing-mode overall score, and in each syllable's `timing.offset_ms` and `timing.score`. A per-word early/late marker is implemented but disabled; see api.md, "Rhythm marker (disabled)".
 
 On the Whisper base, those thresholds work out as follows:
 

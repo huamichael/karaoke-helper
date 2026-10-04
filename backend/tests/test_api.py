@@ -9,6 +9,7 @@ import io
 import json
 import re
 import wave
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -17,6 +18,7 @@ from fastapi.testclient import TestClient
 from app import attempts, main, songs
 from app.audio import BadAudio
 from app.schemas import AttemptResult, ErrorBody, LineStep, Scores
+from app.scoring import transcribe as tr
 
 AUDIO = ("take.webm", b"\0" * 4096, "audio/webm")
 LINE_FORM = {"song_id": "demo", "line_index": "0", "target": "line", "mode": "spoken"}
@@ -233,6 +235,43 @@ def tone_wav(seconds: float, amplitude: float = 0.5) -> tuple[str, bytes, str]:
         w.setframerate(16000)
         w.writeframes(pcm.tobytes())
     return ("take.wav", buf.getvalue(), "audio/wav")
+
+
+@pytest.mark.parametrize("form", [LINE_FORM, WORD_FORM], ids=["line", "word"])
+def test_real_retries_grade_each_upload_instead_of_reusing_the_previous_result(client, monkeypatch, saved, form):
+    monkeypatch.setenv("GRADER", "real")
+    for flag in main.config.LAYER_FLAGS:
+        monkeypatch.setenv(flag, "0")
+    line = songs.get_line(songs.get_song("demo"), 0)
+    expected_text = line.text if form["target"] == "line" else songs.get_word(line, int(form["word_index"])).text
+    inputs = []
+
+    # Replace only the model. Exercise upload decoding, transcription cleanup,
+    # syllable matching, scoring and saving on four takes of the same target.
+    def transcribe(samples, **kwargs):
+        inputs.append(samples.copy())
+        peak = float(np.max(np.abs(samples)))
+        text = expected_text if peak < 0.3 else "aaaa" if peak < 0.6 else "啊啊"
+        return iter([SimpleNamespace(text=text)]), None
+
+    monkeypatch.setattr(tr, "load_model", lambda: SimpleNamespace(transcribe=transcribe))
+    responses = [post(client, form, audio=tone_wav(1, amplitude)) for amplitude in (0.2, 0.5, 0.8, 0.2)]
+    assert all(r.status_code == 200 for r in responses), [r.text for r in responses]
+    good, empty, wrong, recovered = [r.json() for r in responses]
+    assert good["scores"]["overall"] == 100
+    assert empty["status"] == "no_speech"
+    assert all(score is None for score in empty["scores"].values())
+    assert empty["words"] == [] and empty["heard"] is None
+    assert wrong["heard"]["hanzi"] == "啊啊"
+    assert wrong["scores"]["overall"] < good["scores"]["overall"]
+    assert recovered["scores"] == good["scores"]
+    assert len({r.json()["attempt_id"] for r in responses}) == 4
+    assert all(r.json()["engine"] == "whisper" for r in responses)
+    assert len(inputs) == 4
+    assert not np.array_equal(inputs[0], inputs[1])
+    assert not np.array_equal(inputs[1], inputs[2])
+    assert np.array_equal(inputs[0], inputs[3])
+    assert len(list(saved.glob("*.wav"))) == 4
 
 
 @pytest.mark.parametrize("status", ["ok", "no_speech"])

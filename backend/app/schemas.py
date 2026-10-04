@@ -146,9 +146,11 @@ class WordResult(_Model):
     index: int
     text: str
     pinyin: str
-    status: Status
+    status: Status             # pronunciation only, in both modes; rhythm never changes it
     score: Score
     syllable_indices: list[int]
+    # RHYTHM MARKER (disabled; see _word_rhythm in app/scoring/grader.py):
+    # rhythm: Literal["early", "late", "on_time"] | None = None  # singing mode only; None elsewhere
 
 
 class Timing(_Model):

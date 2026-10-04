@@ -20,7 +20,7 @@ services:
       - model-cache:/cache               # Whisper and CTC weights, uv download cache
     environment:
       HOME: /tmp                         # the host user has no home directory in the image
-      GRADER: ${GRADER:-mock}            # mock needs no models; set GRADER=real to grade
+      GRADER: ${GRADER:-real}            # set GRADER=mock explicitly for UI development without models
       WHISPER_ENGINE: ${WHISPER_ENGINE:-faster}  # mlx-whisper is macOS-only; Docker stays on faster-whisper
       ENABLE_CTC: ${ENABLE_CTC:-0}
       ENABLE_RHYTHM: ${ENABLE_RHYTHM:-0}

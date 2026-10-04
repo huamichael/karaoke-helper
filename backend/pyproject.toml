@@ -25,6 +25,8 @@ dependencies = [
     "torch==2.11.*",           # C: local CPU acoustic model
     "torchaudio==2.11.*",      # C: MMS_FA and forced_align
     "pyyaml>=6",                # D: lyrics.yaml
+    # D: jieba 0.42 imports pkg_resources, which setuptools removes after 81.
+    "setuptools>=70,<82",
     "uvicorn>=0.54.0",          # B
     "zhconv>=1.4",              # D: Traditional to Simplified, for segmentation
 ]
@@ -45,7 +47,10 @@ torchaudio = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
-filterwarnings = ["ignore::SyntaxWarning"]  # jieba 0.42 uses old regex escapes
+filterwarnings = [
+    "ignore::SyntaxWarning",                          # jieba 0.42 uses old regex escapes
+    "ignore:pkg_resources is deprecated:UserWarning", # jieba 0.42; setuptools is pinned below 82
+]
 
 [dependency-groups]
 dev = [

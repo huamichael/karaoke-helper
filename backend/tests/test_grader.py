@@ -256,14 +256,23 @@ def ni_result(tone: ToneGrade | None = None, rhythm: RhythmSyllable | None = Non
                            line_index=0, target="word", mode=None, word_index=0)
 
 
-@pytest.mark.parametrize("rhythm_score, offset_ms, status, code", [
-    (84, -120, "ok", "RHYTHM_EARLY"), (70, 90, "ok", "RHYTHM_LATE"),
-    (69, 400, "wrong", "RHYTHM_LATE"), (0, -1, "wrong", "RHYTHM_EARLY"),
-])
-def test_rhythm_below_good_pulls_colour_and_names_the_direction(rhythm_score, offset_ms, status, code):
+@pytest.mark.parametrize("rhythm_score, offset_ms", [(84, -120), (70, 90), (69, 400), (0, -1)])
+def test_rhythm_never_changes_colour(rhythm_score, offset_ms):
+    # Chip colour is pronunciation only, in both modes; rhythm is reported in scores and timing.
     s = ni_result(rhythm=RhythmSyllable(offset_ms=offset_ms, score=rhythm_score)).syllables[0]
-    assert (s.score, s.status) == (100, status)
-    assert (s.feedback.code, s.feedback.message) == (code, feedback.MESSAGES[code])
+    assert (s.score, s.status, s.feedback) == (100, "good", None)
+
+
+def test_singing_line_off_rhythm_keeps_pronunciation_colours():
+    exp = LINE.syllables
+    obs = sylls("我想和你一起", heard=True)
+    late = RhythmResult(score=30, syllables=[RhythmSyllable(offset_ms=500, score=30)] * len(exp))
+    r = grader.assemble(exp, obs, score_sounds_base(exp, obs), spans_for(exp), late, None, heard("我想和你一起"),
+                        word_specs=[(w.index, w.text, w.syllable_indices) for w in LINE.words], engine="whisper+ctc",
+                        trim_offset_ms=0, line_index=0, target="line", mode="singing", word_index=None)
+    assert all(w.status == "good" for w in r.words) and all(s.feedback is None for s in r.syllables)
+    assert r.scores.rhythm == 30 and r.scores.overall < 100
+    assert r.next_step.type == "next_line"
 
 
 def test_rhythm_code_starts_below_the_good_line():

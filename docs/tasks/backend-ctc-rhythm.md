@@ -131,7 +131,7 @@ Answer four questions and report them to the team:
 
 ## Implemented status and running (3 October 2026)
 
-Alignment, per-component likelihood scoring, the track CLI, and checkpoint evaluation are implemented. The grader calls rhythm behind the existing switch. Following main's Task B integration, poor rhythm lowers a syllable that is still `good` after sound and tone checks to the rhythm score's status; the syllable's numeric score remains its sound score. Early/late feedback follows sound and tone feedback in priority. All optional-layer switches still default to off. The syllable types and public scoring function signatures are unchanged.
+Alignment, per-component likelihood scoring, the track CLI, and checkpoint evaluation are implemented. The grader calls rhythm behind the existing switch. Rhythm never changes a syllable's status or a word's colour, which show pronunciation only (team decision, 3 October 2026). Rhythm is reported in `scores.rhythm` and each syllable's `timing`; a per-word early/late marker is implemented but disabled (api.md, "Rhythm marker (disabled)"). All optional-layer switches still default to off. The syllable types and public scoring function signatures are unchanged.
 
 The model is MMS_FA on CPU, with its wildcard output disabled because only known pinyin tokens are aligned. Its convolution stride is checked at load time. Emissions are cached by Audio identity with weak references and an eight-recording bound. Treat samples as immutable during a grading attempt. Imports and weight loading are lazy. The first model download is about 1.18 GB; subsequent runs use the PyTorch cache (`TORCH_HOME` may override it).
 

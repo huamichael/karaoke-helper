@@ -211,9 +211,12 @@ def _syllable_result(index, e, sound, span, rhythm_syllable, tone, trim_offset_m
         # The "ok" fallback only matters if a mismatch ever scores in the good band.
         lowered = status_for(tone.score) if tone.score is not None else "wrong"
         status = "ok" if lowered == "good" else lowered
+    # Colour is pronunciation only, in both modes: rhythm never changes a syllable's status.
+    # Rhythm is reported in scores.rhythm and in each syllable's timing (and, once enabled,
+    # the word's rhythm marker; see _word_rhythm). With status set by pronunciation, a sound
+    # or tone message always wins in feedback.pick, so rhythm_code only matters for a future
+    # rhythm-only message.
     rhythm_code = _rhythm_code(rhythm_syllable)
-    if status == "good" and rhythm_code is not None and rhythm_syllable is not None:
-        status = status_for(rhythm_syllable.score)
     timing = None
     if span is not None:
         timing = Timing(start_ms=span.start_ms + trim_offset_ms, end_ms=span.end_ms + trim_offset_ms,
@@ -231,6 +234,25 @@ def _word_result(index, text, indices, expected, syllables) -> WordResult:
     status = next(st for st in WORST_FIRST if any(p.status == st for p in parts))
     return WordResult(index=index, text=text, pinyin=" ".join(expected[i].pinyin for i in indices),
                       status=status, score=_mean([p.score or 0 for p in parts]), syllable_indices=indices)
+                      # RHYTHM MARKER (disabled): add `rhythm=_word_rhythm(parts),` to the call above.
+
+
+# RHYTHM MARKER (disabled). An early / late / on-time marker under each word in
+# singing mode, kept separate from the chip colour. To enable, uncomment this
+# function, the `rhythm` field on WordResult in app/schemas.py, the call in
+# _word_result above, and the marker in frontend/src/components/WordChips.tsx and
+# frontend/src/styles/lyrics.css; then regenerate frontend/src/api/types.ts.
+# Checklist: docs/contracts/api.md, "Rhythm marker (disabled)".
+#
+# def _word_rhythm(parts: list[SyllableResult]) -> Literal["early", "late", "on_time"] | None:
+#     """The word's rhythm, from its worst-timed syllable. None without rhythm data (spoken mode, Word practice)."""
+#     timed = [p.timing for p in parts if p.timing is not None and p.timing.score is not None]
+#     if not timed:
+#         return None
+#     worst = min(timed, key=lambda t: t.score)
+#     if worst.score >= GOOD_FROM or not worst.offset_ms:
+#         return "on_time"
+#     return "early" if worst.offset_ms < 0 else "late"
 
 
 def _next_step(words: list[WordResult], completeness: int | None, target: str) -> PracticeWordStep | LineStep:
