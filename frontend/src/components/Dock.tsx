@@ -1,6 +1,6 @@
 /**
  * The dock: the current step's actions when the controls are closed, every control
- * with a label when open, Word practice's actions while a word is practised, and
+ * with a label when open, Word practice's actions while a word is practiced, and
  * the microphone prompt when it is needed. The actions come from logic/actions.ts.
  *
  * Owner: A. Spec: docs/design/ui.md §5.3 (dock column), §5.3.1, §5.4.

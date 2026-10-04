@@ -87,17 +87,17 @@ export default function LineScreen({ song, title, mode, onExit }: Props) {
   }, [song.audio_url]);
 
   // Keyboard focus follows practice: Record on open, Sing the line again on success, the word on close.
-  const practisedWord = useRef<number | null>(null);
+  const practicedWord = useRef<number | null>(null);
   const practicePhase = practice?.phase ?? null, practiceWord = practice?.wordIndex ?? null;
   useEffect(() => {
     const focus = (sel: string) => setTimeout(() => root.current?.querySelector<HTMLElement>(sel)?.focus({ preventScroll: true }), 80);
     if (practiceWord != null) {
-      practisedWord.current = practiceWord;
+      practicedWord.current = practiceWord;
       if (practicePhase === "ready") focus(".dock .rec");
       else if (practicePhase === "success") focus(".dock .btn.primary");
-    } else if (practisedWord.current != null) {
-      focus(`.line.active .word[data-w="${practisedWord.current}"]`);
-      practisedWord.current = null;
+    } else if (practicedWord.current != null) {
+      focus(`.line.active .word[data-w="${practicedWord.current}"]`);
+      practicedWord.current = null;
     }
   }, [practicePhase, practiceWord]);
 
@@ -233,7 +233,7 @@ export default function LineScreen({ song, title, mode, onExit }: Props) {
     recording.current?.cancel();
     request.current?.abort();
     stopPlayback();
-    if (earnedMark(p)) dispatch({ type: "practised", wordIndex: p.wordIndex });
+    if (earnedMark(p)) dispatch({ type: "practiced", wordIndex: p.wordIndex });
     setPractice(null);
     after?.();
     setTimeout(() => setMorph((m) => (live.current.practice ? m : null)), 900);
@@ -395,7 +395,7 @@ export default function LineScreen({ song, title, mode, onExit }: Props) {
     toggleControls();
   };
 
-  // While practising, a click on the faded lyrics ends practice (not while recording or grading).
+  // While practicing, a click on the faded lyrics ends practice (not while recording or grading).
   const onLyricsClick = (e: MouseEvent) => {
     const p = live.current.practice;
     if (!p) return;
@@ -410,7 +410,7 @@ export default function LineScreen({ song, title, mode, onExit }: Props) {
     : actionsFor(s.phase, result?.next_step ?? null, open, { last });
   const recordingNow = practice ? practice.phase === "recording" : s.phase === "recording";
   const cls = [
-    "sing", open && "open", practice && "practising", chrome.on && "chrome-on",
+    "sing", open && "open", practice && "practicing", chrome.on && "chrome-on",
     !chrome.on && !open && !practice && "idle", entering && "entering",
   ].filter(Boolean).join(" ");
 
@@ -436,7 +436,7 @@ export default function LineScreen({ song, title, mode, onExit }: Props) {
               phase={k === i ? s.phase : "idle"}
               result={latestResult(s, k)}
               fresh={k === i && !!result && s.fresh === result.attempt_id}
-              practised={s.practised[k] ?? NONE}
+              practiced={s.practiced[k] ?? NONE}
               fill={k === i ? fill : null}
               note={k === i ? s.note : null}
               interactive={k === i && !practice && s.phase !== "recording" && s.phase !== "grading"}

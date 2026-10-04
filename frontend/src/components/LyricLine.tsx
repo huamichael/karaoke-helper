@@ -21,10 +21,10 @@ type Props = {
   phase: LinePhase;
   result: AttemptResult | null;
   fresh: boolean;
-  practised: number[];
+  practiced: number[];
   fill: number[] | null;
   note: string | null;
-  /** Words can be clicked: not while recording, grading or practising. */
+  /** Words can be clicked: not while recording, grading or practicing. */
   interactive: boolean;
   morphWord: number | null;
   awayWord: number | null;
@@ -34,7 +34,7 @@ type Props = {
 };
 
 /** Memoised: the screen passes inactive lines stable props, so a click or a state change re-renders only the active line. */
-export const LyricLine = memo(function LyricLine({ line, index, activeIndex, phase, result, fresh, practised, fill, note, interactive, morphWord, awayWord, onWord, onLine, onMorphDone }: Props) {
+export const LyricLine = memo(function LyricLine({ line, index, activeIndex, phase, result, fresh, practiced, fill, note, interactive, morphWord, awayWord, onWord, onLine, onMorphDone }: Props) {
   const active = index === activeIndex;
   const cls = ["line", active && "active", index < activeIndex && "past", active && fill && "filling", active && phase === "grading" && "grading"]
     .filter(Boolean).join(" ");
@@ -45,7 +45,7 @@ export const LyricLine = memo(function LyricLine({ line, index, activeIndex, pha
         active={active}
         result={result}
         fresh={active && fresh}
-        practised={practised}
+        practiced={practiced}
         fill={active ? fill : null}
         clickable={interactive}
         morphWord={active ? morphWord : null}

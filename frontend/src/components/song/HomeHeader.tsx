@@ -16,7 +16,7 @@ export function HomeHeader() {
           <li><b>1</b>Listen to a line</li>
           <li><b>2</b>Sing it back</li>
           <li><b>3</b>See every word</li>
-          <li><b>4</b>Practise the ones you missed</li>
+          <li><b>4</b>Practice the ones you missed</li>
         </ol>
       </div>
     </header>

@@ -43,7 +43,7 @@ export function WordPractice({ line, practice }: { line: Line; practice: Practic
     : "";
 
   return (
-    <div className={`focus${success ? " success" : ""}`} role="region" aria-label={`Practise ${word.text}`}>
+    <div className={`focus${success ? " success" : ""}`} role="region" aria-label={`Practice ${word.text}`}>
       <div />
       <div className="f-mid">
         <motion.div layoutId="pword" className="f-word">

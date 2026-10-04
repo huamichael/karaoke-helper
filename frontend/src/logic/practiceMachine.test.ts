@@ -39,7 +39,7 @@ describe("word practice", () => {
     expect(practiceReducer(failed, { type: "resend" })).toMatchObject({ phase: "grading", pending: audio, note: null });
   });
 
-  it("Keep practising leaves the success state", () => {
+  it("Keep practicing leaves the success state", () => {
     expect(run([...attempt(wordResult("good")), { type: "keep" }]).phase).toBe("result");
   });
 
@@ -47,7 +47,7 @@ describe("word practice", () => {
     expect(run([...attempt(wordResult("good")), { type: "record" }]).phase).toBe("recording");
   });
 
-  it("earns the practised mark once any attempt was good", () => {
+  it("earns the practiced mark once any attempt was good", () => {
     expect(earnedMark(run(attempt(wordResult("wrong"))))).toBe(false);
     expect(earnedMark(run([...attempt(wordResult("good")), ...attempt(wordResult("wrong"))]))).toBe(true);
   });
@@ -58,7 +58,7 @@ describe("word practice", () => {
     expect(canLeave(run(attempt(wordResult("wrong"))))).toBe(true);
   });
 
-  it("reads the status of the practised word from the result", () => {
+  it("reads the status of the practiced word from the result", () => {
     expect(wordStatus(wordResult("ok", 3), 3)).toBe("ok");
     expect(wordStatus(noSpeech("word"), 1)).toBeNull();
   });

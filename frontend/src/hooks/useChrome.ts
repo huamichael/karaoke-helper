@@ -1,6 +1,6 @@
 /**
  * The line screen's header fades in on pointer movement and out after 2.5 s of
- * stillness, unless it is held (controls open, a word being practised) or the
+ * stillness, unless it is held (controls open, a word being practiced) or the
  * pointer is over it. The cursor hides with it.
  *
  * hide() takes it away at once (E or a double-click closing the controls); for a

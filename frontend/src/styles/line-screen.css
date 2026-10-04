@@ -1,4 +1,4 @@
-/* The line screen as a whole: its states (header shown, controls open, practising, idle cursor)
+/* The line screen as a whole: its states (header shown, controls open, practicing, idle cursor)
    and how it enters. Spec: docs/design/ui.md §3.3, §4.2–4.3. */
 
 .sing { position: absolute; inset: 0; display: flex; overflow: hidden; user-select: none; }

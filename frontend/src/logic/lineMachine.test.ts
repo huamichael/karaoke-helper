@@ -77,7 +77,7 @@ describe("line session", () => {
     expect(sessionReducer(grading, { type: "goto", index: 1 }).lineIndex).toBe(0);
   });
 
-  it("refuses to change line while a word is being practised", () => {
+  it("refuses to change line while a word is being practiced", () => {
     expect(canChangeLine(initSession(3), true)).toBe(false);
   });
 
@@ -90,11 +90,11 @@ describe("line session", () => {
     expect(run([{ type: "goto", index: 3 }]).lineIndex).toBe(0);
   });
 
-  it("marks a practised word, and singing the line again clears the mark", () => {
-    const practised = run([{ type: "practised", wordIndex: 2 }, { type: "practised", wordIndex: 2 }]);
-    expect(practised.practised[0]).toEqual([2]);
-    const sung = run([{ type: "singAgain" }, { type: "record" }, { type: "recorded", audio }, { type: "graded", result: lineResult(["good"]) }], practised);
-    expect(sung.practised[0]).toEqual([]);
+  it("marks a practiced word, and singing the line again clears the mark", () => {
+    const practiced = run([{ type: "practiced", wordIndex: 2 }, { type: "practiced", wordIndex: 2 }]);
+    expect(practiced.practiced[0]).toEqual([2]);
+    const sung = run([{ type: "singAgain" }, { type: "record" }, { type: "recorded", audio }, { type: "graded", result: lineResult(["good"]) }], practiced);
+    expect(sung.practiced[0]).toEqual([]);
   });
 
   it("Sing the line again puts the line in ready", () => {

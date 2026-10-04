@@ -6,7 +6,7 @@
  * word's status (good, ok, wrong, missing), never from a score. Clicking any word
  * of the active line opens Word practice for it.
  *
- * The word being practised flies to the centre of the screen with Motion's
+ * The word being practiced flies to the centre of the screen with Motion's
  * layoutId ("pword"); while it is there, its slot keeps an invisible copy so the
  * line does not move.
  *
@@ -25,7 +25,7 @@ type Props = {
   result: AttemptResult | null;
   /** The result was just revealed: bars grow in, the suggested word pulses. */
   fresh: boolean;
-  practised: number[];
+  practiced: number[];
   /** Karaoke fill per syllable while the line plays. */
   fill: number[] | null;
   clickable: boolean;
@@ -53,7 +53,7 @@ export function WordTokens({ line, syllables, fill }: { line: Line; syllables: n
   );
 }
 
-export function WordChips({ line, active, result, fresh, practised, fill, clickable, morphWord, awayWord, onWord, onMorphDone }: Props) {
+export function WordChips({ line, active, result, fresh, practiced, fill, clickable, morphWord, awayWord, onWord, onMorphDone }: Props) {
   const suggest = active && result?.next_step.type === "practice_word" ? result.next_step.word_index : null;
   const breaks = active ? phraseBreaks(line) : [];
   return (
@@ -80,7 +80,7 @@ export function WordChips({ line, active, result, fresh, practised, fill, clicka
             className={cls}
             role={canClick ? "button" : undefined}
             tabIndex={canClick ? 0 : -1}
-            aria-label={canClick ? `Practise ${w.text}${status ? `, ${status}` : ""}` : undefined}
+            aria-label={canClick ? `Practice ${w.text}${status ? `, ${status}` : ""}` : undefined}
             onClick={canClick ? open : undefined}
             onKeyDown={canClick ? (e: KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(e); } } : undefined}
           >
@@ -90,9 +90,9 @@ export function WordChips({ line, active, result, fresh, practised, fill, clicka
               className={`mark${status ? " show" : ""}${fresh ? " fresh" : ""}${notch ? " notched" : ""}`}
               style={{ "--d": `${k * 0.06}s`, "--notch": notch ?? undefined } as CSSProperties}
             />
-            <span className="tip">Practise</span>
+            <span className="tip">Practice</span>
             {canClick && <WordTooltip syllables={detail} />}
-            {practised.includes(k) && <i className="chk" aria-hidden><CheckIcon /></i>}
+            {practiced.includes(k) && <i className="chk" aria-hidden><CheckIcon /></i>}
           </span>
         );
         return breaks.includes(k) ? [chip, <span key={`br${k}`} className="row-break" aria-hidden />] : [chip];

@@ -35,7 +35,7 @@ export function practiceActionsFor(phase: PracticePhase, attempts: number): Dock
   });
   switch (phase) {
     case "success":
-      return [act("keep", "quiet", "Keep practising"), act("sing", "button", "Sing the line again", true)];
+      return [act("keep", "quiet", "Keep practicing"), act("sing", "button", "Sing the line again", true)];
     case "recording":
       return [listen(true), act("precord", "record", "Stop", true)];
     case "grading":

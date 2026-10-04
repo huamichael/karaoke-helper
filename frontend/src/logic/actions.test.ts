@@ -4,7 +4,7 @@ import { actionsFor, practiceActionsFor, type DockAction, type LinePhase } from 
 
 const NEXT: NextStep = { type: "next_line", message: "" };
 const RETRY: NextStep = { type: "retry_line", message: "" };
-const PRACTISE: NextStep = { type: "practice_word", word_index: 2, message: "" };
+const PRACTICE: NextStep = { type: "practice_word", word_index: 2, message: "" };
 const ids = (a: DockAction[]) => a.map((x) => x.id);
 const primary = (a: DockAction[]) => a.filter((x) => x.primary && x.kind !== "vinyl").map((x) => x.id);
 
@@ -37,7 +37,7 @@ describe("actionsFor, controls closed", () => {
     expect(a[2]).toMatchObject({ label: "Next line", primary: true });
   });
   it("practice_word keeps Next line primary", () => {
-    expect(primary(actionsFor("result", PRACTISE, false))).toEqual(["next"]);
+    expect(primary(actionsFor("result", PRACTICE, false))).toEqual(["next"]);
   });
   it("retry_line makes Retry the primary action", () => {
     const a = actionsFor("result", RETRY, false);
@@ -110,7 +110,7 @@ describe("practiceActionsFor", () => {
   it("offers Send again after a failed request", () => {
     expect(practiceActionsFor("failed", 1)[1]).toMatchObject({ id: "presend", label: "Send again", primary: true });
   });
-  it("after success offers Sing the line again as primary and Keep practising", () => {
+  it("after success offers Sing the line again as primary and Keep practicing", () => {
     const a = practiceActionsFor("success", 3);
     expect(ids(a)).toEqual(["keep", "sing"]);
     expect(primary(a)).toEqual(["sing"]);
@@ -120,7 +120,7 @@ describe("practiceActionsFor", () => {
 describe("actionsFor, invariants", () => {
   it("never has more than one primary button", () => {
     const phases: LinePhase[] = ["idle", "listening", "ready", "recording", "grading", "result", "failed"];
-    for (const p of phases) for (const step of [null, NEXT, RETRY, PRACTISE]) for (const open of [false, true]) {
+    for (const p of phases) for (const step of [null, NEXT, RETRY, PRACTICE]) for (const open of [false, true]) {
       expect(primary(actionsFor(p, step, open)).length).toBeLessThanOrEqual(1);
     }
   });

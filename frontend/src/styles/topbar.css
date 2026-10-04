@@ -1,9 +1,9 @@
 /* The header: back, title, line count, mode badge, and the options pill on the right. No bar, a soft
    gradient. It fades out after 2.5s of stillness unless the controls are open or a word is being
-   practised. Spec: docs/design/ui.md §3.3 ("Header"), §5.3.1. */
+   practiced. Spec: docs/design/ui.md §3.3 ("Header"), §5.3.1. */
 
 .topbar { position: absolute; top: 0; left: 0; right: 0; height: 72px; z-index: 6; display: flex; align-items: center; gap: 14px; padding: 0 18px 0 14px; background: linear-gradient(rgba(0,0,0,.3), transparent); opacity: 0; transform: translateY(-10px); pointer-events: none; transition: opacity .3s var(--ease), transform .3s var(--ease); }
-.sing.chrome-on .topbar, .sing.open .topbar, .sing.practising .topbar { opacity: 1; transform: none; pointer-events: auto; }
+.sing.chrome-on .topbar, .sing.open .topbar, .sing.practicing .topbar { opacity: 1; transform: none; pointer-events: auto; }
 .back { background: none; border: 0; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; cursor: pointer; padding: 8px 12px 8px 6px; border-radius: 12px; transition: background .2s; }
 .back:hover { background: rgba(255,255,255,.1); }
 .back svg { width: 20px; height: 20px; }

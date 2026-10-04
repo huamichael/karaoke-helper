@@ -39,7 +39,7 @@ export function openPractice(lineIndex: number, wordIndex: number): Practice {
   return { lineIndex, wordIndex, phase: "ready", attempts: [], last: null, note: null, pending: null };
 }
 
-/** The practised word's status in a result, or null when nothing was graded. */
+/** The practiced word's status in a result, or null when nothing was graded. */
 export function wordStatus(result: AttemptResult, wordIndex: number): Status | null {
   if (result.status !== "ok" || !result.words.length) return null;
   return (result.words.find((w) => w.index === wordIndex) ?? result.words[0]).status;
@@ -48,7 +48,7 @@ export function wordStatus(result: AttemptResult, wordIndex: number): Status | n
 /** Clicking the faded lyrics ends practice, but not while recording or grading. */
 export const canLeave = (p: Practice) => p.phase !== "recording" && p.phase !== "grading";
 
-/** The practised ✓ is earned once any attempt came back good. */
+/** The practiced ✓ is earned once any attempt came back good. */
 export const earnedMark = (p: Practice) => p.attempts.includes("good");
 
 const rest = (p: Practice): PracticePhase => (p.last ? "result" : "ready");
