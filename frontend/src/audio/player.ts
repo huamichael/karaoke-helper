@@ -13,6 +13,7 @@
  * Owner: A. Spec: docs/tasks/frontend.md ("Playing a line", "Spoken reference in Word practice").
  */
 import { mediaUrl, type Line, type Word } from "../api/client";
+import { pickVoice } from "../logic/voice";
 
 export type Playback = { done: Promise<"ended" | "stopped">; stop(): void };
 
@@ -179,6 +180,20 @@ export function playWord(word: Pick<Word, "text" | "audio_url">): Playback {
   });
 }
 
+// The Mandarin voice for browser speech (logic/voice.ts). Chrome loads its voice list late, so it is
+// looked up on first use once the list exists, and again whenever the list changes.
+let chosenVoice: SpeechSynthesisVoice | null | undefined;
+function mandarinVoice(): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis?.getVoices() ?? [];
+  if (!voices.length) return null;
+  if (chosenVoice === undefined) chosenVoice = pickVoice(voices);
+  return chosenVoice;
+}
+if (typeof window !== "undefined" && window.speechSynthesis) {
+  window.speechSynthesis.getVoices(); // starts Chrome loading the list
+  window.speechSynthesis.addEventListener?.("voiceschanged", () => { chosenVoice = undefined; });
+}
+
 /** Browser speech. Resolves when done, or after a generous guess if the voice never reports back. */
 export function speak(text: string, rate = 0.8): Playback {
   return controlled((finish) => {
@@ -187,7 +202,9 @@ export function speak(text: string, rate = 0.8): Playback {
     if (synth) {
       synth.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = "zh-CN";
+      const voice = mandarinVoice();
+      u.lang = voice?.lang ?? "zh-CN";
+      if (voice) u.voice = voice;
       u.rate = rate;
       u.onend = () => finish("ended");
       synth.speak(u);
