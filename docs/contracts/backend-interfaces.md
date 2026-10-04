@@ -93,7 +93,7 @@ def transcribe(audio: Audio) -> Transcript
 ```
 - Runs Whisper with the language fixed to Chinese and no prompt.
 - Engine: `mlx-whisper` on macOS, `faster-whisper` elsewhere. Override with `WHISPER_ENGINE=mlx` or `faster`. `mlx` is rejected off macOS. `faster-whisper` uses `beam_size=5` and honours `WHISPER_VAD`. `mlx-whisper` 0.4.3 has no beam search, so it decodes greedily at temperature 0; `WHISPER_VAD` does not apply.
-- Sets `no_speech=True` when Whisper returns nothing or only non-Hanzi text.
+- Sets `no_speech=True` when Whisper returns nothing or only non-Hanzi text. Latin-letter tokens are suppressed during decoding, so English words for Mandarin speech ("How" for hào) do not end up as no speech.
 
 ```python
 def match(expected: list[Syllable], heard: list[Syllable]) -> list[Syllable | None]

@@ -98,6 +98,7 @@ C and D add their own dependencies to `pyproject.toml` and their own rows to `fe
 
 - Load one model at startup. On macOS the default engine is `mlx-whisper` (`mlx-community/whisper-large-v3-turbo`). Elsewhere, and in Docker, it is `WhisperModel("large-v3-turbo", device="cpu", compute_type="int8")`. `WHISPER_ENGINE=faster` forces the CPU path. If mlx is still too slow, try `medium`. `mlx-whisper` 0.4.3 cannot do `beam_size=5`; it uses greedy decode at temperature 0.
 - Call it with `language="zh"`, `beam_size=5`, `temperature=0.0`, `condition_on_previous_text=False`, and no `initial_prompt`.
+- Also pass `suppress_tokens`: `-1` (Whisper's own symbol list) plus every text token containing a Latin letter. With `language="zh"` Whisper still writes English for Mandarin that sounds like an English word ("How" for hào, "Hello" for 哈囉). Only Hanzi are kept, so those takes read as no speech. Suppressing Latin tokens makes it write Hanzi instead (好). It gives Whisper no hint about the lyric. Raising `temperature` was tested on saved attempts and did not make grading stricter; keep it at 0.
 - Never pass the expected lyric as a prompt. It biases the transcript toward a pass.
 - `vad_filter=True` reduces invented text on silence, but it may drop a very short word. Test both settings on the isolated words.
 - Whisper may return Traditional characters. That is fine: `to_syllables` handles both scripts and you compare sounds, not characters.

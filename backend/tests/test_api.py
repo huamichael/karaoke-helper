@@ -255,6 +255,7 @@ def test_real_retries_grade_each_upload_instead_of_reusing_the_previous_result(c
         return iter([SimpleNamespace(text=text)]), None
 
     monkeypatch.setattr(tr, "load_model", lambda: SimpleNamespace(transcribe=transcribe))
+    monkeypatch.setattr(tr, "_faster_suppress", lambda: (-1,))
     responses = [post(client, form, audio=tone_wav(1, amplitude)) for amplitude in (0.2, 0.5, 0.8, 0.2)]
     assert all(r.status_code == 200 for r in responses), [r.text for r in responses]
     good, empty, wrong, recovered = [r.json() for r in responses]

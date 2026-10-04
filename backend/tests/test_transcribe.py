@@ -44,6 +44,7 @@ def fake(monkeypatch):
         model = FakeModel(*texts)
         monkeypatch.setenv("WHISPER_ENGINE", "faster")
         monkeypatch.setattr(tr, "load_model", lambda: model)
+        monkeypatch.setattr(tr, "_faster_suppress", lambda: (-1, 11, 12))
         monkeypatch.setattr(mandarin, "to_syllables", fake_to_syllables)
         return model
     return install
@@ -56,7 +57,8 @@ def test_whisper_called_with_spec_arguments(fake, monkeypatch):
     samples, kwargs = model.calls[0]
     assert samples is AUDIO.samples
     assert kwargs == {"language": "zh", "beam_size": 5, "temperature": 0.0,
-                      "condition_on_previous_text": False, "vad_filter": True}
+                      "condition_on_previous_text": False, "vad_filter": True,
+                      "suppress_tokens": [-1, 11, 12]}
 
 
 def test_vad_can_be_switched_off(fake, monkeypatch):
@@ -162,6 +164,7 @@ def test_mlx_called_with_spec_arguments(monkeypatch):
         return {"text": "我想，和你一起。Thank you"}
 
     monkeypatch.setattr(tr, "_mlx", lambda: (SimpleNamespace(transcribe=fake_transcribe), None))
+    monkeypatch.setattr(tr, "_mlx_suppress", lambda: (-1, 21))
     t = tr.transcribe(AUDIO)
     samples, kwargs = calls[0]
     assert samples is AUDIO.samples
@@ -171,6 +174,7 @@ def test_mlx_called_with_spec_arguments(monkeypatch):
         "temperature": 0.0,
         "condition_on_previous_text": False,
         "verbose": None,
+        "suppress_tokens": [-1, 21],
     }
     assert "beam_size" not in kwargs
     assert "vad_filter" not in kwargs
@@ -186,6 +190,7 @@ def test_mlx_no_speech_and_no_vad_kwarg(monkeypatch):
     calls = []
     monkeypatch.setattr(tr, "_mlx", lambda: (SimpleNamespace(
         transcribe=lambda samples, **kwargs: calls.append(kwargs) or {"text": ""}), None))
+    monkeypatch.setattr(tr, "_mlx_suppress", lambda: (-1,))
     t = tr.transcribe(AUDIO)
     assert t.no_speech is True
     assert "vad_filter" not in calls[0]
@@ -199,12 +204,15 @@ def test_mlx_model_loaded_once(monkeypatch):
     holder = SimpleNamespace(get_model=lambda repo, dtype: built.append((repo, dtype)) or object())
     monkeypatch.setattr(tr, "_mlx", lambda: (None, holder))
     monkeypatch.setattr(tr, "_mlx_dtype", lambda: "f16")
+    suppress = []
+    monkeypatch.setattr(tr, "_mlx_suppress", lambda: suppress.append("mlx") or (-1,))
     tr.load_mlx_model.cache_clear()
     try:
         assert tr.load_mlx_model() is tr.load_mlx_model()
         assert built == [("mlx-community/whisper-medium-mlx", "f16")]
         tr.warmup()
         assert built == [("mlx-community/whisper-medium-mlx", "f16")]
+        assert suppress == ["mlx"]
     finally:
         tr.load_mlx_model.cache_clear()
 
@@ -214,8 +222,55 @@ def test_warmup_loads_faster_when_selected(monkeypatch):
     monkeypatch.setenv("WHISPER_ENGINE", "faster")
     monkeypatch.setattr(tr, "load_model", lambda: calls.append("faster"))
     monkeypatch.setattr(tr, "load_mlx_model", lambda: calls.append("mlx"))
+    monkeypatch.setattr(tr, "_faster_suppress", lambda: calls.append("faster suppress") or (-1,))
+    monkeypatch.setattr(tr, "_mlx_suppress", lambda: calls.append("mlx suppress") or (-1,))
     tr.warmup()
-    assert calls == ["faster"]
+    assert calls == ["faster", "faster suppress"]
+
+
+# --- Latin tokens are suppressed ------------------------------------------------------
+
+VOCAB = {0: "好", 1: "How", 2: " how", 3: "，", 4: "é", 5: "OK", 6: "123", 7: "Hello"}
+
+
+def test_latin_tokens_are_the_ones_with_latin_letters_below_eot():
+    assert tr.latin_tokens(lambda ids: VOCAB[ids[0]], eot=7) == (1, 2, 5)
+
+
+def test_latin_tokens_empty_vocabulary():
+    assert tr.latin_tokens(lambda ids: VOCAB[ids[0]], eot=0) == ()
+
+
+def test_faster_suppress_list_built_once_from_model_tokenizer(monkeypatch):
+    decoded = []
+    hf = SimpleNamespace(decode=lambda ids: decoded.append(ids[0]) or VOCAB[ids[0]],
+                         token_to_id=lambda name: {"<|endoftext|>": 7}[name])
+    monkeypatch.setattr(tr, "load_model", lambda: SimpleNamespace(hf_tokenizer=hf))
+    tr._faster_suppress.cache_clear()
+    try:
+        assert tr._faster_suppress() == (-1, 1, 2, 5)
+        assert tr._faster_suppress() == (-1, 1, 2, 5)
+        assert decoded == list(range(7))
+    finally:
+        tr._faster_suppress.cache_clear()
+
+
+def test_mlx_suppress_list_keeps_whisper_symbols_and_uses_the_model_language_count(monkeypatch):
+    mt = pytest.importorskip("mlx_whisper.tokenizer")
+    asked = []
+
+    def get_tokenizer(multilingual, *, num_languages, language, task):
+        asked.append((multilingual, num_languages, language, task))
+        return SimpleNamespace(decode=lambda ids: VOCAB[ids[0]], eot=7)
+
+    monkeypatch.setattr(mt, "get_tokenizer", get_tokenizer)
+    monkeypatch.setattr(tr, "load_mlx_model", lambda: SimpleNamespace(num_languages=100))
+    tr._mlx_suppress.cache_clear()
+    try:
+        assert tr._mlx_suppress() == (-1, 1, 2, 5)
+        assert asked == [(True, 100, "zh", "transcribe")]
+    finally:
+        tr._mlx_suppress.cache_clear()
 
 
 # --- real model, opt-in -----------------------------------------------------------
@@ -273,3 +328,17 @@ def test_real_mlx_on_synthetic_mandarin(monkeypatch, tmp_path):
     print(f"\nmlx heard {t.text!r} in {elapsed:.2f}s ({len(audio.samples) / 16000:.2f}s of audio)")
     assert not t.no_speech
     assert sum(ch in t.text for ch in "我想和你一起") >= 5
+
+
+@needs_mlx
+@pytest.mark.parametrize("engine", ["mlx", "faster"])
+def test_real_whisper_writes_hanzi_for_an_english_sounding_syllable(monkeypatch, tmp_path, engine):
+    if engine == "mlx":
+        pytest.importorskip("mlx_whisper")
+    monkeypatch.setenv("WHISPER_ENGINE", engine)
+    monkeypatch.setattr(mandarin, "to_syllables", fake_to_syllables)
+    out = tmp_path / "how.aiff"
+    subprocess.run(["say", "-v", "Samantha", "-o", str(out), "How"], check=True)
+    t = tr.transcribe(load_audio(out.read_bytes()))
+    print(f"\n{engine} heard {t.text!r} for English 'How'")
+    assert not t.no_speech
