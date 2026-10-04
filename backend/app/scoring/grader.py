@@ -51,7 +51,7 @@ RETRY_BELOW_COMPLETENESS = 50
 WEIGHTS = {
     ("line", "spoken"): {"pronunciation": 0.71, "completeness": 0.29},
     ("line", "singing"): {"pronunciation": 0.60, "completeness": 0.25, "rhythm": 0.15},
-    ("word", None): {"pronunciation": 0.50, "completeness": 0.20, "tone": 0.30},
+    ("word", None): {"pronunciation": 0.40, "completeness": 0.10, "tone": 0.50},
 }
 WORST_FIRST: list[Status] = ["missing", "wrong", "ok", "good"]
 

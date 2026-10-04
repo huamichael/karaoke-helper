@@ -9,6 +9,7 @@ Owner: B.
 import os
 import shutil
 import subprocess
+import sys
 import time
 from types import SimpleNamespace
 
@@ -256,14 +257,14 @@ def test_faster_suppress_list_built_once_from_model_tokenizer(monkeypatch):
 
 
 def test_mlx_suppress_list_keeps_whisper_symbols_and_uses_the_model_language_count(monkeypatch):
-    mt = pytest.importorskip("mlx_whisper.tokenizer")
     asked = []
 
     def get_tokenizer(multilingual, *, num_languages, language, task):
         asked.append((multilingual, num_languages, language, task))
         return SimpleNamespace(decode=lambda ids: VOCAB[ids[0]], eot=7)
 
-    monkeypatch.setattr(mt, "get_tokenizer", get_tokenizer)
+    monkeypatch.setitem(sys.modules, "mlx_whisper", SimpleNamespace())
+    monkeypatch.setitem(sys.modules, "mlx_whisper.tokenizer", SimpleNamespace(get_tokenizer=get_tokenizer))
     monkeypatch.setattr(tr, "load_mlx_model", lambda: SimpleNamespace(num_languages=100))
     tr._mlx_suppress.cache_clear()
     try:

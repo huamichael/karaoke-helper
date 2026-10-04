@@ -18,7 +18,7 @@ from app.schemas import Audio, Span, Syllable, ToneGrade
 from app.scoring.pitch import FRAME_MS, pitch_track
 
 # Tone shapes on the five-level scale, sampled at five points across the syllable.
-TONE_SHAPES = {
+TONE_SHAPES: dict[int, list[float]] = {
     1: [5, 5, 5, 5, 5],          # 55: high and level
     2: [3, 3.5, 4, 4.5, 5],      # 35: rising
     3: [2, 1.5, 1, 2.5, 4],      # 214: dipping, when the syllable ends the word
@@ -33,6 +33,8 @@ SCORE_SCALE = 6.0            # semitones of distance at which the score falls to
 WRONG_TONE_MAX = 60          # cap when another tone shape fits better
 MIN_VOICED_MS = 50           # less voiced audio than this: no tone is measured
 EDGE_TRIM = 0.1              # ignore the first and last tenth of each syllable
+LAST_SYLLABLE_MAX_MS = 400   # in a longer word, the last syllable is read for at most this long
+SHAPE_WEIGHT = 0.75          # in a longer word, how much a syllable is judged by shape rather than height
 
 
 def score_tones(audio: Audio, expected: list[Syllable], spans: list[Span | None] | None) -> list[ToneGrade | None]:
@@ -54,9 +56,13 @@ def score_tones(audio: Audio, expected: list[Syllable], spans: list[Span | None]
     times_ms, semitones = pitch_track(audio.samples, audio.sample_rate)
     if spans is None:
         spans = [_voiced_span(times_ms, semitones)]
+    else:
+        spans = _syllable_regions(spans, times_ms, semitones)
 
     targets = sandhi_tones(expected)
-    shape_only = len(expected) == 1
+    # One syllable has nothing to compare its height against: compare shape only.
+    # In a longer word, height (relative to the recording's median) still counts a little.
+    shape_weight = 1.0 if len(expected) == 1 else SHAPE_WEIGHT
     grades: list[ToneGrade | None] = []
     for position, (target, span) in enumerate(zip(targets, spans)):
         if target is None:
@@ -68,14 +74,11 @@ def score_tones(audio: Audio, expected: list[Syllable], spans: list[Span | None]
             continue
 
         word_final = position == len(expected) - 1
-        templates = {tone: _template(tone, word_final) for tone in TONE_SHAPES}
-        if shape_only:
-            # One syllable has nothing to compare its height against: compare shape only.
-            contour = contour - contour.mean()
-            templates = {tone: t - t.mean() for tone, t in templates.items()}
+        contour = contour - shape_weight * contour.mean()
+        templates = {tone: (t := _template(tone, word_final)) - shape_weight * t.mean() for tone in TONE_SHAPES}
         distances = {tone: _distance(contour, t) for tone, t in templates.items()}
 
-        heard = min(distances, key=distances.get)
+        heard = min(distances, key=distances.__getitem__)
         score = round(100 * math.exp(-distances[target] / SCORE_SCALE))
         if heard != target:
             score = min(score, WRONG_TONE_MAX)
@@ -107,6 +110,27 @@ def _voiced_span(times_ms: np.ndarray, semitones: np.ndarray) -> Span | None:
     if voiced.size == 0:
         return None
     return Span(start_ms=int(voiced[0]), end_ms=int(voiced[-1]) + FRAME_MS, confidence=1.0)
+
+
+def _syllable_regions(spans: list[Span | None], times_ms: np.ndarray, semitones: np.ndarray) -> list[Span | None]:
+    """Each syllable runs from the start of its span to the start of the next one.
+
+    The CTC layer's spans mark where each syllable is recognised, often well under
+    half of it, while the tone runs through the whole vowel. The last syllable, and
+    one followed by a syllable without a span, runs to the last voiced frame, for
+    at most LAST_SYLLABLE_MAX_MS.
+    """
+    voiced = times_ms[~np.isnan(semitones)]
+    voiced_end = int(voiced[-1]) + FRAME_MS if voiced.size else 0
+    regions: list[Span | None] = []
+    for i, span in enumerate(spans):
+        if span is None:
+            regions.append(None)
+            continue
+        following = spans[i + 1] if i + 1 < len(spans) else None
+        end = following.start_ms if following else min(voiced_end, span.start_ms + LAST_SYLLABLE_MAX_MS)
+        regions.append(Span(start_ms=span.start_ms, end_ms=max(end, span.end_ms), confidence=span.confidence))
+    return regions
 
 
 def _contour(times_ms: np.ndarray, semitones: np.ndarray, span: Span | None) -> np.ndarray | None:
