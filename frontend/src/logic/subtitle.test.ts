@@ -1,5 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { demoMarks, previewWindow, subtitleIndex } from "./subtitle";
+import { demoMarks, loopTime, previewWindow, subtitleIndex } from "./subtitle";
+
+describe("loopTime", () => {
+  const win = { fromMs: 1000, toMs: 5000 };
+  it("runs from the start of the window", () => {
+    expect(loopTime(win, 0)).toBe(1000);
+    expect(loopTime(win, 2500)).toBe(3500);
+  });
+  it("comes back round to the start, again and again", () => {
+    expect(loopTime(win, 4000)).toBe(1000);
+    expect(loopTime(win, 4500)).toBe(1500);
+    expect(loopTime(win, 40_000 + 250)).toBe(1250);
+  });
+  it("copes with an empty window", () => {
+    expect(loopTime({ fromMs: 800, toMs: 800 }, 1234)).toBe(800);
+  });
+});
 
 describe("demoMarks", () => {
   it("gives one mark per character, the same every time", () => {

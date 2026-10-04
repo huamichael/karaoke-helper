@@ -52,6 +52,12 @@ export function demoMarks(songId: string, line: number, count: number): ("good" 
   return marks;
 }
 
+/** The track time elapsedMs after the record started, going round the window again and again. */
+export function loopTime(win: { fromMs: number; toMs: number }, elapsedMs: number): number {
+  const span = win.toMs - win.fromMs;
+  return span > 0 ? win.fromMs + (elapsedMs % span) : win.fromMs;
+}
+
 /** The part of the track the record plays while the arm is down, looping: the whole lyric, padded. */
 export function previewWindow(lines: Timed[]): { fromMs: number; toMs: number } {
   return { fromMs: Math.max(0, lines[0].start_ms - PAD_MS), toMs: lines[lines.length - 1].end_ms + PAD_MS };

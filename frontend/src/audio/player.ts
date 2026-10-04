@@ -13,6 +13,7 @@
  * Owner: A. Spec: docs/tasks/frontend.md ("Playing a line", "Spoken reference in Word practice").
  */
 import { mediaUrl, type Line, type Word } from "../api/client";
+import { loopTime } from "../logic/subtitle";
 import { pickVoice } from "../logic/voice";
 
 export type Playback = { done: Promise<"ended" | "stopped">; stop(): void };
@@ -106,7 +107,8 @@ const STOP_FADE_MS = 250;
  * long as the arm is down, fading in at the start of each pass and out before the
  * loop. Muted, it keeps playing silently, so the lyric subtitle stays in time.
  * Browsers refuse sound before the first click or key press; then it plays muted
- * and unmutes on the first one. Stopping fades out over a quarter second.
+ * and unmutes on the first one. Stopping fades out over a quarter second. With
+ * no track to play, the lyric still goes round on a silent clock.
  */
 export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number }, muted: boolean): RecordPlayback {
   const a = new Audio(mediaUrl(audioUrl));
@@ -114,7 +116,7 @@ export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number
   a.volume = 0;
   a.muted = muted;
   a.currentTime = win.fromMs / 1000;
-  let want = muted, blocked = false, raf = 0, stoppingAt = 0, settled = false;
+  let want = muted, blocked = false, raf = 0, stoppingAt = 0, silentSince = 0, settled = false;
   let resolve!: (r: "ended" | "stopped") => void;
   const done = new Promise<"ended" | "stopped">((r) => (resolve = r));
   const unlock = () => { blocked = false; a.muted = want; };
@@ -144,23 +146,40 @@ export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number
     raf = requestAnimationFrame(frame);
   };
   const start = () => { if (!settled) raf = requestAnimationFrame(frame); };
+  // If the file itself ends before the window does, go round again all the same.
+  a.onended = () => {
+    if (settled || stoppingAt || silentSince) return;
+    a.currentTime = win.fromMs / 1000;
+    a.play().catch(() => {});
+  };
+  // No track to play (none in the bundle yet, or it cannot be decoded): keep time silently, still looping,
+  // so the lyric on the song screen goes on going round.
+  const silent = () => {
+    if (settled) return;
+    silentSince = performance.now();
+    a.removeAttribute("src");
+  };
   a.play().then(start, (e: DOMException) => {
     if (settled) return;
-    if (e.name !== "NotAllowedError" || a.muted) return finish("ended"); // no track yet, or it can't play
+    if (e.name !== "NotAllowedError" || a.muted) return silent();
     blocked = true;
     a.muted = true;
     document.addEventListener("pointerdown", unlock, { once: true });
     document.addEventListener("keydown", unlock, { once: true });
-    a.play().then(start, () => finish("ended"));
+    a.play().then(start, silent);
   });
   return {
     done,
     stop: () => {
       if (settled) return;
-      if (a.paused || stoppingAt) return finish("stopped");
+      if (silentSince || a.paused || stoppingAt) return finish("stopped");
       stoppingAt = performance.now();
     },
-    timeMs: () => (!settled && !a.paused && a.readyState >= 2 ? a.currentTime * 1000 : null),
+    timeMs: () => {
+      if (settled) return null;
+      if (silentSince) return loopTime(win, performance.now() - silentSince);
+      return !a.paused && a.readyState >= 2 ? a.currentTime * 1000 : null;
+    },
     setMuted: (m) => {
       want = m;
       if (!blocked) a.muted = m;
