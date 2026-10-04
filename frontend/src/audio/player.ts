@@ -109,14 +109,17 @@ const STOP_FADE_MS = 250;
  * Browsers refuse sound before the first click or key press; then it plays muted
  * and unmutes on the first one. Stopping fades out over a quarter second. With
  * no track to play, the lyric still goes round on a silent clock.
+ *
+ * It starts at startMs (where the record was last stopped, logic/subtitle.ts
+ * resumeFrom), fading in from there too.
  */
-export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number }, muted: boolean): RecordPlayback {
+export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number }, muted: boolean, startMs = win.fromMs): RecordPlayback {
   const a = new Audio(mediaUrl(audioUrl));
   a.preload = "auto";
   a.volume = 0;
   a.muted = muted;
-  a.currentTime = win.fromMs / 1000;
-  let want = muted, blocked = false, raf = 0, stoppingAt = 0, silentSince = 0, settled = false;
+  a.currentTime = startMs / 1000;
+  let want = muted, blocked = false, raf = 0, stoppingAt = 0, silentSince = 0, begun = 0, settled = false;
   let resolve!: (r: "ended" | "stopped") => void;
   const done = new Promise<"ended" | "stopped">((r) => (resolve = r));
   const unlock = () => { blocked = false; a.muted = want; };
@@ -136,7 +139,7 @@ export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number
       a.currentTime = win.fromMs / 1000;
       ms = win.fromMs;
     }
-    let v = Math.max(0, Math.min(1, (ms - win.fromMs) / FADE_MS, (win.toMs - ms) / FADE_MS));
+    let v = Math.max(0, Math.min(1, (ms - win.fromMs) / FADE_MS, (win.toMs - ms) / FADE_MS, (now - begun) / FADE_MS));
     if (stoppingAt) {
       const k = (now - stoppingAt) / STOP_FADE_MS;
       if (k >= 1) return finish("stopped");
@@ -145,7 +148,7 @@ export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number
     a.volume = v * RECORD_VOLUME;
     raf = requestAnimationFrame(frame);
   };
-  const start = () => { if (!settled) raf = requestAnimationFrame(frame); };
+  const start = () => { if (!settled) { begun = performance.now(); raf = requestAnimationFrame(frame); } };
   // If the file itself ends before the window does, go round again all the same.
   a.onended = () => {
     if (settled || stoppingAt || silentSince) return;
@@ -177,7 +180,7 @@ export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number
     },
     timeMs: () => {
       if (settled) return null;
-      if (silentSince) return loopTime(win, performance.now() - silentSince);
+      if (silentSince) return loopTime(win, startMs - win.fromMs + performance.now() - silentSince);
       return !a.paused && a.readyState >= 2 ? a.currentTime * 1000 : null;
     },
     setMuted: (m) => {

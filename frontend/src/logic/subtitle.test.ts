@@ -1,5 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { demoMarks, HOLD_MS, LEAD_MS, loopTime, previewWindow, subtitleIndex } from "./subtitle";
+import { demoMarks, HOLD_MS, LEAD_MS, loopTime, previewWindow, resumeFrom, subtitleIndex } from "./subtitle";
+
+describe("resumeFrom", () => {
+  const win = { fromMs: 1000, toMs: 60_000 };
+  it("starts where the record was stopped", () => {
+    expect(resumeFrom(win, 23_400)).toBe(23_400);
+  });
+  it("starts at the beginning when it was never played", () => {
+    expect(resumeFrom(win, undefined)).toBe(1000);
+  });
+  it("starts at the beginning when it stopped in the last moments before the loop", () => {
+    expect(resumeFrom(win, 59_500)).toBe(1000);
+  });
+  it("never starts outside the part the record plays", () => {
+    expect(resumeFrom(win, 200)).toBe(1000);
+    expect(resumeFrom(win, 90_000)).toBe(1000);
+  });
+});
 
 describe("loopTime", () => {
   const win = { fromMs: 1000, toMs: 5000 };

@@ -30,7 +30,7 @@ import { Tonearm, type ArmPlace, type CapPlace, type TonearmHandle } from "../co
 import { useLatest } from "../hooks/useLatest";
 import { useWindowSize } from "../hooks/useWindowSize";
 import { betweenAmount, wheelGeometry } from "../logic/recordWheel";
-import { previewWindow } from "../logic/subtitle";
+import { previewWindow, resumeFrom } from "../logic/subtitle";
 import type { Entry } from "../logic/songList";
 
 type Props = {
@@ -46,9 +46,11 @@ type Props = {
   onRetry(): void;
 };
 
-// The sound switch and the turntable keep their state across visits to the song screen.
+// The sound switch and the turntable keep their state across visits to the song screen,
+// and each song's record where it was stopped, so playing it again carries on from there.
 let soundOn = true;
 let recordOn = true;
+const stoppedAt = new Map<string, number>();
 const songs = new Map<string, Promise<Song>>();
 const songFor = (id: string) => {
   if (!songs.has(id)) songs.set(id, getSong(id).catch((e) => { songs.delete(id); throw e; }));
@@ -61,6 +63,7 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
   const record = useRef<SongRecordHandle>(null);
   const arm = useRef<TonearmHandle>(null);
   const audio = useRef<RecordPlayback | null>(null);
+  const audioSong = useRef<string | null>(null);
   const settleTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const playingNow = useRef(recordOn); // read by async arm callbacks before React re-renders
   const [picking, setPicking] = useState(false);
@@ -81,15 +84,22 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
   const go = (where: ArmPlace) => arm.current?.go(where) ?? Promise.resolve(true);
 
   // ---- the preview: plays while the arm is down on a playable song (muted while sound is off) ----
-  const stopAudio = useCallback(() => { audio.current?.stop(); audio.current = null; }, []);
+  const stopAudio = useCallback(() => {
+    const t = audio.current?.timeMs();
+    if (t != null && audioSong.current) stoppedAt.set(audioSong.current, t);
+    audio.current?.stop();
+    audio.current = null;
+  }, []);
   const startAudio = useCallback((k: number) => {
     const e = live.current.entries[k];
     if (!e?.playable || audio.current) return;
     songFor(e.id).then((song) => {
       const now = live.current;
       if (!playingNow.current || now.leaving || now.entries[now.selected]?.id !== e.id || audio.current || !song.lines.length) return;
-      const pb = playRecord(song.audio_url, previewWindow(song.lines), !now.sound);
+      const win = previewWindow(song.lines);
+      const pb = playRecord(song.audio_url, win, !now.sound, resumeFrom(win, stoppedAt.get(e.id)));
       audio.current = pb;
+      audioSong.current = e.id;
       pb.done.then(() => { if (audio.current === pb) audio.current = null; });
     }, () => {});
   }, [live]);

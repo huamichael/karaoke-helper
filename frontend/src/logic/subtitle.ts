@@ -59,6 +59,15 @@ export function demoMarks(songId: string, line: number, count: number): ("good" 
   return marks;
 }
 
+/** Stopped this close to the loop point, the record starts the song over instead. */
+export const RESUME_TAIL_MS = 2000;
+
+/** Where the record starts playing again, given where it was last stopped (undefined: never played). */
+export function resumeFrom(win: { fromMs: number; toMs: number }, stoppedAtMs: number | undefined): number {
+  if (stoppedAtMs == null || stoppedAtMs < win.fromMs || stoppedAtMs >= win.toMs - RESUME_TAIL_MS) return win.fromMs;
+  return stoppedAtMs;
+}
+
 /** The track time elapsedMs after the record started, going round the window again and again. */
 export function loopTime(win: { fromMs: number; toMs: number }, elapsedMs: number): number {
   const span = win.toMs - win.fromMs;
