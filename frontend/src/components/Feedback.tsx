@@ -1,8 +1,6 @@
 /**
- * The text under a result: the feedback message and the suggested next step,
- * rendered as sent by the backend. What the grader heard is not shown: its idea
- * of that can be mistaken, and a confident wrong diagnosis misleads more than it
- * helps (team decision, 4 October 2026; docs/contracts/scoring.md, "Feedback").
+ * The text under a result: the "what we heard" transcript, the feedback message,
+ * and the suggested next step. All of it is rendered as sent by the backend.
  *
  * Under the line the message is next_step.message; in Word practice it is the
  * syllables' feedback.message (docs/design/ui.md §9, question 5).
@@ -13,6 +11,12 @@
  *
  * Owner: A. Spec: docs/tasks/frontend.md.
  */
+import type { AttemptResult } from "../api/client";
+
+export function Heard({ heard }: { heard: AttemptResult["heard"] }) {
+  if (!heard) return null;
+  return <p className="heard">We heard<span className="hh">{heard.hanzi}</span>{heard.pinyin}</p>;
+}
 
 export function Feedback({ message }: { message: string | null }) {
   if (!message) return null;

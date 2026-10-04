@@ -3,10 +3,8 @@
  *
  * The clicked word moves to the exact centre of the screen (Motion layoutId
  * "pword", shared with WordChips) while the lyrics step back. The result is marked
- * on the word itself: each syllable's pinyin takes its status colour and underline.
- * It never says what was heard: the grader's idea of that can be mistaken, and a
- * confident wrong diagnosis misleads (team decision, 4 October 2026; scoring.md,
- * "Feedback"). Under the word: its
+ * on the word itself: each syllable's pinyin takes its status colour and underline,
+ * and a caption under the character says what was heard. Under the word: its
  * meaning with one dot per graded attempt, every score that is not null, then a
  * hint, "Nailed it.", or one feedback message: the first syllable's that still
  * needs work. All of them at once ran under the dock in a word of two or three
@@ -18,10 +16,20 @@
  * Owner: A. Spec: docs/tasks/frontend.md ("Word practice panel"), docs/design/ui.md §5.4.
  */
 import { motion } from "motion/react";
-import type { Line } from "../api/client";
+import type { Line, SyllableResult } from "../api/client";
 import type { Practice } from "../logic/practiceMachine";
 import { Feedback } from "./Feedback";
 import { ScoreRow } from "./ScoreRow";
+
+/** What was heard instead, read from the result's parts as sent. */
+function caption(r: SyllableResult | null): string {
+  if (!r || r.status === "good") return "";
+  if (r.status === "missing") return "not heard";
+  const off = [r.initial, r.final].find((p) => p && p.heard !== p.expected);
+  const sound = off ? (off.heard ? `heard ${off.heard}` : "not heard") : "";
+  const tone = r.tone && r.tone.heard != null && r.tone.heard !== r.tone.expected ? `tone ${r.tone.heard}` : "";
+  return [sound, tone].filter(Boolean).join(", ");
+}
 
 export function WordPractice({ line, practice }: { line: Line; practice: Practice }) {
   const word = line.words[practice.wordIndex];
@@ -48,6 +56,7 @@ export function WordPractice({ line, practice }: { line: Line; practice: Practic
               <span className="tok" key={j}>
                 <span className="py"><span className={`pp${st}`}>{s.pinyin}</span></span>
                 <span className="hz">{s.hanzi}</span>
+                <span className={`cap${r ? ` s-${r.status}` : ""}`}>{caption(r)}</span>
               </span>
             );
           })}

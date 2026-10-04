@@ -1,9 +1,9 @@
 /**
  * Shows one lyric line: Hanzi with Pinyin for each character, and the translation.
  *
- * The active line is large and, under it, shows its latest result: the score row
- * and the feedback message (never what was heard: scoring.md, "Feedback"), then the
- * line's note (no_speech or a failed request). In Karaoke it shows the cue instead while the music plays on its
+ * The active line is large and, under it, shows its latest result: the score row,
+ * what we heard, and the feedback message, then the line's note (no_speech or a
+ * failed request). In Karaoke it shows the cue instead while the music plays on its
  * own before the line. Other lines are small and clickable to change line.
  *
  * Owner: A. Spec: docs/tasks/frontend.md, docs/design/ui.md §4.2, §5.3.
@@ -11,7 +11,7 @@
 import { memo, type CSSProperties } from "react";
 import type { AttemptResult, Line } from "../api/client";
 import type { LinePhase } from "../logic/actions";
-import { Feedback } from "./Feedback";
+import { Feedback, Heard } from "./Feedback";
 import { ScoreRow } from "./ScoreRow";
 import { WordChips } from "./WordChips";
 
@@ -64,6 +64,7 @@ export const LyricLine = memo(function LyricLine({ line, index, activeIndex, pha
             <div className="res">
               {result.engine === "mock" && <p className="note" role="status">Demo scores — your audio is not being graded.</p>}
               <ScoreRow scores={result.scores} fresh={fresh} />
+              <Heard heard={result.heard} />
               <Feedback message={result.next_step.message} />
             </div>
           )}

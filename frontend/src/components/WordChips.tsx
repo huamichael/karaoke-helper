@@ -4,8 +4,7 @@
  * Each word shows its characters with Pinyin above (ruby style) and, once graded,
  * a status bar under it in its status colour and shape. Colour comes from the
  * word's status (good, ok, wrong, missing), never from a score. Clicking any word
- * of the active line opens Word practice for it. Hovering a word says nothing about
- * what was heard: the grader's idea of that can be mistaken (scoring.md, "Feedback").
+ * of the active line opens Word practice for it.
  *
  * The word being practiced flies to the centre of the screen with Motion's
  * layoutId ("pword"); while it is there, its slot keeps an invisible copy so the
@@ -15,20 +14,10 @@
  */
 import { motion } from "motion/react";
 import type { CSSProperties, KeyboardEvent } from "react";
-import type { AttemptResult, Line, SyllableResult, WordResult } from "../api/client";
+import type { AttemptResult, Line } from "../api/client";
 import { phraseBreaks } from "../logic/phrases";
-import { notchPosition } from "../logic/timing";
 import { CheckIcon } from "./icons";
-
-function syllablesOf(result: AttemptResult, w: WordResult): SyllableResult[] {
-  return w.syllable_indices.map((i) => result.syllables.find((s) => s.index === i)).filter((s): s is SyllableResult => !!s);
-}
-
-/** Where the bar's notch sits (logic/timing.ts), as CSS. Null without timing. */
-function notchOffset(ss: SyllableResult[]): string | null {
-  const at = notchPosition(ss.map((s) => s.timing?.offset_ms));
-  return at == null ? null : `${at}%`;
-}
+import { notchOffset, syllablesOf, WordTooltip } from "./WordTooltip";
 
 type Props = {
   line: Line;
@@ -108,6 +97,7 @@ export function WordChips({ line, active, result, fresh, practiced, fill, clicka
               <span className={`rhythm r-${wr.rhythm}`}>{wr.rhythm === "early" ? "early" : "late"}</span>
             )} */}
             <span className="tip">Practice</span>
+            {canClick && <WordTooltip syllables={detail} />}
             {practiced.includes(k) && <i className="chk" aria-hidden><CheckIcon /></i>}
           </span>
         );
