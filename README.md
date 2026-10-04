@@ -20,7 +20,7 @@ A vinyl-inspired song browser, animated artwork, and an immersive lyric view mak
 
 | Song browser | Pronunciation practice |
 | :---: | :---: |
-| ![Song browser](docs/screenshots/song-browser.png) Artwork, vinyl selection, and play modes | ![Pronunciation practice](docs/screenshots/pronunciation-practice.png) Line recording and word-by-word feedback |
+| ![Song browser](docs/screenshots/song-browser-vinyl.png) Artwork, vinyl selection, and play modes | ![Pronunciation practice](docs/screenshots/pronunciation-practice.png) Line recording and word-by-word feedback |
 | **Word practice** | **Karaoke** |
 | ![Word practice](docs/screenshots/word-practice.png) Spoken references and focused retries | ![Karaoke](docs/screenshots/karaoke.png) Instrumental playback and synchronized lyrics |
 
