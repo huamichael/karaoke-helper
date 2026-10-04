@@ -17,6 +17,9 @@ import { armLayout } from "../../../logic/turntable";
 
 export type ArmPlace = "play" | "rest" | "cue";
 
+/** Where the sound button goes: the centre of the arm's pivot cap and the button's diameter, in the dial's pixels. */
+export type CapPlace = { x: number; y: number; d: number };
+
 export type TonearmScene = {
   /** Size the canvas to the dial and place the arm for this record. */
   layout(g: { cx: number; cy: number; R: number }, w: number, h: number): void;
@@ -42,7 +45,7 @@ function roundedRect(w: number, h: number, r: number) {
   return s;
 }
 
-export function createTonearm(canvas: HTMLCanvasElement, accentColor: string): TonearmScene {
+export function createTonearm(canvas: HTMLCanvasElement, accentColor: string, onCap: (place: CapPlace) => void): TonearmScene {
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -112,7 +115,8 @@ export function createTonearm(canvas: HTMLCanvasElement, accentColor: string): T
   const plinthRim = mesh(new THREE.TorusGeometry(46.5, 1, 8, 96), polished, 0, 7);
   plinthRim.rotation.x = Math.PI / 2;
   const housing = mesh(new THREE.CylinderGeometry(25, 27, 24, 72), brushed, 0, 19);
-  const housingCap = mesh(new THREE.CylinderGeometry(19, 22, 5, 72), polished, 0, 33.5);
+  const CAP = { top: 19, h: 5 };
+  const housingCap = mesh(new THREE.CylinderGeometry(CAP.top, 22, CAP.h, 72), polished, 0, 33.5);
   const accentRing = mesh(new THREE.TorusGeometry(34, 1.3, 10, 96), accent, 0, 7.6);
   accentRing.rotation.x = Math.PI / 2;
   const skate = new THREE.Group();
@@ -252,6 +256,17 @@ export function createTonearm(canvas: HTMLCanvasElement, accentColor: string): T
     rest.rotation.y = Math.PI - ST.phiR;
     pose();
     render();
+    placeSound(w, h);
+  }
+
+  // The sound button sits on the gimbal's polished cap: project the cap's top face to the screen and centre the button on it.
+  function placeSound(w: number, h: number) {
+    scene.updateMatrixWorld();
+    const toPx = (v: THREE.Vector3) => { const p = v.clone().project(camera); return { x: ((p.x + 1) / 2) * w, y: ((1 - p.y) / 2) * h }; };
+    const at = toPx(housingCap.localToWorld(new THREE.Vector3(0, CAP.h / 2, 0)));
+    const edge = toPx(housingCap.localToWorld(new THREE.Vector3(CAP.top, CAP.h / 2, 0)));
+    const r = Math.hypot(edge.x - at.x, edge.y - at.y);
+    onCap({ x: at.x, y: at.y, d: 2 * r - 8 }); // leave an even ring of polished metal round it
   }
 
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();

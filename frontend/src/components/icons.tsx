@@ -14,7 +14,3 @@ export const RetryIcon = () => <svg viewBox="0 0 24 24" {...stroke}><path d="M4 
 export const CloseIcon = () => <svg viewBox="0 0 24 24" {...stroke} strokeWidth={2.2}><path d="M6 6l12 12M18 6L6 18" /></svg>;
 export const CheckIcon = () => <svg viewBox="0 0 24 24" {...stroke} strokeWidth={3.2}><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>;
 export const BackIcon = () => <svg viewBox="0 0 24 24" {...stroke}><path d="M15 6l-6 6 6 6" /></svg>;
-export const SoundOnIcon = () => (
-  <svg viewBox="0 0 24 24" {...stroke}><path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>
-);
-export const SoundOffIcon = () => <svg viewBox="0 0 24 24" {...stroke}><path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l5 6M22 9l-5 6" /></svg>;

@@ -8,9 +8,9 @@
  * Owner: A. Spec: docs/design/ui.md §5.1 ("The tonearm", "It behaves like a real turntable"), §6.
  */
 import { forwardRef, useEffect, useImperativeHandle, useRef, type RefObject } from "react";
-import type { ArmPlace, TonearmScene } from "./tonearm/arm";
+import type { ArmPlace, CapPlace, TonearmScene } from "./tonearm/arm";
 
-export type { ArmPlace };
+export type { ArmPlace, CapPlace };
 export type TonearmHandle = { go(where: ArmPlace): Promise<boolean> };
 
 type Props = {
@@ -21,15 +21,17 @@ type Props = {
   /** The screen whose clicks the arm takes where it is drawn. */
   host: RefObject<HTMLElement | null>;
   onToggle(): void;
+  /** Where the sound button goes: on the arm's pivot cap, or its usual spot without an arm. */
+  onCap(place: CapPlace): void;
 };
 
-export const Tonearm = forwardRef<TonearmHandle, Props>(function Tonearm({ g, width, height, accent, host, onToggle }, ref) {
+export const Tonearm = forwardRef<TonearmHandle, Props>(function Tonearm({ g, width, height, accent, host, onToggle, onCap }, ref) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const arm = useRef<TonearmScene | null>(null);
   const failed = useRef(false);
   const pending = useRef<{ where: ArmPlace; resolve(ok: boolean): void } | null>(null);
-  const view = useRef({ g, width, height, accent, onToggle });
-  view.current = { g, width, height, accent, onToggle };
+  const view = useRef({ g, width, height, accent, onToggle, onCap });
+  view.current = { g, width, height, accent, onToggle, onCap };
 
   useImperativeHandle(ref, () => ({
     go(where) {
@@ -48,20 +50,27 @@ export const Tonearm = forwardRef<TonearmHandle, Props>(function Tonearm({ g, wi
       pending.current = null;
       if (p) (arm.current ? arm.current.go(p.where) : Promise.resolve(true)).then(p.resolve);
     };
-    const giveUp = setTimeout(() => { if (!arm.current) { failed.current = true; flush(); } }, 5000);
+    // Without an arm the sound button goes where the pivot would be, at its plain size.
+    const fail = () => {
+      failed.current = true;
+      view.current.onCap({ x: view.current.width - 72, y: 82, d: 32 });
+      flush();
+    };
+    const giveUp = setTimeout(() => { if (alive && !arm.current) fail(); }, 5000);
     import("./tonearm/arm").then(
       (m) => {
         if (!alive || !canvas.current) return;
         try {
           const v = view.current;
-          arm.current = m.createTonearm(canvas.current, v.accent);
+          arm.current = m.createTonearm(canvas.current, v.accent, (place) => view.current.onCap(place));
           arm.current.layout(v.g, v.width, v.height);
         } catch {
-          failed.current = true; // no WebGL: the record plays without an arm
+          arm.current = null;
+          return fail(); // no WebGL: the record plays without an arm
         }
         flush();
       },
-      () => { failed.current = true; flush(); },
+      () => { if (alive) fail(); },
     );
     return () => {
       alive = false;
@@ -71,7 +80,10 @@ export const Tonearm = forwardRef<TonearmHandle, Props>(function Tonearm({ g, wi
     };
   }, []);
 
-  useEffect(() => { arm.current?.layout(g, width, height); }, [g, width, height]);
+  useEffect(() => {
+    if (arm.current) arm.current.layout(g, width, height);
+    else if (failed.current) view.current.onCap({ x: width - 72, y: 82, d: 32 });
+  }, [g, width, height]);
   useEffect(() => { arm.current?.setAccent(accent); }, [accent]);
 
   // The arm is drawn above everything on the right, so wherever it is visible it takes the click.

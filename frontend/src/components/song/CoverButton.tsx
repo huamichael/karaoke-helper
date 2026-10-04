@@ -36,7 +36,7 @@ export function CoverButton({ cx, cy, rl, playing, onToggle }: Props) {
   return (
     <button className={`cover-btn${playing ? "" : " paused"}`} aria-label={playing ? "Stop the record" : "Play the record"}
       style={{ left: cx - rl, top: cy - rl, width: 2 * rl, height: 2 * rl }} onClick={click}>
-      <svg viewBox="0 0 36 36" fill="currentColor" aria-hidden><path d={a} /><path d={b} /></svg>
+      <svg viewBox="8 8 20 20" fill="currentColor" aria-hidden><path d={a} /><path d={b} /></svg>
     </button>
   );
 }

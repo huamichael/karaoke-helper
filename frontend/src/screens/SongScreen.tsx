@@ -26,14 +26,13 @@ import { MODE_HINT, SingButton } from "../components/song/SingButton";
 import { SongRecord, type SongRecordHandle } from "../components/song/SongRecord";
 import { SongTitle } from "../components/song/SongTitle";
 import { SoundCap } from "../components/song/SoundCap";
-import { Tonearm, type ArmPlace, type TonearmHandle } from "../components/song/Tonearm";
+import { Tonearm, type ArmPlace, type CapPlace, type TonearmHandle } from "../components/song/Tonearm";
 import { SHOW_MODE_CHOICE } from "../config";
 import { useLatest } from "../hooks/useLatest";
 import { useWindowSize } from "../hooks/useWindowSize";
 import { betweenAmount, wheelGeometry } from "../logic/recordWheel";
 import { previewWindow } from "../logic/subtitle";
 import type { Entry } from "../logic/songList";
-import { armLayout } from "../logic/turntable";
 
 type Props = {
   entries: Entry[];
@@ -75,7 +74,7 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
   const entry = entries[selected];
   const g = useMemo(() => wheelGeometry(W, H, W * 0.48, 0), [W, H]);
   const dialW = W * 0.52;
-  const pivot = armLayout(g, dialW, H).pivot;
+  const [cap, setCap] = useState<CapPlace | null>(null);
   const avail = g.discLeft - W * 0.07 - 72; // every title line ends at least 72px before the record
   const indent = Math.round(Math.min(W * 0.12, 180, avail * 0.3));
   const copyw = Math.max(260, Math.min(460, avail - indent));
@@ -254,8 +253,8 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
           between={entry && <Scraps songId={entry.id} theme={entry.theme} g={g} W={W} H={H} />}
         >
           <CoverButton cx={g.cx} cy={g.cy} rl={g.rl} playing={playing} onToggle={toggleRecord} />
-          <Tonearm ref={arm} g={g} width={dialW} height={H} accent={t?.palette.accent ?? "#ece8ff"} host={root} onToggle={toggleRecord} />
-          <SoundCap x={pivot.x} y={pivot.y} sound={sound} onToggle={toggleSound} />
+          <Tonearm ref={arm} g={g} width={dialW} height={H} accent={t?.palette.accent ?? "#ece8ff"} host={root} onToggle={toggleRecord} onCap={setCap} />
+          <SoundCap place={cap} sound={sound} onToggle={toggleSound} />
         </SongRecord>
       )}
 
