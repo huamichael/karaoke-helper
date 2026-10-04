@@ -2,9 +2,11 @@
  * Per-song design data, keyed by song id. Not part of the API.
  *
  * Each song has a five-colour palette, and may have a photograph (Unsplash
- * License, in public/photos), an album cover (copyrighted: public/covers, which
- * git ignores), the recording's artist, album and year, how the title splits over
- * two lines on the song screen, and where the collage scraps look into the photo.
+ * License, in public/photos), an album cover (public/covers, committed so every
+ * clone has them; the covers are copyrighted), the recording's artist, album and
+ * year, how the title splits over two lines on the song screen, and where the
+ * collage scraps look into the photo. Images are WebP: the photos at 2000px wide,
+ * the covers at 1000px, about a quarter of the JPGs' size.
  *
  * A theme with a title but no matching song from the backend shows on the record
  * as "Coming soon" (docs/design/ui.md §5.1).
@@ -50,9 +52,9 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     titlePinyin: "mò lì huā",
     titleEnglish: "Jasmine Flower",
     blurb: "A Jiangsu folk song, as 鳳飛飛 sang it in 1971. Slow, with one syllable per note, so every word is easy to hear.",
-    photo: "/photos/molihua.jpg",
+    photo: "/photos/molihua.webp",
     photoCredit: { name: "Irina Iriser", url: "https://unsplash.com/photos/vB4_CtsfaZ0" },
-    cover: "/covers/molihua.jpg",
+    cover: "/covers/molihua.webp",
     focus: ["72% 22%", "46% 38%", "30% 72%"],
     artist: "鳳飛飛",
     album: "鳳飛飛 金賞輯 3",
@@ -65,9 +67,9 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     titlePinyin: "yì jiǎn méi",
     titleEnglish: "A Spray of Plum Blossoms",
     blurb: "Fei Yu-ching's ballad. Long held notes that test how cleanly you finish each word.",
-    photo: "/photos/yijianmei.jpg",
+    photo: "/photos/yijianmei.webp",
     photoCredit: { name: "yamasa-n", url: "https://unsplash.com/photos/SPEUTg0phCg" },
-    cover: "/covers/yijianmei.jpg",
+    cover: "/covers/yijianmei.webp",
     focus: ["34% 30%", "52% 64%", "68% 58%"],
     artist: "費玉清",
     album: "清韻悠揚 精選（一）",
@@ -80,9 +82,9 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     titlePinyin: "yuè liàng dài biǎo wǒ de xīn",
     titleEnglish: "The Moon Represents My Heart",
     blurb: "Teresa Teng's best-known love song, sung all over the world.",
-    photo: "/photos/yueliang.jpg",
+    photo: "/photos/yueliang.webp",
     photoCredit: { name: "Laura Cleffmann", url: "https://unsplash.com/photos/gRT7o73xua0" },
-    cover: "/covers/yueliang.jpg",
+    cover: "/covers/yueliang.webp",
     focus: ["42% 40%", "58% 52%", "50% 47%"],
     artist: "鄧麗君",
     album: "島國之情歌 第四集 香港之戀",

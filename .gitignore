@@ -23,8 +23,7 @@ data/attempts/*
 
 # Album covers used by the prototype are copyrighted (see docs/design/ui.md §11)
 frontend/prototype/assets/covers/
-# ... and the app loads them from here (see frontend/src/theme/songThemes.ts)
-frontend/public/covers/
+# The app's own copies (frontend/public/covers/) are committed on purpose, so everyone who pulls has them.
 
 # Song tracks are copyrighted and the repository is public: share them outside git.
 # Ignored wherever a song folder lands, not only under data/songs/.
