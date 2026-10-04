@@ -4,4 +4,5 @@
   .blob, .vinyl, .photo, .grain, .eq i, .ch, .burst, .word.suggest.pulse,
   .mark.show.fresh, .scrap, .dock-row > *, .opts-row > *, .sing.entering .line, .sing.entering .dock { animation: none !important; }
   .sub-line .mark { transition: none; }
+  .line .hz, .line.filling .hz, .sub-line .hz { transform: none; transition: none; }
 }
