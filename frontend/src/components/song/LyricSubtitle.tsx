@@ -3,7 +3,8 @@
  * the song on the record, one line at a time, in time with the track. Each
  * character fills left to right as it is sung, with the line screen's karaoke
  * fill (logic/timing.ts: each syllable's own time once the track is aligned,
- * else the line split evenly); logic/subtitle.ts picks the line. Once a character
+ * else the line split evenly); logic/subtitle.ts picks the line by that same fill,
+ * so the next line has risen in before its first character is sung. Once a character
  * is sung, a status bar grows in under it, as if the singer were being graded:
  * pretend grades (demoMarks), not a result. A new line rises in out of a blur as
  * the last one drifts up and away.
@@ -14,7 +15,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Line } from "../../api/client";
 import { demoMarks, subtitleIndex } from "../../logic/subtitle";
-import { fillFractions } from "../../logic/timing";
+import { fillFractions, fillSpan } from "../../logic/timing";
 
 type Props = {
   songId: string;
@@ -41,13 +42,16 @@ export function LyricSubtitle({ songId, lines, timeMs }: Props) {
   // A new song starts on its first line, waiting.
   useEffect(() => { setIndex(0); }, [songId]);
 
+  // Which line shows goes by each line's fill (fillSpan), worked out once per song.
+  const spans = useMemo(() => lines.map(fillSpan), [lines]);
+
   // Every frame: which line shows, rendered only when it changes, and how far each of its characters
   // has filled, written straight to them. A render a frame cost far more than the fill itself.
   useEffect(() => {
     let raf = requestAnimationFrame(function frame() {
       const t = read.current();
       if (t != null && lines.length) {
-        const i = subtitleIndex(lines, t);
+        const i = subtitleIndex(spans, t);
         setIndex(i);
         const toks = root.current?.querySelector(`.sub-line[data-k="${songId}:${i}"]`)?.children;
         if (toks) {
@@ -58,7 +62,7 @@ export function LyricSubtitle({ songId, lines, timeMs }: Props) {
       raf = requestAnimationFrame(frame);
     });
     return () => cancelAnimationFrame(raf);
-  }, [songId, lines]);
+  }, [songId, lines, spans]);
 
   const line = lines[index];
   const marks = useMemo(() => demoMarks(songId, index, line?.syllables.length ?? 0), [songId, index, line]);

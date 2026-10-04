@@ -8,19 +8,26 @@
  */
 
 type Timed = { start_ms: number; end_ms: number };
+/** A line by its karaoke fill (timing.ts, fillSpan): its first character starts to fill, its last is full. */
+type Fill = { fromMs: number; toMs: number };
 
-/** A finished line stays this long before the next one shows, waiting. */
+/** A line stays this long after its last character is full before the next one shows, waiting. */
 export const HOLD_MS = 600;
-/** In a short gap, the next line shows this long before it starts. */
+/** When the singing goes straight on, the next line shows this long before its first character fills, so
+ *  it has risen in (0.55 s) by the time it is sung. A line still filling is never taken away for it. */
 export const LEAD_MS = 500;
 /** The preview starts this long before the first line and loops this long after the last. */
 export const PAD_MS = 1500;
 
-/** Which line shows at track time t: the one being sung, or the next one, waiting. -1 without lines. */
-export function subtitleIndex(lines: Timed[], t: number): number {
+/**
+ * Which line shows at track time t: the one being sung, or the next one, waiting. -1 without lines.
+ * Goes by the fill, not the lines' start_ms and end_ms: an aligned line is sung, and full, well
+ * before its end_ms, while the next often starts filling the moment it starts.
+ */
+export function subtitleIndex(lines: Fill[], t: number): number {
   for (let i = 0; i < lines.length - 1; i++) {
-    const end = lines[i].end_ms, next = lines[i + 1].start_ms;
-    if (t < Math.max(end, Math.min(end + HOLD_MS, next - LEAD_MS))) return i;
+    const done = lines[i].toMs, next = lines[i + 1].fromMs;
+    if (t < Math.max(done, Math.min(done + HOLD_MS, next - LEAD_MS))) return i;
   }
   return lines.length - 1;
 }

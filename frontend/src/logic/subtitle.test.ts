@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { demoMarks, loopTime, previewWindow, subtitleIndex } from "./subtitle";
+import { demoMarks, HOLD_MS, LEAD_MS, loopTime, previewWindow, subtitleIndex } from "./subtitle";
 
 describe("loopTime", () => {
   const win = { fromMs: 1000, toMs: 5000 };
@@ -44,8 +44,11 @@ describe("demoMarks", () => {
 
 const at = (start_ms: number, end_ms: number) => ({ start_ms, end_ms });
 
+// Each line by its fill (timing.ts, fillSpan): when its first character starts to fill, and when its last is full.
+const fills = (fromMs: number, toMs: number) => ({ fromMs, toMs });
+
 describe("subtitleIndex", () => {
-  const lines = [at(1000, 2000), at(2000, 3000), at(8000, 9000)];
+  const lines = [fills(1000, 2000), fills(2000, 3000), fills(8000, 9000)];
 
   it("shows the first line, waiting, before the song reaches it", () => {
     expect(subtitleIndex(lines, 0)).toBe(0);
@@ -54,17 +57,32 @@ describe("subtitleIndex", () => {
     expect(subtitleIndex(lines, 1500)).toBe(0);
     expect(subtitleIndex(lines, 2500)).toBe(1);
   });
-  it("moves straight on when the next line follows without a gap", () => {
+  it("moves straight on when the next line fills right after", () => {
     expect(subtitleIndex(lines, 2000)).toBe(1);
   });
   it("holds a finished line a moment before showing the next one, waiting", () => {
     expect(subtitleIndex(lines, 3400)).toBe(1);
     expect(subtitleIndex(lines, 3700)).toBe(2);
   });
-  it("shows the next line a little before it starts when the gap is short", () => {
-    const close = [at(0, 1000), at(1300, 2000)];
+  it("shows the next line a little before it starts to fill when the gap is short", () => {
+    const close = [fills(0, 1000), fills(1300, 2000)];
     expect(subtitleIndex(close, 900)).toBe(0);
     expect(subtitleIndex(close, 1000)).toBe(1);
+  });
+  it("goes by the fill: a line full early is held, then the next shows, waiting, long before it is sung", () => {
+    const early = [fills(0, 1500), fills(3000, 5000)];
+    expect(subtitleIndex(early, 1500 + HOLD_MS - 10)).toBe(0);
+    expect(subtitleIndex(early, 1500 + HOLD_MS)).toBe(1);
+  });
+  it("cuts the hold short so the next line shows its whole lead before it fills", () => {
+    const soon = [fills(0, 2200), fills(3000, 5000)];
+    expect(subtitleIndex(soon, 3000 - LEAD_MS - 10)).toBe(0);
+    expect(subtitleIndex(soon, 3000 - LEAD_MS)).toBe(1);
+  });
+  it("never takes a line away before it has finished filling", () => {
+    const overlapping = [fills(0, 3000), fills(2800, 4000)];
+    expect(subtitleIndex(overlapping, 2990)).toBe(0);
+    expect(subtitleIndex(overlapping, 3000)).toBe(1);
   });
   it("stays on the last line after the song's last lyric", () => {
     expect(subtitleIndex(lines, 60_000)).toBe(2);

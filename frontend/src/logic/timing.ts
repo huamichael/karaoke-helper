@@ -91,3 +91,11 @@ export function fillFractions(line: Pick<Line, "start_ms" | "end_ms" | "syllable
   const p = clamp01((tMs - line.start_ms) / Math.max(1, line.end_ms - line.start_ms));
   return ss.map((_, j) => clamp01(p * ss.length - j));
 }
+
+/** When a line's first character starts to fill and when its last is full, by fillFractions' own rules. */
+export function fillSpan(line: Pick<Line, "start_ms" | "end_ms" | "syllables">): { fromMs: number; toMs: number } {
+  const starts = syllableStarts(line);
+  if (!starts?.length) return { fromMs: line.start_ms, toMs: line.end_ms };
+  const last = starts[starts.length - 1];
+  return { fromMs: starts[0] - FILL_LEAD_MS, toMs: Math.max(last, Math.min(line.end_ms, last + FILL_MAX_MS)) };
+}

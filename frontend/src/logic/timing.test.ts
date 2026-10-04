@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FILL_LEAD_MS, FILL_MAX_MS, fillFractions, syllableStarts, notchPosition, recordLimitMs, wordLimitMs } from "./timing";
+import { FILL_LEAD_MS, FILL_MAX_MS, fillFractions, fillSpan, syllableStarts, notchPosition, recordLimitMs, wordLimitMs } from "./timing";
 
 describe("notchPosition", () => {
   it("has no notch until the backend sends offset_ms", () => {
@@ -99,5 +99,30 @@ describe("fillFractions", () => {
   it("splits the line evenly when no syllable is aligned", () => {
     expect(syllableStarts(four)).toBeNull();
     expect(fillFractions(four, 2500)).toEqual([1, 0.5, 0, 0]);
+  });
+});
+
+describe("fillSpan", () => {
+  const at = (i: number, start_ms: number) => ({ ...LINE.syllables[i], start_ms, end_ms: start_ms + 100 });
+  const sung = { start_ms: 0, end_ms: 4000, syllables: [at(0, 1000), at(1, 2000), at(2, 3000)] };
+  const even = { start_ms: 1000, end_ms: 5000, syllables: LINE.syllables.slice(0, 4) };
+
+  it("runs from just before the first syllable is sung until the last one is full", () => {
+    expect(fillSpan(sung)).toEqual({ fromMs: 1000 - FILL_LEAD_MS, toMs: 3000 + FILL_MAX_MS });
+  });
+  it("ends with the line when its last syllable is sung right at the end", () => {
+    expect(fillSpan({ start_ms: 0, end_ms: 3200, syllables: [at(0, 1000), at(1, 3000)] }).toMs).toBe(3200);
+  });
+  it("is the line's own start and end when the track is not aligned", () => {
+    expect(fillSpan(even)).toEqual({ fromMs: 1000, toMs: 5000 });
+  });
+  it("agrees with fillFractions: nothing filled at its start, everything full at its end and not before", () => {
+    for (const line of [sung, even]) {
+      const { fromMs, toMs } = fillSpan(line);
+      expect(fillFractions(line, fromMs).every((f) => f === 0)).toBe(true);
+      expect(fillFractions(line, fromMs + 10)[0]).toBeGreaterThan(0);
+      expect(fillFractions(line, toMs).every((f) => f >= 0.999)).toBe(true);
+      expect(fillFractions(line, toMs - 10).every((f) => f >= 0.999)).toBe(false);
+    }
   });
 });
