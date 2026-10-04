@@ -25,6 +25,7 @@ Each file has one owner. Nobody edits another owner's file without asking.
 | `backend/app/mandarin.py` | D | `to_syllables`, `segment_words`, `sandhi_tones` |
 | `backend/app/scoring/pitch.py`, `tone.py` | D | `score_tones` |
 | `backend/pipeline/build_song.py` | D | Builds `song.json` and word clips |
+| `backend/pipeline/line_ends.py`, `separate.py`, `instrumental.py` | D | Line times from the singer's voice; Demucs separation; Karaoke mode's `instrumental.mp3` |
 | `backend/pipeline/whisper_words.py` | B | Isolated-word Whisper experiment |
 | `data/songs/` | D | The demo song bundles |
 | `backend/tests/fixtures/` | D keeps it; everyone adds recordings | Shared test data |

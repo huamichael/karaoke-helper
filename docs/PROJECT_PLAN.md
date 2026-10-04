@@ -16,21 +16,23 @@ What changed in revision 5:
 
 Karaoke_Helper turns Mandarin songs into pronunciation exercises.
 
-1. The user picks a song and a mode: **spoken accuracy** or **singing accuracy**.
-2. The app plays one line of the song and shows it in Hanzi and Pinyin.
-3. The user sings the line back unaccompanied while the app records. This is the same in both modes.
+1. The user picks a song and a mode: **Practice mode** or **Karaoke mode**.
+2. In Practice mode the app plays one line of the song and shows it in Hanzi and Pinyin.
+3. The user sings the line back unaccompanied while the app records.
 4. The backend grades the recording. The app shows each word of the line as a coloured chip, with a few overall scores.
 5. The user can click any word to open **Word practice**: they hear the word spoken normally, say it themselves without melody, and get a grade for how they said it.
 6. They retry the line or move to the next one.
+
+In Karaoke mode the user sings the whole song along with its instrumental, and nothing is graded.
 
 A polished version of this loop on two songs beats a half-working system for arbitrary songs.
 
 ### The two modes
 
-The user performs the same way in both. The modes differ in how deeply the recording is graded.
+- **Practice mode** asks whether the right words came out, a line at a time, with Word practice for any word. It is the spoken-accuracy grading below, renamed; the API still calls it `spoken`.
+- **Karaoke mode** plays the song's instrumental from the start with the lyrics in time: the line being sung is in the centre and fills character by character at the pace the original singer sang it. It records and grades nothing. The instrumental is separated from the track ahead of time with Demucs ([tasks/backend-songs-tone.md](tasks/backend-songs-tone.md), "Instrumentals").
 
-- **Spoken-accuracy mode** asks whether the right words came out. It uses the Whisper base layer. This is the MVP.
-- **Singing-accuracy mode** adds the CTC layer on top of Whisper. It grades each sound more finely and scores the user's rhythm against the original singer.
+Team decision, 4 October 2026: singing-accuracy mode (Whisper + CTC, plus rhythm) is no longer offered by the app. Karaoke mode takes its place. Its backend code stays and the API still accepts `mode: "singing"`, but nothing sends it. The tables below keep its column as a record of what it grades.
 
 ### What each one judges
 
@@ -69,8 +71,8 @@ Until stage 2, both modes produce the same grades.
 | Demo | Runs locally on one Mac, in desktop Chrome. No hosting. |
 | Speech-to-text | Open-source Whisper running locally, not the OpenAI hosted API |
 | Grading | Whisper as the base layer; CTC alignment as the in-depth layer on top |
-| Modes | Chosen by the user before starting a song: spoken accuracy (Whisper base) or singing accuracy (Whisper + CTC, plus rhythm) |
-| Recording flow | Listen to the line, then sing it back unaccompanied, in both modes |
+| Modes | Chosen by the user before starting a song: Practice mode (Whisper base, graded) or Karaoke mode (instrumental and lyrics, not graded). Singing accuracy was retired on 4 October 2026. |
+| Recording flow | Practice mode: listen to the line, then sing it back unaccompanied |
 | Must be in the demo (stage 1) | A grade per word for a sung line in spoken-accuracy mode; click any word to open Word practice; Word practice graded on initials and finals |
 | Next, in order | CTC layer for singing-accuracy mode (stage 2); rhythm and tone (stage 3) |
 | Stretch | Melody score, singing along with the backing track |
@@ -164,9 +166,10 @@ Each task can be developed and tested alone, because every function in the inter
 
 ```text
 ┌───────────────── Browser: React + TypeScript ─────────────────┐
-│ Song screen: pick song + mode (spoken or singing accuracy)    │
+│ Song screen: pick song + mode (Practice or Karaoke)           │
 │ Line screen: play line [start_ms,end_ms] → record             │
 │   → graded word chips → click a word → Word practice          │
+│ Karaoke screen: instrumental + lyrics in time, no grading     │
 └───────┬──────────────────────────────────▲────────────────────┘
         │ GET /songs, /songs/{id}          │ AttemptResult (JSON)
         │ POST /attempts (audio + ids)     │

@@ -274,6 +274,8 @@ export interface components {
             line_count: number;
             /** Audio Url */
             audio_url: string;
+            /** Instrumental Url */
+            instrumental_url?: string | null;
             /** Lines */
             lines: components["schemas"]["Line"][];
         };

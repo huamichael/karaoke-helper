@@ -1,8 +1,8 @@
 /**
  * Song screen: the song list and the mode choice.
  *
- * The user picks a song and how closely to grade it (spoken or singing accuracy;
- * singing waits for the backend), then starts at line 1.
+ * The user picks a song and a mode (Practice mode, graded line by line, or Karaoke
+ * mode, the instrumental with the lyrics in time), then starts at line 1.
  *
  * The design (ui.md §5.1): each song's photograph is the page, its title is set
  * huge in a hairline serif, and the songs ride a huge record on the right, pasted
@@ -14,7 +14,7 @@
  * Owner: A. Spec: docs/tasks/frontend.md, docs/design/ui.md §4.1, §5.1.
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { getSong, type Mode, type Song } from "../api/client";
+import { getSong, type Song } from "../api/client";
 import { setAmbienceActive, setStatic } from "../audio/ambience";
 import { playRecord, type RecordPlayback } from "../audio/player";
 import { CoverButton } from "../components/song/CoverButton";
@@ -22,12 +22,11 @@ import { Credit } from "../components/song/Credit";
 import { HomeHeader } from "../components/song/HomeHeader";
 import { LyricSubtitle } from "../components/song/LyricSubtitle";
 import { Scraps } from "../components/song/Scraps";
-import { MODE_HINT, SingButton, type ModeHint } from "../components/song/SingButton";
+import { MODE_HINT, SingButton, type ModeHint, type PlayMode } from "../components/song/SingButton";
 import { SongRecord, type SongRecordHandle } from "../components/song/SongRecord";
 import { SongTitle } from "../components/song/SongTitle";
 import { SoundCap } from "../components/song/SoundCap";
 import { Tonearm, type ArmPlace, type CapPlace, type TonearmHandle } from "../components/song/Tonearm";
-import { SINGING_READY } from "../config";
 import { useLatest } from "../hooks/useLatest";
 import { useWindowSize } from "../hooks/useWindowSize";
 import { betweenAmount, wheelGeometry } from "../logic/recordWheel";
@@ -40,7 +39,7 @@ type Props = {
   onSelect(i: number): void;
   /** Every frame the record turns: the backdrop and the grain follow it. */
   onTurn(u: number): void;
-  onStart(mode: Mode): void;
+  onStart(mode: PlayMode): void;
   leaving: boolean;
   arriving: boolean;
   error: string | null;
@@ -186,7 +185,7 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
     return () => el.removeEventListener("wheel", f);
   }, []);
 
-  const start = (mode: Mode) => {
+  const start = (mode: PlayMode) => {
     if (!entry?.playable || leaving) return;
     stopPreview();
     setPicking(false);
@@ -235,7 +234,7 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
             </div>
             <div className="h-cta">
               {entry.playable
-                ? <SingButton title={entry.title} singingReady={SINGING_READY} picking={picking} onPicking={setPicking} onHint={setHint} onStart={start} />
+                ? <SingButton title={entry.title} picking={picking} onPicking={setPicking} onHint={setHint} onStart={start} />
                 : <><button className="btn" disabled>Coming soon</button><span className="h-meta">This song isn't on the server yet</span></>}
             </div>
           </div>

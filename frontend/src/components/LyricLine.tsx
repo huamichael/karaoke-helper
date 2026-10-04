@@ -3,7 +3,8 @@
  *
  * The active line is large and, under it, shows its latest result: the score row,
  * what we heard, and the feedback message, then the line's note (no_speech or a
- * failed request). Other lines are small and clickable to change line.
+ * failed request). In Karaoke it shows the cue instead while the music plays on its
+ * own before the line. Other lines are small and clickable to change line.
  *
  * Owner: A. Spec: docs/tasks/frontend.md, docs/design/ui.md §4.2, §5.3.
  */
@@ -24,6 +25,8 @@ type Props = {
   practiced: number[];
   fill: number[] | null;
   note: string | null;
+  /** Karaoke, during an instrumental break: "Instrumental · next line in 12 s", then a count-in. */
+  cue?: string | null;
   /** Words can be clicked: not while recording, grading or practicing. */
   interactive: boolean;
   morphWord: number | null;
@@ -34,7 +37,7 @@ type Props = {
 };
 
 /** Memoised: the screen passes inactive lines stable props, so a click or a state change re-renders only the active line. */
-export const LyricLine = memo(function LyricLine({ line, index, activeIndex, phase, result, fresh, practiced, fill, note, interactive, morphWord, awayWord, onWord, onLine, onMorphDone }: Props) {
+export const LyricLine = memo(function LyricLine({ line, index, activeIndex, phase, result, fresh, practiced, fill, note, cue = null, interactive, morphWord, awayWord, onWord, onLine, onMorphDone }: Props) {
   const active = index === activeIndex;
   const cls = ["line", active && "active", index < activeIndex && "past", active && fill && "filling", active && phase === "grading" && "grading"]
     .filter(Boolean).join(" ");
@@ -56,6 +59,7 @@ export const LyricLine = memo(function LyricLine({ line, index, activeIndex, pha
       {active && (
         <div className="meta">
           {line.translation && <p className="tr">{line.translation}</p>}
+          {cue && <p className={`cue${cue.startsWith("●") ? " count" : ""}`}>{cue}</p>}
           {result && (
             <div className="res">
               {result.engine === "mock" && <p className="note" role="status">Demo scores — your audio is not being graded.</p>}

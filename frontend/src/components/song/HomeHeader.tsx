@@ -10,7 +10,7 @@ export function HomeHeader() {
   return (
     <header className="h-top">
       <div>
-        <div className="wordmark"><Vinyl />Karaoke Helper</div>
+        <div className="wordmark"><Vinyl />Lotus Roots</div>
         <p className="h-tag">Learn Mandarin by singing the songs you love.</p>
         <ol className="steps">
           <li><b>1</b>Listen to a line</li>

@@ -4,6 +4,7 @@
   "artist": "Traditional",
   "line_count": 2,
   "audio_url": "/media/songs/demo/audio.mp3",
+  "instrumental_url": null,
   "lines": [
     {
       "index": 0,

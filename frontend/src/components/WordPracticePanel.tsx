@@ -5,8 +5,10 @@
  * "pword", shared with WordChips) while the lyrics step back. The result is marked
  * on the word itself: each syllable's pinyin takes its status colour and underline,
  * and a caption under the character says what was heard. Under the word: its
- * meaning with one dot per graded attempt, then a hint, "Nailed it.", or the
- * syllables' feedback messages, and every score that is not null.
+ * meaning with one dot per graded attempt, every score that is not null, then a
+ * hint, "Nailed it.", or one feedback message: the first syllable's that still
+ * needs work. All of them at once ran under the dock in a word of two or three
+ * syllables and hid the scores.
  *
  * Part has no status yet (ui.md §9, question 2), so the whole syllable is
  * coloured rather than its initial and final separately.
@@ -38,9 +40,9 @@ export function WordPractice({ line, practice }: { line: Line; practice: Practic
     const idx = wr?.syllable_indices[k];
     return idx == null ? null : last!.syllables.find((s) => s.index === idx) ?? null;
   };
-  const messages = last
-    ? word.syllable_indices.map((_, k) => resultFor(k)?.feedback?.message).filter(Boolean).join(" ")
-    : "";
+  const message = last
+    ? word.syllable_indices.map((_, k) => resultFor(k)?.feedback?.message).find(Boolean) ?? null
+    : null;
 
   return (
     <div className={`focus${success ? " success" : ""}`} role="region" aria-label={`Practice ${word.text}`}>
@@ -70,16 +72,16 @@ export function WordPractice({ line, practice }: { line: Line; practice: Practic
             </span>
           )}
         </p>
-        {success ? <p className="f-status" role="status">Nailed it.</p>
-          : practice.note ? <p className="f-note" role="status">{practice.note}</p>
-          : !last ? <p className="f-hint">Listen, then say the word on its own.</p>
-          : <Feedback message={messages || null} />}
         {practice.last && !practice.note && (
           <>
             {practice.last.engine === "mock" && <p className="f-note" role="status">Demo scores — your audio is not being graded.</p>}
             <ScoreRow key={practice.last.attempt_id} scores={practice.last.scores} fresh />
           </>
         )}
+        {success ? <p className="f-status" role="status">Nailed it.</p>
+          : practice.note ? <p className="f-note" role="status">{practice.note}</p>
+          : !last ? <p className="f-hint">Listen, then say the word on its own.</p>
+          : <Feedback message={message} />}
       </div>
     </div>
   );

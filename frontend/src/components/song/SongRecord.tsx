@@ -192,7 +192,7 @@ export const SongRecord = forwardRef<SongRecordHandle, Props>(function SongRecor
   const weights = crossfadeWeights(u, n);
   const selected = entries[sel];
   const t = selected?.theme;
-  const ring = selected ? `${selected.artist}　${t?.album ?? ""}　${t?.year ?? ""}　${selected.title}　Karaoke Helper　`.replace(/(　)+/g, "　") : "";
+  const ring = selected ? `${selected.artist}　${t?.album ?? ""}　${t?.year ?? ""}　${selected.title}　Lotus Roots　`.replace(/(　)+/g, "　") : "";
 
   return (
     <div ref={dial} className={`dial${grabbing ? " grabbing" : ""}`} role="listbox" aria-label="Songs"

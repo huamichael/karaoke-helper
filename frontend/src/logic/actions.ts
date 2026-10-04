@@ -1,5 +1,5 @@
 /**
- * The dock's actions for each line-screen state.
+ * The dock's actions for each line-screen state, for Word practice, and for Karaoke.
  *
  * Closed, the dock holds only what the current step needs; open, it holds every
  * control with a label, dimming the unavailable ones. Exactly one button is the
@@ -14,7 +14,8 @@ export type LinePhase = "idle" | "listening" | "ready" | "recording" | "grading"
 
 export type DockActionId =
   | "listen" | "record" | "retry" | "resend" | "next" | "busy"
-  | "plisten" | "precord" | "presend" | "confident" | "keep" | "sing";
+  | "plisten" | "precord" | "presend" | "confident" | "keep" | "sing"
+  | "kplay" | "krestart" | "kskip";
 
 export type DockAction = {
   id: DockActionId;
@@ -25,6 +26,8 @@ export type DockAction = {
   primary: boolean;
   disabled: boolean;
   icon?: "play" | "stop" | "retry";
+  /** The vinyl's spoken name, when it is not the line screen's Listen. */
+  aria?: string;
 };
 
 /** Word practice's dock: Listen to the reference, Record, and a quiet "I'm confident" that ends practice. */
@@ -45,6 +48,20 @@ export function practiceActionsFor(phase: PracticePhase, attempts: number): Dock
     default:
       return [listen(), act("precord", "record", attempts ? "Record again" : "Record", true), act("confident", "quiet", "I'm confident")];
   }
+}
+
+/**
+ * Karaoke's dock: the vinyl plays and pauses the song (it spins while it plays), a round
+ * button starts it again, and during a long instrumental stretch "Skip to the singing".
+ */
+export function karaokeActionsFor(playing: boolean, canSkip: boolean, open: boolean): DockAction[] {
+  const vinyl: DockAction = {
+    id: "kplay", kind: "vinyl", label: open || !playing ? (playing ? "Pause" : "Play") : null, primary: !playing, disabled: false,
+    aria: playing ? "Pause the song" : "Play the song",
+  };
+  const skip = act("kskip", "button", "Skip to the singing", playing, !canSkip);
+  if (open) return [vinyl, act("krestart", "button", "Start again"), skip];
+  return canSkip ? [vinyl, skip] : [vinyl, act("krestart", "round", "Start again")];
 }
 
 type Primary = "listen" | "record" | "retry" | "next" | null;

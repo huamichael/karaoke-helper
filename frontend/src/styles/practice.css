@@ -29,4 +29,5 @@
 .f-status { margin-top: 18px; font-size: 24px; font-weight: 600; }
 .f-note { margin-top: 18px; padding: 8px 16px; border-radius: 12px; background: rgba(248,113,113,.16); font-size: 15px; }
 .f-below .scores { margin-top: 14px; }
-.f-below .advice { margin-top: 18px; }
+/* One hint, smaller than under a line, so it ends above the dock even in a short window. */
+.f-below .advice { margin-top: 16px; max-width: 560px; font-size: clamp(14px, 1.9vh, 16px); color: var(--text-2); }

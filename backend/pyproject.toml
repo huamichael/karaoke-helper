@@ -55,6 +55,7 @@ filterwarnings = [
 [dependency-groups]
 # Optional, for the song pipeline only: separates the singer's voice from a track.
 #   uv run --group vocals python -m pipeline.line_ends --song <id>
+#   uv run --group vocals python -m pipeline.instrumental --all     # Karaoke mode's tracks
 vocals = ["demucs>=4"]
 dev = [
     "httpx>=0.28.1",

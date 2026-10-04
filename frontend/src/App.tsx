@@ -1,6 +1,7 @@
 /**
  * The app: loads the song list, owns the background and the song theme, and
- * switches between the song screen and the line screen. F toggles full screen
+ * switches between the song screen and the chosen mode's screen: the line screen
+ * for Practice mode, the karaoke screen for Karaoke mode. F toggles full screen
  * anywhere; nothing else changes the window.
  *
  * Starting a song opens no window: the song screen's title drifts away, the photo
@@ -9,11 +10,13 @@
  * Owner: A. Spec: docs/tasks/frontend.md, docs/design/ui.md §3.3 ("Starting a song"), §4, §7 rule 4.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ApiError, getSong, listSongs, type Mode, type Song, type SongSummary } from "./api/client";
+import { ApiError, getSong, listSongs, type Song, type SongSummary } from "./api/client";
 import { Backdrop, type BackdropHandle } from "./components/Backdrop";
+import type { PlayMode } from "./components/song/SingButton";
 import { Toaster } from "./components/Toast";
 import { betweenAmount, crossfadeWeights } from "./logic/recordWheel";
 import { buildEntries } from "./logic/songList";
+import KaraokeScreen from "./screens/KaraokeScreen";
 import LineScreen from "./screens/LineScreen";
 import SongScreen from "./screens/SongScreen";
 import { applyPalette, SONG_THEMES } from "./theme/songThemes";
@@ -25,7 +28,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState(0);
   const [song, setSong] = useState<Song | null>(null);
-  const [mode, setMode] = useState<Mode>("spoken");
+  const [mode, setMode] = useState<PlayMode>("practice");
   const [leaving, setLeaving] = useState(false);
   const [arriving, setArriving] = useState(false);
   const backdrop = useRef<BackdropHandle>(null);
@@ -71,7 +74,7 @@ export default function App() {
     grain.current?.style.setProperty("--grain", (0.1 + 0.34 * betweenAmount(u)).toFixed(3));
   }, [entries.length]);
 
-  const start = (m: Mode) => {
+  const start = (m: PlayMode) => {
     if (!entry?.playable || leaving) return;
     setLeaving(true);
     backdrop.current?.setWeights(entries.map((_, k) => (k === selected ? 1 : 0)));
@@ -81,6 +84,8 @@ export default function App() {
       (e: ApiError) => { setLeaving(false); setError(e.message); },
     );
   };
+
+  const titleOf = (s: Song) => entries.find((e) => e.id === s.id)?.title ?? s.title;
 
   const exit = () => {
     setSong(null);
@@ -95,12 +100,14 @@ export default function App() {
       <div ref={grain} className="grain" aria-hidden />
       <div className="stage">
         {song
-          ? <LineScreen key={song.id} song={song} title={entries.find((e) => e.id === song.id)?.title ?? song.title} mode={mode} onExit={exit} />
+          ? mode === "karaoke"
+            ? <KaraokeScreen key={song.id} song={song} title={titleOf(song)} onExit={exit} />
+            : <LineScreen key={song.id} song={song} title={titleOf(song)} onExit={exit} />
           : <SongScreen entries={entries} selected={selected} onSelect={setSelected} onTurn={onTurn} onStart={start}
               leaving={leaving} arriving={arriving} error={error} onRetry={() => load()} />}
       </div>
       <Toaster />
-      <div className="narrow">Karaoke Helper is built for laptops and desktops.<br />Open it on a wider screen to sing along.</div>
+      <div className="narrow">Lotus Roots is built for laptops and desktops.<br />Open it on a wider screen to sing along.</div>
     </div>
   );
 }

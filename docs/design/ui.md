@@ -126,7 +126,7 @@ Target viewport **1440×900**; must work at **1280×720** (projector). Below 102
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│ ◉ Karaoke Helper                    (full-screen photo)  (Sound on)  │
+│ ◉ Lotus Roots                       (full-screen photo)  (Sound on)  │
 │ Learn Mandarin by singing the songs you love.        ╭───────────────│
 │ 1 Listen  2 Sing it back  3 See every word …      ╭──╯  03 月亮代表… │
 │                                                  │  ring text ╭──────│
@@ -165,7 +165,7 @@ Target viewport **1440×900**; must work at **1280×720** (projector). Below 102
 ### 4.3 Line screen, controls open
 
 ```
-│  ← Songs  茉莉花  2 / 7  [Spoken accuracy]   ( • Pinyin  • Translation ✕) │
+│  ← Songs  茉莉花  2 / 7  [Practice mode]     ( • Pinyin  • Translation ✕) │
 │                                          ( Next result: Auto Good … )   │ ← only with ?demo
 │                          (same lyrics)                                   │
 │   Space record  L listen  R retry  Enter next  ↑↓ change line  E hide    │
@@ -185,7 +185,7 @@ Target viewport **1440×900**; must work at **1280×720** (projector). Below 102
 
 - **The photograph is the page.** Each song has one photograph, full screen, slowly pushing in, under a soft left-to-right and bottom shade and the film grain. The theme colours come from the same song.
 - **The title is the bold element.** Noto Serif SC at weight 200, about 19% of the screen height, split over two staggered lines (茉莉 / 花, 月亮代表 / 我的心). It is measured after rendering and its characters (not the indent) shrink until every line ends at least 72px before the record. Under it, aligned with the second line: pinyin and English, one sentence about the song, and **Sing 茉莉花** on its own.
-- **Sing opens into the mode choice.** When `VITE_SHOW_MODE_CHOICE` is on, pressing Sing (or Enter) springs the same pill open into **Spoken accuracy**, **Singing accuracy** and ✕. While it is open, the song's description above the pill gives way to a line explaining whichever option the pointer or focus is on; both share one slot, so the pill does not move, and the description sits clear of the background. Choosing one starts the song. Esc, ✕ or a click elsewhere closes it again. When the flag is off, Sing starts the song in spoken accuracy.
+- **Sing opens into the mode choice.** Pressing Sing (or Enter) springs the same pill open into **Practice mode**, **Karaoke mode** and ✕. While it is open, the song's description above the pill gives way to a line explaining whichever option the pointer or focus is on; both share one slot, so the pill does not move, and the description sits clear of the background. Choosing one starts the song: Practice mode on the line screen (5.3), Karaoke mode on the karaoke screen (5.6). Esc, ✕ or a click elsewhere closes it again.
 - **The record.** On the right, a stylized record about 1.1 screen-heights across, its centre just inside the right edge. Graphic rather than realistic: fine grooves, two track gaps, and a sheen in the song's own colours that stays still while the grooves turn.
 - **Collage where the record meets the photo.** The record is a torn-paper cut-out pasted onto the photograph: a torn edge (SVG turbulence masks), a fringe of off-white paper with a paper shadow, and three scraps overlapping the rim, all cut from the song's own photo and each a different shape: a wide torn piece held by a strip of translucent tape, a narrow torn strip, and a round cut that echoes the record. Each shows an enlarged detail of the photo (a flower, part of the moon). The photo seems to run onto the record. Its label is the album cover of the recording we use, with a ring of small text around it (artist, album, year, title). The covers crossfade as it turns.
 - **The songs ride the groove band,** between an accent needle on the rim and the label: number, title (sized to fit the band) and artist, plus "Playing a preview" on the selected one. Each name is tilted to the record's angle at its position, as if printed on it, and turns with it. At most three are in view: the selected one at the needle (level, 0°), one above at 45° and one below at −45°, measured from the record's centre. They loop: after the last song comes the first. Spin it with the wheel or trackpad, by dragging, with ↑ ↓ ← →, or by clicking a song. One wheel notch or one short swipe moves one song; a long swipe can move several. A song that isn't ready still tunes in, and its button reads "Coming soon".
@@ -274,7 +274,7 @@ The frontend task's Word practice panel, without a panel. It sends `target=word`
 
 - **Opening:** the clicked word grows from its slot in the lyric to the exact centre of the screen (pinyin above, Hanzi up to 150px). The lyrics fade to 12%, blur slightly and shrink to 98%; the line rail hides. The header's back button reads "Line 2". The layout is three rows (`1fr auto 1fr`) with the word in the middle one, so the word stays centred whatever appears under it.
 - **The result is marked on the word itself.** In the pinyin above each character, the initial and the final take their own status colour and underline (dotted for `ok`, wavy for `wrong`, dashed for `missing`; `good` stays plain), and a small caption under the character says what was heard ("heard ai", "not heard"). Tone joins from stage 3.
-- **Under the word:** its English meaning with one dot per graded attempt beside it, then the hint "Listen, then say the word on its own", or "Nailed it.", or the coach bubble with the syllables' feedback messages and "Ask why".
+- **Under the word:** its English meaning with one dot per graded attempt beside it, the scores, then the hint "Listen, then say the word on its own", or "Nailed it.", or one feedback message: that of the first syllable that still needs work (later, in the coach bubble with "Ask why"). One message at a time keeps everything above the dock: every syllable's message at once ran under it in a two- or three-syllable word and hid the scores.
 - **The dock carries the practice actions:** Listen (the spoken reference: `audio_url`, or `speechSynthesis` in `zh-CN` when it is `null`), **Record** / **Record again**, and a quiet "I'm confident" that ends practice at any time.
 - **Success:** when the returned word's `status` is `good`, the Hanzi turns green, a ring expands, "Nailed it." appears, and the dock offers **Sing the line again** (primary) and Keep practising. Sing the line again ends practice and puts the line in `ready`.
 - **Ending practice:** I'm confident, the back button, Esc, or a click on the faded lyrics (not while recording or grading). The word flies back into its slot.
@@ -291,6 +291,19 @@ The plan's MVP has rule-based feedback and no LLM. This design gives the feedbac
 - **Behind a flag** (`VITE_SHOW_COACH`, off by default) until a coach endpoint exists. Section 9, question 4 proposes one.
 - The prototype shows the drawer with scripted replies built from the attempt, and says so in the drawer.
 
+### 5.6 Karaoke
+
+Karaoke mode (`screens/KaraokeScreen.tsx`): the song's instrumental with the lyrics in time. Nothing is recorded or graded.
+
+- **The same lyric list as the line screen,** on the same blurred photo, with the same header (badge "Karaoke"), options pill and line rail. The song starts by itself once the lyrics have risen in.
+- **The line being sung is in the centre** and fills character by character with the karaoke fill (section 3.3), at the pace the original singer sang it. The list moves to the next line on the line spring just before it is due, by the song screen subtitle's rule (5.1).
+- **Breaks.** During the intro and any break of four seconds or more, the waiting line shows "Instrumental · next line in 12 s" under its translation, then a count-in of three dots in the accent colour over the last three seconds.
+- **The dock:** the vinyl plays and pauses the song and spins while it plays; a round button starts it again; during a break with more than six seconds left, **Skip to the singing** jumps to three seconds before the line.
+- **Changing line** (↑ ↓, swipe, the rail, or a click on another line) moves the song to a few seconds before that line.
+- **Keyboard:** `Space` play or pause, `↑/↓` change line, `→` skip to the singing, `R` start again, `P` pinyin, `E` controls, `F` full screen.
+- **The track** is `instrumental_url`. Without one it plays `audio_url`, singer and all, and says so; with no track at all the lyric runs on a silent clock.
+- At the end of the song: "That's the whole song. Play it again, or pick another."
+
 ## 6. Components and logic
 
 The file split in `frontend/src/` is a starting point (plan section 10). This design adds or changes:
@@ -300,7 +313,7 @@ The file split in `frontend/src/` is a starting point (plan section 10). This de
 | `DynamicBackground` | theme, `playing` | Drifting, or static with reduced motion |
 | `PhotoBackdrop`, `Grain` | the songs' photos, dial position | Crossfades and blurs the photos; sharp on the song screen, blurred on the line screen |
 | `SongRecord` | `SongSummary[]`, covers, position | Unbounded position with a settling spring, shown modulo the song count; wheel, drag, keys, click; at most three names in view |
-| `SingButton` | mode-choice flag | One pill that opens into the two modes |
+| `SingButton` | | One pill that opens into the two modes, Practice and Karaoke |
 | `Tonearm` | playing, record geometry, accent colour | three.js (or @react-three/fiber) canvas over the record; swing with lift; hit-testing by raycast |
 | `Ambience`, `PreviewPlayer` | sound on, dial position, a clip URL | Crackle and static generated with Web Audio; the preview with fades |
 | `TopBar` | title, line N of M, mode, controls open | Fades when idle |
@@ -314,7 +327,8 @@ The file split in `frontend/src/` is a starting point (plan section 10). This de
 
 Logic that is easy to get wrong goes in small pure modules with unit tests:
 
-- `actions.ts`: `actionsFor(state, nextStep, open)` returns the dock's actions and which one is primary.
+- `actions.ts`: `actionsFor(state, nextStep, open)` returns the dock's actions and which one is primary; `karaokeActionsFor(playing, canSkip, open)` does the same for Karaoke.
+- `karaoke.ts`: where the song goes when the singer changes line, and the cue and skip target during a break.
 - `practiceMachine.ts`: the Word practice states and the attempt list; `success` only when the returned word's `status` is `good`.
 - `lineSwipe.ts`: turns wheel and touch input into "up one line" or "down one line", built on `wheel-gestures`. Tested with recorded event sequences: one trackpad swipe with a long momentum tail gives exactly one step.
 
@@ -406,7 +420,7 @@ Total is about 24 hours of design work on top of the functional work. P1 alone i
 4. Click that word → it grows into the middle of the screen as the lyrics step back → **Listen** → say the word → initial and final results (and tone from stage 3). Say it again until it turns green: "Nailed it."
 5. **Sing the line again** → the word flies back into the line; sing it → it turns green.
 6. Tap **Aa** → every control and option appears, to show the judges.
-7. If checkpoint B passed: back to songs, choose **Singing accuracy**, sing a line → Rhythm appears in the score row.
+7. Back to songs, choose **Karaoke mode** on 月亮代表我的心 → the instrumental plays, **Skip to the singing**, and sing along as each line fills.
 
 ## 11. Prototype
 

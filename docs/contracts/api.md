@@ -30,6 +30,7 @@ type SongSummary = { id: string; title: string; artist: string; line_count: numb
 
 type Song = SongSummary & {
   audio_url: string;                  // full track; play [start_ms, end_ms] per line
+  instrumental_url: string | null;    // the track without its singer, for Karaoke mode; null until made
   lines: Line[];
 };
 
@@ -69,6 +70,7 @@ type Word = {
 //   line_index  int
 //   target      "line" | "word"     "line" = a sung line; "word" = Word practice
 //   mode        "spoken" | "singing": required when target is "line"; ignored when target is "word"
+//               The app sends only "spoken" (its Practice mode). "singing" still works but is retired.
 //   word_index  int: required when target is "word"; omit when target is "line"
 
 type Score = number | null;

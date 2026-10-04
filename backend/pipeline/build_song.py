@@ -32,6 +32,7 @@ RATE = "-30%"                           # slower than her default, easier to lea
 MAX_LINE_MS = 30_000                    # a user recording is capped at 30 s
 LONG_LINE_MS = 12_000                   # longer lines are hard to sing back and grade
 ALIGN_CONTEXT_MS = 200                  # align_track looks this far before a line's start
+INSTRUMENTAL = "instrumental.mp3"       # the track without its singer, made by pipeline.instrumental
 _SONG_ID = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 
 
@@ -163,10 +164,16 @@ def build_song(folder: Path, make_clips: bool = True) -> Song:
         artist=str(lyrics["metadata"]["artist"]),
         line_count=len(lines),
         audio_url=f"{MEDIA_PREFIX}/{song_id}/audio.mp3",
+        instrumental_url=instrumental_url(folder),
         lines=lines,
     )
     _keep_aligned_times(song, folder / "song.json")
     return song
+
+
+def instrumental_url(folder: Path) -> str | None:
+    """The Karaoke-mode track's media URL, or None while the song has none (pipeline.instrumental)."""
+    return f"{MEDIA_PREFIX}/{folder.name}/{INSTRUMENTAL}" if (folder / INSTRUMENTAL).exists() else None
 
 
 def write_song(folder: Path, song: Song) -> None:

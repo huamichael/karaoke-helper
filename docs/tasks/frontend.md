@@ -34,16 +34,16 @@ scripts/gen-types.sh       # regenerates TypeScript types from the backend
 ### 1. Song screen
 
 - A list of songs from `GET /api/v1/songs`.
-- Selecting a song shows the mode choice before anything starts. While choosing, the explanation replaces the song's description above the Sing pill. Suggested wording:
-  - **Spoken accuracy.** "Did the right words come out? Checks the sounds of each word."
-  - **Singing accuracy.** "A closer look at every sound, plus your rhythm against the original."
-- A Start button begins at line 1.
+- Selecting a song shows the mode choice before anything starts. While choosing, the explanation replaces the song's description above the Sing pill:
+  - **Practice mode.** "Sing or say a line at a time and every word is graded. Click a word to practice it on its own." Opens the line screen.
+  - **Karaoke mode.** "Sing along to the instrumental, with the lyrics filling in time. Nothing is graded." Opens the karaoke screen.
+- Choosing a mode starts at line 1.
 
-### 2. Line screen
+Singing accuracy was retired on 4 October 2026 (PROJECT_PLAN.md, "The two modes"); Karaoke mode took its place.
 
-The same screen serves both modes, and the user sings in both.
+### 2. Line screen (Practice mode)
 
-- Header: song title, "line 3 of 12", and a badge showing the mode.
+- Header: song title, "line 3 of 12", and the badge "Practice mode".
 - The line in Hanzi with Pinyin for each character, and the translation underneath.
 - A Listen button plays the line from the original track.
 - A Record button with a live level meter. Recording ends when the user presses it again or after a time limit.
@@ -56,24 +56,23 @@ The same screen serves both modes, and the user sings in both.
 
 ### 3. Word practice panel
 
-Opens over the line screen when the user clicks a word chip. It is identical in both modes.
+Opens over the line screen when the user clicks a word chip.
 
 - The word in Hanzi and Pinyin, with its English meaning.
 - A Play button for the spoken reference.
 - A Record button.
-- The result: each syllable's initial, final and, when present, tone, each with a status colour and a feedback message.
+- The result: each syllable coloured by its status, the scores, then one feedback message: that of the first syllable that still needs work. Showing every syllable's message at once ran under the dock in a word of two or three syllables and hid the scores.
 - Closing the panel returns to the line.
 
-### What differs between the modes
+### 4. Karaoke screen (Karaoke mode)
 
-| Element | Spoken-accuracy mode | Singing-accuracy mode |
-|---|---|---|
-| Word chips | Grade from the Whisper base | Finer grade from Whisper + CTC |
-| Score row | Pronunciation, Completeness, Overall | Pronunciation, Completeness, Rhythm (when present), Overall |
-| Feedback message | Names the sound when Whisper heard a different syllable | Names the sound more often |
-| Clicking a word | Opens Word practice | Opens Word practice |
+Sing along with the song; nothing is recorded or graded. `screens/KaraokeScreen.tsx`, design in docs/design/ui.md §5.6.
 
-You do not implement these differences. You send the mode, and the backend's response differs.
+- Plays `song.instrumental_url` from the start. When it is `null` or cannot be played, plays `audio_url` instead and says so; with no track at all, the lyric runs on a silent clock.
+- The lyric list follows the song: the line being sung is centred and fills character by character with the line screen's karaoke fill (`logic/timing.ts`), and the next line takes over by the song screen subtitle's rule (`logic/subtitle.ts`).
+- During an intro or a break, the waiting line shows "Instrumental · next line in 12 s", then a count-in of dots, and the dock offers "Skip to the singing" (`logic/karaoke.ts`).
+- Dock: play and pause (the vinyl, spinning while it plays), Start again, Skip to the singing. Keys: Space, ↑ ↓ change line (the song jumps to a few seconds before it), → skip, R start again, P pinyin.
+- Header: song title, "line 3 of 12", the badge "Karaoke", and the Pinyin and Translation switches.
 
 ### States of the line screen
 
@@ -87,9 +86,8 @@ You do not implement these differences. You send the mode, and the backend's res
 
 - Chip colour comes from `status`: good is green, ok is yellow, wrong is red, missing is grey. Never compute it from a score.
 - Show every score that is not `null`, and hide the ones that are. Rhythm and Tone then appear by themselves when the backend starts sending them.
-- Send `mode` with every `target=line` attempt.
+- Send `mode: "spoken"` with every `target=line` attempt: Practice mode is the API's spoken-accuracy grading.
 - Any word chip is clickable, not only the one in `next_step`.
-- Until the CTC layer lands, both modes return the same grades. Put the mode choice behind a flag, `VITE_SHOW_MODE_CHOICE`, and default to spoken accuracy when it is off.
 
 ## Deliverables
 
@@ -179,7 +177,8 @@ speechSynthesis.speak(u);
 | Variable | Meaning | Default |
 |---|---|---|
 | `VITE_API_URL` | Backend address | `http://localhost:8000` |
-| `VITE_SHOW_MODE_CHOICE` | Show the mode choice on the song screen | off |
+
+`VITE_SHOW_MODE_CHOICE` and `VITE_SINGING_READY` are no longer read: Sing always offers Practice mode and Karaoke mode.
 
 ### Running
 
@@ -194,4 +193,4 @@ npm run dev        # http://localhost:5173
 - Any scoring, thresholds or feedback wording.
 - Accounts and saved history.
 - Mobile browsers. The demo runs in desktop Chrome.
-- Singing along with a backing track.
+- Grading a song sung along with the instrumental. Karaoke mode only plays it.

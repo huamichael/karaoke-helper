@@ -19,7 +19,8 @@ Command-line tool, two modes.
 
 The first run separates the singer's voice from the track with Demucs (a minute or
 two on CPU) and keeps it as data/songs/<id>/check/vocals.wav, which git ignores
-because it is cut from a copyrighted track. Later runs reuse it.
+because it is cut from a copyrighted track. Later runs reuse it, and so does
+pipeline.instrumental, which keeps the voice when it makes a song's karaoke track.
 
 For each line it prints the current end_ms, where the voice falls silent, and a
 suggested end_ms: the voice end plus TAIL_MS, never later than the current end.
@@ -256,36 +257,10 @@ def load_vocals(folder: Path) -> np.ndarray:
     if cached.exists():
         with wave.open(str(cached)) as w:
             return np.frombuffer(w.readframes(w.getnframes()), dtype="<i2").astype(np.float32) / 32768
-    try:
-        import torch
-        from demucs.apply import apply_model
-        from demucs.audio import convert_audio
-        from demucs.pretrained import get_model
-    except ImportError:
-        sys.exit("Demucs is not installed. Run with:  uv run --group vocals python -m pipeline.line_ends --song <id>")
+    from pipeline.separate import save_voice, separate
 
-    import av
-
-    print("separating the singer's voice with Demucs (once per song, a minute or two) ...", file=sys.stderr)
-    model = get_model("htdemucs").eval()
-    chunks = []
-    with av.open(str(folder / "audio.mp3")) as container:
-        resampler = av.AudioResampler(format="fltp", layout="stereo", rate=model.samplerate)
-        for frame in container.decode(audio=0):
-            chunks.extend(out.to_ndarray() for out in resampler.resample(frame))
-        chunks.extend(out.to_ndarray() for out in resampler.resample(None))
-    track = torch.from_numpy(np.concatenate(chunks, axis=1))
-    with torch.no_grad():
-        sources = apply_model(model, track[None], device="cpu", progress=True)[0]
-    voice = sources[model.sources.index("vocals")]
-    voice = convert_audio(voice, model.samplerate, RATE, 1)[0].numpy().astype(np.float32)
-
-    cached.parent.mkdir(exist_ok=True)
-    with wave.open(str(cached), "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(RATE)
-        w.writeframes((np.clip(voice, -1, 1) * 32767).astype("<i2").tobytes())
+    voice = separate(folder).voice
+    save_voice(folder, voice)
     return voice
 
 

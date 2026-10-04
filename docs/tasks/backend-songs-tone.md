@@ -29,6 +29,9 @@ The three demo songs are built: 月亮代表我的心, 一剪梅 and 茉莉花. 
 ```text
 backend/app/mandarin.py           # to_syllables, segment_words, sandhi_tones
 backend/pipeline/build_song.py    # lyrics + audio -> song.json and word clips
+backend/pipeline/line_ends.py     # line start and end times from the singer's voice
+backend/pipeline/separate.py      # Demucs: the track -> the voice and the instrumental
+backend/pipeline/instrumental.py  # Karaoke mode's track: instrumental.mp3 and instrumental_url
 backend/app/scoring/pitch.py      # pitch contour helper
 backend/app/scoring/tone.py       # score_tones
 data/songs/<song_id>/             # the demo song bundles
@@ -118,6 +121,14 @@ Lyric timestamps are often 0.1–0.4 s late, so a line clips its first word and 
 All three demo songs were corrected this way on 4 October 2026. Every cut between sung lines sits at least 25 dB below the singing, except 月亮代表我的心 line 7→8, where the singer glides into the next line without a breath (14 dB).
 
 
+### Instrumentals
+
+Karaoke mode plays each song without its singer. `uv run --group vocals python -m pipeline.instrumental --all` (or `--song <id>`) separates `audio.mp3` with Demucs (`htdemucs`, about 90 seconds per song on CPU), writes everything but the voice to `instrumental.mp3` (192 kbit/s, encoded by PyAV's bundled LAME, so no system ffmpeg), and sets `instrumental_url` in `song.json`. It keeps the separated voice as `check/vocals.wav` for `line_ends`, so no song is separated twice; `--force` separates again. `build_song` sets `instrumental_url` whenever the file is there, and `null` otherwise.
+
+- The instrumental is cut from a copyrighted track, so git ignores it. Share it with `audio.mp3`, outside git. A machine without it plays the original track in Karaoke mode.
+- Stop the backend while it runs if memory is tight: Demucs and the loaded grading models together came close to the 7 GB Docker limit.
+- Check, 4 October 2026: on two sung lines from each demo song, Whisper heard the lyric in `audio.mp3` and nothing in `instrumental.mp3` (once a made-up subtitle credit, Whisper's usual output on music).
+
 A line whose `end_ms` runs into the instrumental makes Listen play the extra music, and lengthens the recording limit. To trim:
 
 1. Measure: `uv run --group vocals python -m pipeline.line_ends --song <id>`. Demucs separates the singer's voice once (cached in the git-ignored `check/vocals.wav`); for each line the tool prints the current `end_ms`, where the voice falls silent, and a suggested `end_ms`. It changes nothing.
@@ -131,7 +142,7 @@ A line whose `end_ms` runs into the instrumental makes Listen play the extra mus
 - edge-tts reads the Hanzi itself and does not know about `readings` fixes. Listen to the clips of fixed words (`yan3-mo4.mp3`, `chang2-liu2.mp3`) to check it says them correctly.
 - `translation` and `gloss` come from the song's `translations` and `glosses` blocks, or are `null`.
 - Validate the output by loading it into the `Song` model before writing. Print a table of Hanzi and pinyin for the human review.
-- The tracks are copyrighted and the repository is public, so `audio.mp3` is ignored by git and shared through the team folder. `lyrics.yaml` and `song.json` are committed.
+- The tracks are copyrighted and the repository is public, so `audio.mp3` and `instrumental.mp3` are ignored by git and shared through the team folder. `lyrics.yaml` and `song.json` are committed.
 
 ### Pitch
 

@@ -1,19 +1,38 @@
 /**
  * The row of keyboard hints above the dock, shown while the controls are open.
+ * The line screen's by default; Karaoke passes its own.
  *
- * Owner: A. Spec: docs/design/ui.md §4.3, §5.3.3 ("Keyboard").
+ * Owner: A. Spec: docs/design/ui.md §4.3, §5.3.3 ("Keyboard"), §5.6.
  */
-export function KeyHints() {
+export type KeyHint = [keys: string[], label: string];
+
+export const LINE_KEYS: KeyHint[] = [
+  [["Space"], "record"],
+  [["L"], "listen"],
+  [["R"], "retry"],
+  [["Enter"], "next"],
+  [["↑", "↓"], "change line"],
+  [["P"], "pinyin"],
+  [["F"], "full screen"],
+  [["E"], "or double-click: hide controls"],
+];
+
+export const KARAOKE_KEYS: KeyHint[] = [
+  [["Space"], "play or pause"],
+  [["↑", "↓"], "change line"],
+  [["→"], "skip to the singing"],
+  [["R"], "start again"],
+  [["P"], "pinyin"],
+  [["F"], "full screen"],
+  [["E"], "or double-click: hide controls"],
+];
+
+export function KeyHints({ keys = LINE_KEYS }: { keys?: KeyHint[] }) {
   return (
     <div className="keys" aria-hidden>
-      <span><kbd>Space</kbd>record</span>
-      <span><kbd>L</kbd>listen</span>
-      <span><kbd>R</kbd>retry</span>
-      <span><kbd>Enter</kbd>next</span>
-      <span><kbd>↑</kbd><kbd>↓</kbd>change line</span>
-      <span><kbd>P</kbd>pinyin</span>
-      <span><kbd>F</kbd>full screen</span>
-      <span><kbd>E</kbd>or double-click: hide controls</span>
+      {keys.map(([ks, label]) => (
+        <span key={label}>{ks.map((k) => <kbd key={k}>{k}</kbd>)}{label}</span>
+      ))}
     </div>
   );
 }

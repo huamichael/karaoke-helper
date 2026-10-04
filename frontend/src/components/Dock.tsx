@@ -1,14 +1,15 @@
 /**
  * The dock: the current step's actions when the controls are closed, every control
  * with a label when open, Word practice's actions while a word is practiced, and
- * the microphone prompt when it is needed. The actions come from logic/actions.ts.
+ * the microphone prompt when it is needed; in Karaoke, play, start again and skip.
+ * The actions come from logic/actions.ts.
  *
  * Owner: A. Spec: docs/design/ui.md §5.3 (dock column), §5.3.1, §5.4.
  */
 import { useRef, type CSSProperties, type ReactNode } from "react";
 import { useWidthMorph } from "../hooks/useWidthMorph";
 import type { DockAction, DockActionId } from "../logic/actions";
-import { PlayIcon, RetryIcon, StopIcon } from "./icons";
+import { PauseIcon, PlayIcon, RetryIcon, StopIcon } from "./icons";
 import { RecordButton, type Meter } from "./RecordButton";
 import { Vinyl } from "./Vinyl";
 
@@ -32,8 +33,8 @@ function Item({ a, i, spinning, recording, meter, onAction }: { a: DockAction; i
     case "vinyl":
       return (
         <button className={`vbtn${a.label ? " lbl" : ""}`} style={style} disabled={a.disabled} onClick={click}
-          aria-label={spinning ? "Stop the line" : "Listen to the line"}>
-          <Vinyl spinning={spinning}>{spinning ? <StopIcon /> : <PlayIcon />}</Vinyl>
+          aria-label={a.aria ?? (spinning ? "Stop the line" : "Listen to the line")}>
+          <Vinyl spinning={spinning}>{spinning ? (a.id === "kplay" ? <PauseIcon /> : <StopIcon />) : <PlayIcon />}</Vinyl>
           {a.label && <span className="txt">{a.label}</span>}
         </button>
       );

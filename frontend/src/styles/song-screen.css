@@ -36,7 +36,7 @@
 .h-meta { font-size: 14px; color: var(--text-3); }
 @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } }
 
-/* Sing is one pill; pressing it springs open into the two modes. */
+/* Sing is one pill; pressing it springs open into the two modes, Practice and Karaoke. */
 .sing-pill { position: relative; display: inline-flex; align-items: center; height: 54px; border-radius: 999px; overflow: hidden; background: var(--accent); color: var(--c0); box-shadow: 0 14px 44px -14px color-mix(in srgb, var(--accent) 70%, transparent); transition: background .35s var(--ease), height .35s var(--ease), box-shadow .35s, color .35s; }
 .sing-go { position: relative; height: 54px; padding: 0 30px; border: 0; background: none; color: inherit; font-size: 16px; font-weight: 600; white-space: nowrap; cursor: pointer; overflow: hidden; }
 .sing-go::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.6) 50%, transparent 70%); transform: translateX(-130%); pointer-events: none; }
@@ -46,9 +46,6 @@
 .sing-pick { display: flex; align-items: center; gap: 4px; padding: 0 5px; }
 .sing-pick button { display: flex; align-items: center; justify-content: center; height: 46px; padding: 0 18px; border: 0; border-radius: 999px; background: none; color: #fff; white-space: nowrap; cursor: pointer; animation: riseIn .35s var(--ease) both; animation-delay: calc(var(--i) * 50ms + 90ms); transition: background .2s, color .2s; font-size: 14.5px; font-weight: 600; }
 .sing-pick button:hover, .sing-pick button:focus-visible { background: var(--accent); color: var(--c0); outline: none; }
-/* Singing accuracy, until the backend is ready: still there to point at, but quieter, and it never fills. */
-.sing-pick button.not-ready { color: var(--text-3); cursor: default; }
-.sing-pick button.not-ready:hover, .sing-pick button.not-ready:focus-visible { background: rgba(255,255,255,.08); color: var(--text-2); }
 .sing-pick .sing-x { width: 40px; height: 40px; padding: 0; border-radius: 50%; color: var(--text-2); }
 .sing-pick .sing-x svg { width: 16px; height: 16px; }
 

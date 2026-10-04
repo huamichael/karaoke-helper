@@ -1,16 +1,16 @@
 /**
  * Playback.
  *
- * Plays one line of the track between its start and end times, and plays a word's
+ * Plays one line of the track between its start and end times, plays a word's
  * spoken reference clip, falling back to browser speech synthesis when there is no
- * clip.
+ * clip, and plays a whole song for Karaoke mode (karaokeTrack).
  *
  * One <audio> element serves the track. Its position is polled every frame,
  * because `timeupdate` fires too rarely to stop on time. When the track cannot
  * play (a song bundle without its audio file yet), the line is spoken instead and
  * the karaoke fill runs over the line's own duration.
  *
- * Owner: A. Spec: docs/tasks/frontend.md ("Playing a line", "Spoken reference in Word practice").
+ * Owner: A. Spec: docs/tasks/frontend.md ("Playing a line", "Spoken reference in Word practice", "Karaoke screen").
  */
 import { mediaUrl, type Line, type Word } from "../api/client";
 import { loopTime } from "../logic/subtitle";
@@ -183,6 +183,99 @@ export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number
     setMuted: (m) => {
       want = m;
       if (!blocked) a.muted = m;
+    },
+  };
+}
+
+export type KaraokeTrack = {
+  play(): void;
+  pause(): void;
+  seek(ms: number): void;
+  /** Where the song is, in ms, playing or paused. */
+  timeMs(): number;
+  dispose(): void;
+};
+
+type KaraokeEvents = {
+  onPlaying(playing: boolean): void;
+  onEnded(): void;
+  /** The first source could not be played: "next" is playing the next one; "silent" means none could. */
+  onFallback(to: "next" | "silent"): void;
+};
+
+/**
+ * Karaoke mode's song: the first source that plays, from the start, with play,
+ * pause and seek. Sources are tried in order (the instrumental, then the original
+ * track). If none can be played, a silent clock keeps time, so the lyric still
+ * runs, and stops at silentEndMs.
+ */
+export function karaokeTrack(urls: (string | null | undefined)[], silentEndMs: number, ev: KaraokeEvents): KaraokeTrack {
+  const sources = urls.filter((u): u is string => !!u).map(mediaUrl);
+  const a = new Audio();
+  a.preload = "auto";
+  let k = 0, want = false, gone = false, lastMs = 0;
+  // The silent clock: the time it was set to, and when it last started running (null while paused).
+  let silent = false, clockMs = 0, runningSince: number | null = null;
+
+  const setWant = (w: boolean) => { if (want !== w) { want = w; ev.onPlaying(w); } };
+  const refused = (e: DOMException) => {
+    // NotAllowedError: the browser wants a click first. Errors loading the file arrive as "error" events.
+    if (e.name === "NotAllowedError") setWant(false);
+  };
+  const goSilent = () => {
+    silent = true;
+    clockMs = lastMs;
+    runningSince = want ? performance.now() : null;
+    ev.onFallback("silent");
+  };
+  const load = () => {
+    a.src = sources[k];
+    a.currentTime = lastMs / 1000;
+    if (want) a.play().catch(refused);
+  };
+  a.addEventListener("error", () => {
+    if (gone || silent) return;
+    if (++k < sources.length) { ev.onFallback("next"); load(); }
+    else goSilent();
+  });
+  a.addEventListener("ended", () => { setWant(false); ev.onEnded(); });
+  if (sources.length) load();
+  else silent = true;
+
+  const timeMs = () => {
+    if (!silent) return (lastMs = a.currentTime * 1000);
+    const t = clockMs + (runningSince != null ? performance.now() - runningSince : 0);
+    if (runningSince != null && t >= silentEndMs) {
+      clockMs = silentEndMs;
+      runningSince = null;
+      setWant(false);
+      ev.onEnded();
+    }
+    return (lastMs = Math.min(t, silentEndMs));
+  };
+
+  return {
+    play() {
+      setWant(true);
+      if (silent) runningSince = performance.now();
+      else a.play().catch(refused);
+    },
+    pause() {
+      if (silent) { clockMs = timeMs(); runningSince = null; }
+      else a.pause();
+      setWant(false);
+    },
+    seek(ms) {
+      lastMs = Math.max(0, ms);
+      if (silent) { clockMs = lastMs; if (runningSince != null) runningSince = performance.now(); }
+      else a.currentTime = lastMs / 1000;
+    },
+    timeMs,
+    dispose() {
+      gone = true;
+      a.pause();
+      a.removeAttribute("src");
+      a.load();
     },
   };
 }

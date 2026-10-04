@@ -78,6 +78,8 @@ class Song(_Model):
     artist: str
     line_count: int
     audio_url: str
+    # The track without its singer, for Karaoke mode; None until pipeline.instrumental makes it.
+    instrumental_url: str | None = None
     lines: list[Line]
 
 

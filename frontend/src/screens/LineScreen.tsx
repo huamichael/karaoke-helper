@@ -1,5 +1,5 @@
 /**
- * Line screen: the main loop, used by both modes.
+ * Line screen: Practice mode's loop. (Karaoke mode is screens/KaraokeScreen.tsx.)
  *
  * Listen to the line, record, send for grading, show the result, then retry or go
  * to the next line. States: idle, listening, ready, recording, grading, result
@@ -33,7 +33,10 @@ import { canLeave, earnedMark, openPractice, practiceReducer, type Practice, typ
 import { fillFractions, recordLimitMs, wordLimitMs } from "../logic/timing";
 
 /** title: the song's title as shown (the theme's Hanzi when it has one). */
-type Props = { song: Song; title: string; mode: Mode; onExit(): void };
+type Props = { song: Song; title: string; onExit(): void };
+
+/** Practice mode grades lines with the API's spoken-accuracy mode (docs/contracts/api.md). */
+const GRADING: Mode = "spoken";
 
 let hinted = false;
 const NONE: number[] = [];
@@ -41,7 +44,7 @@ const NONE: number[] = [];
 const failure = (e: ApiError, line: boolean) =>
   `${e.message} Your recording is kept${line ? ", so you can send it again" : ""}.`;
 
-export default function LineScreen({ song, title, mode, onExit }: Props) {
+export default function LineScreen({ song, title, onExit }: Props) {
   const lines = song.lines;
   const [s, dispatch] = useReducer(sessionReducer, lines.length, initSession);
   const [practice, setPractice] = useState<Practice | null>(null);
@@ -150,7 +153,7 @@ export default function LineScreen({ song, title, mode, onExit }: Props) {
   };
 
   const sendLine = (audio: Blob, lineIndex: number) =>
-    send(audio, { target: "line", songId: song.id, lineIndex, mode },
+    send(audio, { target: "line", songId: song.id, lineIndex, mode: GRADING },
       (r) => dispatch({ type: "graded", result: r }),
       (e) => dispatch({ type: "failed", message: failure(e, true) }));
 
@@ -458,7 +461,7 @@ export default function LineScreen({ song, title, mode, onExit }: Props) {
         onBack={() => (practice ? closePractice() : exit())}
         title={title}
         position={`${i + 1} / ${lines.length}`}
-        badge={mode === "singing" ? "Singing accuracy" : "Spoken accuracy"}
+        badge="Practice mode"
         onHover={chrome.setOver}
       >
         <OptionsPill

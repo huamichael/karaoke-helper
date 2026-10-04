@@ -21,7 +21,7 @@ CONTRACT_FIELDS = {
                       "index", "word_index"],
     s.Word: ["index", "text", "syllable_indices", "gloss", "audio_url"],
     s.Line: ["index", "start_ms", "end_ms", "text", "translation", "syllables", "words"],
-    s.Song: ["id", "title", "artist", "line_count", "audio_url", "lines"],
+    s.Song: ["id", "title", "artist", "line_count", "audio_url", "instrumental_url", "lines"],
     # backend-interfaces.md section 2
     s.Transcript: ["text", "syllables", "no_speech"],
     s.Span: ["start_ms", "end_ms", "confidence"],
