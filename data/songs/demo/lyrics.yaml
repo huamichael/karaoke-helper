@@ -1,0 +1,24 @@
+version: '1.0'
+metadata:
+  title: 两只老虎
+  artist: Traditional
+readings:
+  两只: liang3 zhi1
+  跑得快: pao3 de5 kuai4
+words:
+  两只老虎: 两只 老虎
+  跑得快: 跑得快
+translations:
+  两只老虎，两只老虎: "Two tigers, two tigers"
+  跑得快，跑得快: "Run fast, run fast"
+glosses:
+  两只: "two (of an animal)"
+  老虎: "tiger"
+  跑得快: "runs fast"
+lines:
+- text: 两只老虎，两只老虎
+  start_ms: 0
+  end_ms: 4000
+- text: 跑得快，跑得快
+  start_ms: 4000
+  end_ms: 8000
