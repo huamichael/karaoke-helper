@@ -36,6 +36,7 @@ import { fillFractions, recordLimitMs, wordLimitMs } from "../logic/timing";
 type Props = { song: Song; title: string; mode: Mode; onExit(): void };
 
 let hinted = false;
+const NONE: number[] = [];
 
 const failure = (e: ApiError, line: boolean) =>
   `${e.message} Your recording is kept${line ? ", so you can send it again" : ""}.`;
@@ -361,6 +362,11 @@ export default function LineScreen({ song, title, mode, onExit }: Props) {
   };
   const keyHandler = useLatest(onKey);
   const swipeHandler = useLatest((dir: Step) => goTo(live.current.s.lineIndex + dir, dir));
+  // Stable callbacks for the memoised lyric lines.
+  const lineHandlers = useLatest({ openWord, goTo });
+  const onWord = useCallback((k: number) => lineHandlers.current.openWord(k), [lineHandlers]);
+  const onLine = useCallback((j: number) => lineHandlers.current.goTo(j), [lineHandlers]);
+  const onMorphDone = useCallback(() => { if (!live.current.practice) setMorph(null); }, [live]);
 
   useEffect(() => {
     const f = (e: KeyboardEvent) => keyHandler.current(e);
@@ -418,18 +424,19 @@ export default function LineScreen({ song, title, mode, onExit }: Props) {
               line={l}
               index={k}
               activeIndex={i}
-              phase={s.phase}
+              // Only the active line gets values that change; the others keep equal props and skip re-rendering.
+              phase={k === i ? s.phase : "idle"}
               result={latestResult(s, k)}
               fresh={k === i && !!result && s.fresh === result.attempt_id}
-              practised={s.practised[k] ?? []}
+              practised={s.practised[k] ?? NONE}
               fill={k === i ? fill : null}
               note={k === i ? s.note : null}
-              interactive={!practice && s.phase !== "recording" && s.phase !== "grading"}
-              morphWord={morph}
-              awayWord={practice?.wordIndex ?? null}
-              onWord={openWord}
-              onLine={(j) => goTo(j)}
-              onMorphDone={() => { if (!live.current.practice) setMorph(null); }}
+              interactive={k === i && !practice && s.phase !== "recording" && s.phase !== "grading"}
+              morphWord={k === i ? morph : null}
+              awayWord={k === i ? practice?.wordIndex ?? null : null}
+              onWord={onWord}
+              onLine={onLine}
+              onMorphDone={onMorphDone}
             />
           ))}
         </LyricList>

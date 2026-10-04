@@ -7,7 +7,7 @@
  *
  * Owner: A. Spec: docs/tasks/frontend.md, docs/design/ui.md §4.2, §5.3.
  */
-import type { CSSProperties } from "react";
+import { memo, type CSSProperties } from "react";
 import type { AttemptResult, Line } from "../api/client";
 import type { LinePhase } from "../logic/actions";
 import { Feedback, Heard } from "./Feedback";
@@ -33,7 +33,8 @@ type Props = {
   onMorphDone(): void;
 };
 
-export function LyricLine({ line, index, activeIndex, phase, result, fresh, practised, fill, note, interactive, morphWord, awayWord, onWord, onLine, onMorphDone }: Props) {
+/** Memoised: the screen passes inactive lines stable props, so a click or a state change re-renders only the active line. */
+export const LyricLine = memo(function LyricLine({ line, index, activeIndex, phase, result, fresh, practised, fill, note, interactive, morphWord, awayWord, onWord, onLine, onMorphDone }: Props) {
   const active = index === activeIndex;
   const cls = ["line", active && "active", index < activeIndex && "past", active && fill && "filling", active && phase === "grading" && "grading"]
     .filter(Boolean).join(" ");
@@ -67,4 +68,4 @@ export function LyricLine({ line, index, activeIndex, phase, result, fresh, prac
       )}
     </div>
   );
-}
+});
