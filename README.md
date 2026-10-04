@@ -23,8 +23,8 @@ docker compose up            # backend on http://localhost:8000, frontend on htt
 ```
 
 - The repo is mounted into the containers, so edits on your machine reload live. Dependencies added to `backend/pyproject.toml` or `frontend/package.json` are installed on the next start.
-- The backend starts with the mock grader. Run `GRADER=real docker compose up` to grade for real. Layer switches work the same way, for example `ENABLE_CTC=1`.
-- Model weights download on first use into a Docker volume (about 3 GB) and are kept between runs. The first real grading request needs internet.
+- The backend starts with real grading. For UI development without models, run `GRADER=mock docker compose up`; mock scores are fixed per line and ignore the audio. The app labels them as demo scores. Layer switches work the same way, for example `ENABLE_CTC=1`.
+- Model weights download at backend startup into a Docker volume (about 3 GB) and are kept between runs. The first startup with real grading needs internet.
 - Raise Docker Desktop's memory limit to 8 GB or more before running the real grader.
 - The microphone is used by Chrome on your machine, not by the containers.
 
@@ -50,8 +50,16 @@ Needs Python 3.12, [uv](https://docs.astral.sh/uv/) and Node 22 on your machine.
 
 ```bash
 # backend, on http://localhost:8000
-cd backend && uv sync && GRADER=mock uv run uvicorn app.main:app --reload --port 8000
+cd backend && uv sync && uv run uvicorn app.main:app --reload --port 8000
 
 # frontend, on http://localhost:5173
 cd frontend && npm install && npm run dev
 ```
+
+For UI development without models, set `GRADER=mock` on the backend command.
+
+If retries always have the same score, check `GET /api/v1/health`: `grader` should
+be `real`. Remove any `GRADER=mock` override and restart the backend. With Docker,
+run `GRADER=real docker compose up -d --force-recreate backend` to replace an
+existing mock container. A retry with no usable speech clears the previous score
+and word grades and asks for another recording.

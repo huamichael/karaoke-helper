@@ -52,7 +52,8 @@ export function canChangeLine(s: Session, practising: boolean): boolean {
 
 export function latestResult(s: Session, index = s.lineIndex): AttemptResult | null {
   const r = s.results[index];
-  return r && r.length ? r[r.length - 1] : null;
+  const latest = r?.[r.length - 1];
+  return latest?.status === "ok" ? latest : null;
 }
 
 export function sessionReducer(s: Session, e: SessionEvent): Session {
@@ -70,9 +71,10 @@ export function sessionReducer(s: Session, e: SessionEvent): Session {
       return s.phase === "recording" ? { ...s, phase: "ready" } : s;
     case "graded": {
       if (s.phase !== "grading" || e.result.line_index !== i) return s;
-      if (e.result.status === "no_speech") return { ...s, phase: "ready", note: NO_SPEECH_LINE, pending: null };
+      const noSpeech = e.result.status === "no_speech";
       return {
-        ...s, phase: "result", note: null, pending: null, fresh: e.result.attempt_id,
+        ...s, phase: noSpeech ? "ready" : "result", note: noSpeech ? NO_SPEECH_LINE : null,
+        pending: null, fresh: noSpeech ? null : e.result.attempt_id,
         results: { ...s.results, [i]: [...(s.results[i] ?? []), e.result] },
         practised: { ...s.practised, [i]: [] },
       };

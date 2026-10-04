@@ -215,13 +215,14 @@ The states and their rules are in the frontend task. This is what each state loo
 
 - When `next_step.type` is `retry_line`, Retry is the primary action in `result` instead of Next line.
 - On the last line, Next line reads "Back to songs".
-- `no_speech`: "We didn't hear anything. Move closer to the mic and sing again." under the line, then `ready`.
+- `no_speech`: "We didn't hear anything. Move closer to the mic and sing again." under the line, then `ready`. Clear the previous score row, transcript, feedback and word grades. Revisiting the line must not restore an older grade after this retry.
 
 **After grading:**
 
 - **The words are the chips.** Each word gets a bar under it in its `status` colour and shape, and the pinyin of a word that is not `good` takes the same colour. There is no second row of words.
 - If `next_step.type` is `practice_word`, that word gets an accent ring that pulses once.
 - Under the line: the translation, the score row (every score that is not `null`: Overall, Pronunciation, Completeness, then Rhythm, Tone and Melody when the backend sends them), "We heard" with `heard.hanzi` and its pinyin, and the coach bubble (section 5.5).
+- Results with `engine: "mock"` show "Demo scores — your audio is not being graded." above the score row, also in Word practice.
 
 #### 5.3.1 Controls: closed and open
 
@@ -269,7 +270,7 @@ The frontend task's Word practice panel, without a panel. It sends `target=word`
 - **The dock carries the practice actions:** Listen (the spoken reference: `audio_url`, or `speechSynthesis` in `zh-CN` when it is `null`), **Record** / **Record again**, and a quiet "I'm confident" that ends practice at any time.
 - **Success:** when the returned word's `status` is `good`, the Hanzi turns green, a ring expands, "Nailed it." appears, and the dock offers **Sing the line again** (primary) and Keep practising. Sing the line again ends practice and puts the line in `ready`.
 - **Ending practice:** I'm confident, the back button, Esc, or a click on the faded lyrics (not while recording or grading). The word flies back into its slot.
-- `no_speech`: "We didn't hear anything. Say the word a little louder." A failed request shows Send again, which resends the same recording.
+- `no_speech`: "We didn't hear anything. Say the word a little louder." Clear the previous word grade, captions, feedback and scores, return to `ready`, and keep the earlier attempt dots. A failed request shows Send again, which resends the same recording.
 - Attempts and the practised mark live in memory for the session only.
 
 ### 5.5 Coach

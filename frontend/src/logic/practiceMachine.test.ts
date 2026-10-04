@@ -25,7 +25,16 @@ describe("word practice", () => {
     const p = run(attempt(noSpeech("word")));
     expect(p).toMatchObject({ phase: "ready", note: NO_SPEECH_WORD, attempts: [] });
     const after = run(attempt(noSpeech("word")), run(attempt(wordResult("wrong"))));
-    expect(after.phase).toBe("result");
+    expect(after).toMatchObject({ phase: "ready", last: null, pending: null, attempts: ["wrong"] });
+  });
+
+  it("a no_speech retry cannot bring back the previous word grade when listening or recording again", () => {
+    const p = run([...attempt(wordResult("good")), ...attempt(noSpeech("word"))]);
+    expect(p).toMatchObject({ phase: "ready", last: null, note: NO_SPEECH_WORD, attempts: ["good"] });
+    const listened = run([{ type: "listen" }, { type: "listenEnd" }], p);
+    expect(listened).toMatchObject({ phase: "ready", last: null });
+    expect(run([{ type: "record" }], listened).last).toBeNull();
+    expect(run(attempt(wordResult("wrong")), listened).phase).toBe("result");
   });
 
   it("listening returns to where it was", () => {

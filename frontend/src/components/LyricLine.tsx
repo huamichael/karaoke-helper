@@ -57,6 +57,7 @@ export function LyricLine({ line, index, activeIndex, phase, result, fresh, prac
           {line.translation && <p className="tr">{line.translation}</p>}
           {result && (
             <div className="res">
+              {result.engine === "mock" && <p className="note" role="status">Demo scores — your audio is not being graded.</p>}
               <ScoreRow scores={result.scores} fresh={fresh} />
               <Heard heard={result.heard} />
               <Feedback message={result.next_step.message} />

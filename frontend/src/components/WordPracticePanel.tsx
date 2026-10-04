@@ -74,7 +74,12 @@ export function WordPractice({ line, practice }: { line: Line; practice: Practic
           : practice.note ? <p className="f-note" role="status">{practice.note}</p>
           : !last ? <p className="f-hint">Listen, then say the word on its own.</p>
           : <Feedback message={messages || null} />}
-        {practice.last && !practice.note && <ScoreRow key={practice.last.attempt_id} scores={practice.last.scores} fresh />}
+        {practice.last && !practice.note && (
+          <>
+            {practice.last.engine === "mock" && <p className="f-note" role="status">Demo scores — your audio is not being graded.</p>}
+            <ScoreRow key={practice.last.attempt_id} scores={practice.last.scores} fresh />
+          </>
+        )}
       </div>
     </div>
   );

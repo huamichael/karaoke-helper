@@ -79,8 +79,9 @@ You do not implement these differences. You send the mode, and the backend's res
 
 `idle` → `listening` → `ready` → `recording` → `grading` → `result`
 
-- If the backend returns `status: "no_speech"`, show "We didn't hear anything" and return to `ready`.
+- If the backend returns `status: "no_speech"`, show "We didn't hear anything" and return to `ready`. Clear the previous score, word grades and feedback so a failed retry cannot look like the earlier attempt. Keep the line's attempt history in memory, including `no_speech`, but display grades only when its newest attempt has `status: "ok"`. Word practice clears its last result and returns to `ready`, keeping the dots from earlier graded attempts.
 - If the request fails, show a retry button and keep the recording so it can be sent again.
+- When a displayed result has `engine: "mock"`, label it "Demo scores — your audio is not being graded." in both line and word practice results.
 
 ## Rules
 

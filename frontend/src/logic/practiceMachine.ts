@@ -68,7 +68,7 @@ export function practiceReducer(p: Practice, e: PracticeEvent): Practice {
     case "graded": {
       if (p.phase !== "grading") return p;
       const st = wordStatus(e.result, p.wordIndex);
-      if (e.result.status === "no_speech" || !st) return { ...p, phase: rest(p), note: NO_SPEECH_WORD, pending: null };
+      if (e.result.status === "no_speech" || !st) return { ...p, phase: "ready", last: null, note: NO_SPEECH_WORD, pending: null };
       return { ...p, phase: st === "good" ? "success" : "result", attempts: [...p.attempts, st], last: e.result, note: null, pending: null };
     }
     case "failed":
