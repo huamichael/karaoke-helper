@@ -3,6 +3,11 @@
  * while the record is between two songs. Generated with Web Audio; no files.
  * Browsers allow sound only after a click or a key press, so it starts on the first.
  *
+ * Opening a page's first AudioContext takes about 0.2 s while the audio device
+ * starts (unless a track is already playing). Built on the first click, that froze
+ * whatever the click began, opening Sing say, so it is built as the page loads,
+ * suspended, and the first click or key press only resumes it.
+ *
  * Owner: A. Spec: docs/design/ui.md §5.1 ("Between songs"), §6 (Ambience).
  */
 
@@ -27,7 +32,7 @@ function loop(c: AudioContext, seconds: number, fill: (d: Float32Array) => void)
   return src;
 }
 
-function start() {
+function build() {
   if (ctx) return;
   try {
     const c = (ctx = new AudioContext());
@@ -66,7 +71,13 @@ function apply() {
   noise.gain.setTargetAtTime(active ? level * STATIC_LEVEL : 0, t, 0.03);
 }
 
+function start() {
+  build();
+  ctx?.resume().catch(() => {});
+}
+
 if (typeof document !== "undefined") {
+  build();
   for (const ev of ["pointerdown", "keydown"]) document.addEventListener(ev, start, { once: true });
 }
 
