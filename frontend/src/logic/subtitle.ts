@@ -25,6 +25,33 @@ export function subtitleIndex(lines: Timed[], t: number): number {
   return lines.length - 1;
 }
 
+/** A stable number in [0, 1) for a key (FNV-1a, then mixed). */
+function unit(key: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  h ^= h >>> 13;
+  h = Math.imul(h, 0x5bd1e995);
+  h ^= h >>> 15;
+  return (h >>> 0) / 4294967296;
+}
+
+/**
+ * The subtitle's pretend grades: one status per character, like a singer who
+ * mostly gets it right. About a quarter of the lines are all good; the rest have
+ * one character off, yellow (ok) a little more often than red (wrong), in a
+ * different place on each line. Decorative and fixed per song and line: nobody
+ * is being graded, and nothing here is computed from a score.
+ */
+export function demoMarks(songId: string, line: number, count: number): ("good" | "ok" | "wrong")[] {
+  const marks: ("good" | "ok" | "wrong")[] = new Array(count).fill("good");
+  const kind = unit(`${songId}:${line}`);
+  if (count && kind < 0.75) marks[Math.floor(unit(`${songId}:${line}:at`) * count)] = kind < 0.45 ? "ok" : "wrong";
+  return marks;
+}
+
 /** The part of the track the record plays while the arm is down, looping: the whole lyric, padded. */
 export function previewWindow(lines: Timed[]): { fromMs: number; toMs: number } {
   return { fromMs: Math.max(0, lines[0].start_ms - PAD_MS), toMs: lines[lines.length - 1].end_ms + PAD_MS };

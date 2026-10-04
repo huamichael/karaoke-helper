@@ -1,5 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { previewWindow, subtitleIndex } from "./subtitle";
+import { demoMarks, previewWindow, subtitleIndex } from "./subtitle";
+
+describe("demoMarks", () => {
+  it("gives one mark per character, the same every time", () => {
+    const a = demoMarks("jasmine-flower", 3, 9);
+    expect(a).toHaveLength(9);
+    expect(demoMarks("jasmine-flower", 3, 9)).toEqual(a);
+  });
+  it("uses only good, ok and wrong", () => {
+    for (let i = 0; i < 30; i++) for (const m of demoMarks("yi-jian-mei", i, 10)) expect(["good", "ok", "wrong"]).toContain(m);
+  });
+  it("marks at most one character of a line as off, like a singer who mostly gets it right", () => {
+    for (const song of ["jasmine-flower", "yi-jian-mei", "yue-liang-dai-biao-wo-de-xin"])
+      for (let i = 0; i < 26; i++) expect(demoMarks(song, i, 8).filter((m) => m !== "good").length).toBeLessThanOrEqual(1);
+  });
+  it("across a song, some lines are perfect, some have a yellow and some a red", () => {
+    const lines = Array.from({ length: 26 }, (_, i) => demoMarks("yue-liang-dai-biao-wo-de-xin", i, 8));
+    expect(lines.some((l) => l.every((m) => m === "good"))).toBe(true);
+    expect(lines.some((l) => l.includes("ok"))).toBe(true);
+    expect(lines.some((l) => l.includes("wrong"))).toBe(true);
+  });
+  it("puts the odd mark in different places on different lines", () => {
+    const spots = new Set(Array.from({ length: 26 }, (_, i) => demoMarks("jasmine-flower", i, 9).findIndex((m) => m !== "good")).filter((k) => k >= 0));
+    expect(spots.size).toBeGreaterThan(3);
+  });
+});
 
 const at = (start_ms: number, end_ms: number) => ({ start_ms, end_ms });
 

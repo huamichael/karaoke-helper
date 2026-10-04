@@ -3,15 +3,17 @@
  * the song on the record, one line at a time, in time with the track. Each
  * character fills left to right as it is sung, with the line screen's karaoke
  * fill (logic/timing.ts: each syllable's own time once the track is aligned,
- * else the line split evenly); logic/subtitle.ts picks the line. A new line rises
- * in out of a blur as the last one drifts up and away.
+ * else the line split evenly); logic/subtitle.ts picks the line. Once a character
+ * is sung, a status bar grows in under it, as if the singer were being graded:
+ * pretend grades (demoMarks), not a result. A new line rises in out of a blur as
+ * the last one drifts up and away.
  *
  * Owner: A. Spec: docs/design/ui.md §5.1 ("The subtitle").
  */
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { Line } from "../../api/client";
-import { subtitleIndex } from "../../logic/subtitle";
+import { demoMarks, subtitleIndex } from "../../logic/subtitle";
 import { fillFractions } from "../../logic/timing";
 
 type Props = {
@@ -46,6 +48,7 @@ export function LyricSubtitle({ songId, lines, timeMs }: Props) {
   }, [lines]);
 
   const line = lines[view.index];
+  const marks = useMemo(() => demoMarks(songId, view.index, line?.syllables.length ?? 0), [songId, view.index, line]);
   if (!line) return null;
   return (
     <div className="subtitle" aria-hidden>
@@ -59,12 +62,16 @@ export function LyricSubtitle({ songId, lines, timeMs }: Props) {
             exit={{ opacity: 0, y: -18, filter: "blur(6px)" }}
             transition={{ duration: 0.55, ease: EASE }}
           >
-            {line.syllables.map((s, j) => (
-              <span className="tok" key={j}>
-                <span className="py">{s.pinyin}</span>
-                <span className="hz" data-hz={s.hanzi} style={{ "--f": view.fill[j] ?? 0 } as CSSProperties}>{s.hanzi}</span>
-              </span>
-            ))}
+            {line.syllables.map((s, j) => {
+              const f = view.fill[j] ?? 0;
+              return (
+                <span className={`tok s-${marks[j]}${f >= 0.999 ? " graded" : ""}`} key={j}>
+                  <span className="py">{s.pinyin}</span>
+                  <span className="hz" data-hz={s.hanzi} style={{ "--f": f } as CSSProperties}>{s.hanzi}</span>
+                  <i className="mark" />
+                </span>
+              );
+            })}
           </motion.div>
         </AnimatePresence>
       </div>
