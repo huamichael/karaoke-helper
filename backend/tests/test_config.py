@@ -8,6 +8,12 @@ import pytest
 from app import config
 
 
+@pytest.fixture(autouse=True)
+def experiments_off(monkeypatch):
+    for name in config.EXPERIMENT_FLAGS:
+        monkeypatch.delenv(name, raising=False)
+
+
 @pytest.fixture
 def flags_off(monkeypatch):
     for name in config.LAYER_FLAGS:
@@ -49,7 +55,7 @@ def test_spoken_never_gets_ctc_even_when_enabled(monkeypatch):
     assert (layers.ctc_spans, layers.ctc_scores) == (False, False)
 
 
-@pytest.mark.parametrize("name", config.LAYER_FLAGS)
+@pytest.mark.parametrize("name", config.LAYER_FLAGS + config.EXPERIMENT_FLAGS)
 def test_bad_flag_rejected(monkeypatch, name):
     monkeypatch.setenv(name, "yes")
     with pytest.raises(ValueError, match=name):

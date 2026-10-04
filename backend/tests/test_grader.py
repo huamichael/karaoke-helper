@@ -24,7 +24,7 @@ AUDIO = Audio(samples=np.zeros(16000, dtype=np.float32), sample_rate=16000, trim
 
 @pytest.fixture(autouse=True)
 def layer_flags_off(monkeypatch):
-    for name in ("ENABLE_CTC", "ENABLE_RHYTHM", "ENABLE_TONE"):
+    for name in ("ENABLE_CTC", "ENABLE_RHYTHM", "ENABLE_TONE", "TONE_REFERENCE"):
         monkeypatch.setenv(name, "0")
 
 
@@ -119,8 +119,15 @@ def test_missing_syllable(monkeypatch):
     assert (s.status, s.score, s.feedback.code) == ("missing", 0, "MISSING")
     assert (s.initial.heard, s.initial.score, s.final.score) == (None, 0, 0)
     assert (r.words[2].status, r.words[2].score) == ("missing", 0)
-    assert (r.scores.pronunciation, r.scores.completeness, r.scores.overall) == (100, 83, 95)
+    # A missing syllable counts 0 in pronunciation, so leaving words out costs as much as saying them wrong.
+    assert (r.scores.pronunciation, r.scores.completeness, r.scores.overall) == (83, 83, 83)
     assert r.next_step.type == "practice_word" and r.next_step.word_index == 2
+
+
+def test_missing_and_wrong_syllables_both_count_in_pronunciation(monkeypatch):
+    r = run(monkeypatch, "我想你一李")  # 和 missing, 起 heard as 李 (66)
+    assert [s.score for s in r.syllables] == [100, 100, 0, 100, 100, 66]
+    assert (r.scores.pronunciation, r.scores.completeness, r.scores.overall) == (78, 83, 79)  # 466 / 6 = 77.7
 
 
 def test_word_status_is_worst_syllable_and_score_is_mean(monkeypatch):
@@ -293,6 +300,14 @@ def test_sound_and_tone_messages_beat_rhythm():
     assert (sound.score, sound.status, sound.feedback.code) == (83, "ok", "INITIAL_N_L")
     tone = ni_result(tone=ToneGrade(expected=3, heard=2, score=40), rhythm=early).syllables[0]
     assert (tone.status, tone.feedback.code) == ("wrong", "TONE_3_2")
+
+
+def test_pronunciation_is_none_when_every_syllable_is_missing():
+    line = make_line(["你", "好"])
+    r = grader.assemble(line.syllables, [None, None], [None, None], None, None, None, heard("啊"),
+                        word_specs=[(0, "你", [0]), (1, "好", [1])], engine="whisper", trim_offset_ms=0,
+                        line_index=0, target="line", mode="spoken", word_index=None)
+    assert (r.scores.pronunciation, r.scores.completeness, r.scores.overall) == (None, 0, 0)
 
 
 def test_missing_syllable_beats_rhythm():
@@ -583,3 +598,49 @@ def test_assemble_rejects_misaligned_layers():
         grader.assemble(exp, [None] * 5, [None] * 6, None, None, None, heard(""),
                         word_specs=[], engine="whisper", trim_offset_ms=0,
                         line_index=0, target="line", mode="spoken", word_index=None)
+
+
+# --- experiments: TONE_REFERENCE --------------------------------------------------
+
+
+def test_tone_reference_passes_each_syllables_reference_contour(monkeypatch):
+    monkeypatch.setenv("ENABLE_TONE", "1")
+    monkeypatch.setenv("TONE_REFERENCE", "1")
+    reference = [np.arange(5.0)]
+    monkeypatch.setattr(grader, "_reference_contours", lambda line, expected: reference)
+    calls = []
+    monkeypatch.setattr(grader, "score_tones_with_references",
+                        lambda audio, expected, spans, refs: calls.append(refs) or [ToneGrade(expected=3, heard=3, score=90)])
+    monkeypatch.setattr(grader, "score_tones", lambda *a: pytest.fail("the plain tone check ran"))
+    r = run(monkeypatch, "我", target="word", mode=None, word_index=0)
+    assert calls == [reference] and r.scores.tone == 90
+
+
+def test_tone_reference_off_uses_the_plain_tone_check(monkeypatch):
+    monkeypatch.setenv("ENABLE_TONE", "1")
+    calls = []
+    monkeypatch.setattr(grader, "score_tones", lambda audio, expected, spans: calls.append(1) or [ToneGrade(expected=3, heard=3, score=90)])
+    monkeypatch.setattr(grader, "score_tones_with_references", lambda *a: calls.append(2) or [None])
+    run(monkeypatch, "我", target="word", mode=None, word_index=0)
+    assert calls == [1]
+
+
+def test_reference_contours_come_from_the_word_clip():
+    from app import songs
+    line = songs.get_line(songs.get_song("jasmine-flower"), 0)
+    no_clip = line.model_copy(update={"words": [w.model_copy(update={"audio_url": None}) for w in line.words]})
+    expected = songs.word_syllables(line, 0)  # 好, a one-syllable word
+    [contour] = grader._reference_contours(line, expected)
+    assert contour is not None and contour.shape == (5,)
+    assert grader._reference_contours(no_clip, expected) == [None]
+
+
+def test_reference_contours_give_each_syllable_its_own_part_of_the_clip(monkeypatch):
+    from app import songs
+    line = songs.get_line(songs.get_song("jasmine-flower"), 0)  # 好 / 一朵 / 美麗 / 的 / 茉莉花
+    monkeypatch.setattr(grader, "_CLIP_CONTOURS", {})
+    monkeypatch.setattr(grader, "align", lambda clip, sylls: [None] * len(sylls))
+    monkeypatch.setattr(grader, "syllable_contours",
+                        lambda clip, sylls, spans: [np.full(5, float(k)) for k in range(len(sylls))])
+    contours = grader._reference_contours(line, line.syllables)
+    assert [float(c[0]) for c in contours] == [0, 0, 1, 0, 1, 0, 0, 1, 2]

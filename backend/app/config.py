@@ -17,6 +17,9 @@ from typing import Literal
 GRADERS = ("mock", "real")
 WHISPER_ENGINES = ("mlx", "faster")
 LAYER_FLAGS = ("ENABLE_CTC", "ENABLE_RHYTHM", "ENABLE_TONE")
+# Experiments for manual testing, off by default. TONE_REFERENCE compares tone with the
+# word's reference clip.
+EXPERIMENT_FLAGS = ("TONE_REFERENCE",)
 
 # backend-interfaces.md section 4: (ctc_spans, ctc_scores, rhythm, tone)
 _LINE = {
@@ -63,8 +66,13 @@ def flag(name: str) -> bool:
 
 
 def validate_layer_flags() -> None:
-    for name in LAYER_FLAGS:
+    for name in LAYER_FLAGS + EXPERIMENT_FLAGS:
         flag(name)
+
+
+def whisper_prompt() -> str | None:
+    """WHISPER_PROMPT, an experiment: text Whisper treats as coming just before the recording."""
+    return os.environ.get("WHISPER_PROMPT") or None
 
 
 def layers_for(target: str, mode: str | None, syllable_count: int = 1) -> Layers:

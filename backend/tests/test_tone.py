@@ -13,7 +13,7 @@ import pytest
 from app.mandarin import to_syllables
 from app.schemas import Audio, Span
 from app.scoring.pitch import pitch_track
-from app.scoring.tone import score_tones
+from app.scoring.tone import score_tones, score_tones_with_references, syllable_contours
 
 SR = 16_000
 
@@ -149,6 +149,29 @@ def test_robotic_voice_hears_level_tones_and_marks_others_wrong():
     grades = score_tones(audio, to_syllables("你問我愛"), spans)
     assert [g.heard for g in grades] == [1, 1, 1, 1]
     assert all(g.score <= 60 for g in grades)
+
+
+# TONE_REFERENCE experiment: the reference clip's contour stands in for the expected shape.
+
+
+def test_reference_contour_replaces_the_expected_shape():
+    # 骂 said with a dip, and a reference clip that dips the same way.
+    dip = recording(silence(150), voice(200, SHAPES[3], 380), silence(150))
+    reference = syllable_contours(dip, to_syllables("骂"), None)
+    [plain] = score_tones(dip, to_syllables("骂"), None)
+    [with_reference] = score_tones_with_references(dip, to_syllables("骂"), None, reference)
+    assert (plain.expected, plain.heard) == (4, 3)
+    assert (with_reference.expected, with_reference.heard) == (4, 4) and with_reference.score >= 95
+
+
+def test_missing_reference_falls_back_to_the_textbook_shape():
+    flat = recording(silence(150), voice(200, [0, 0, 0], 380), silence(150))
+    assert score_tones_with_references(flat, to_syllables("骂"), None, [None]) == score_tones(flat, to_syllables("骂"), None)
+
+
+def test_references_must_match_syllables():
+    with pytest.raises(ValueError, match="one entry per"):
+        score_tones_with_references(two_syllables(2, 3), to_syllables("你好"), TWO_SYLLABLE_SPANS, [None])
 
 
 def test_neutral_tone_not_scored():

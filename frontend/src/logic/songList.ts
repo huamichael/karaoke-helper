@@ -13,14 +13,21 @@ import { FALLBACK_PALETTE, type SongTheme } from "../theme/songThemes";
 
 export type Entry = { id: string; title: string; artist: string; playable: boolean; theme: SongTheme };
 
+/**
+ * Songs the backend serves only as test fixtures, never shown on the record:
+ * "demo" is a hand-written two-line 两只老虎 with no track.
+ */
+export const HIDDEN_SONGS: ReadonlySet<string> = new Set(["demo"]);
+
 export function buildEntries(songs: SongSummary[], themes: Record<string, SongTheme>): Entry[] {
+  songs = songs.filter((s) => !HIDDEN_SONGS.has(s.id));
   const served = songs.map((s) => {
     const theme = themes[s.id] ?? { palette: FALLBACK_PALETTE };
     return { id: s.id, title: theme.title ?? s.title, artist: theme.artist ?? s.artist, playable: true, theme };
   });
   const ids = new Set(songs.map((s) => s.id));
   const soon = Object.entries(themes)
-    .filter(([id, t]) => !ids.has(id) && t.title)
+    .filter(([id, t]) => !ids.has(id) && !HIDDEN_SONGS.has(id) && t.title)
     .map(([id, t]) => ({ id, title: t.title!, artist: t.artist ?? "", playable: false, theme: t }));
   return [...served, ...soon];
 }

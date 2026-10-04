@@ -53,13 +53,21 @@ def fake(monkeypatch):
 
 def test_whisper_called_with_spec_arguments(fake, monkeypatch):
     monkeypatch.delenv("WHISPER_VAD", raising=False)
+    monkeypatch.delenv("WHISPER_PROMPT", raising=False)
     model = fake("我想和李一起")
     tr.transcribe(AUDIO)
     samples, kwargs = model.calls[0]
     assert samples is AUDIO.samples
     assert kwargs == {"language": "zh", "beam_size": 5, "temperature": 0.0,
                       "condition_on_previous_text": False, "vad_filter": True,
-                      "suppress_tokens": [-1, 11, 12]}
+                      "suppress_tokens": [-1, 11, 12], "initial_prompt": None}
+
+
+def test_whisper_prompt_experiment_reaches_the_model(fake, monkeypatch):
+    monkeypatch.setenv("WHISPER_PROMPT", "嗯，那个。")
+    model = fake("我")
+    tr.transcribe(AUDIO)
+    assert model.calls[0][1]["initial_prompt"] == "嗯，那个。"
 
 
 def test_vad_can_be_switched_off(fake, monkeypatch):
@@ -157,6 +165,7 @@ def test_mlx_called_with_spec_arguments(monkeypatch):
     monkeypatch.setenv("WHISPER_ENGINE", "mlx")
     monkeypatch.setattr(config.sys, "platform", "darwin")
     monkeypatch.delenv("WHISPER_MODEL", raising=False)
+    monkeypatch.delenv("WHISPER_PROMPT", raising=False)
     monkeypatch.setattr(mandarin, "to_syllables", fake_to_syllables)
     calls = []
 
@@ -176,12 +185,16 @@ def test_mlx_called_with_spec_arguments(monkeypatch):
         "condition_on_previous_text": False,
         "verbose": None,
         "suppress_tokens": [-1, 21],
+        "initial_prompt": None,
     }
     assert "beam_size" not in kwargs
     assert "vad_filter" not in kwargs
-    assert "initial_prompt" not in kwargs
     assert t.text == "我想和你一起"
     assert t.no_speech is False
+
+    monkeypatch.setenv("WHISPER_PROMPT", "嗯，那个。")
+    tr.transcribe(AUDIO)
+    assert calls[1][1]["initial_prompt"] == "嗯，那个。"
 
 
 def test_mlx_no_speech_and_no_vad_kwarg(monkeypatch):

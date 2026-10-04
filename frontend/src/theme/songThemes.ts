@@ -37,14 +37,6 @@ export type SongTheme = {
 export const FALLBACK_PALETTE: Palette = { c0: "#15141f", c1: "#3b3f6b", c2: "#6b4a6a", c3: "#2f5a5a", accent: "#ece8ff" };
 
 export const SONG_THEMES: Record<string, SongTheme> = {
-  demo: {
-    palette: { c0: "#1f160e", c1: "#8a4b1f", c2: "#f0c27a", c3: "#5a3a22", accent: "#f7d9a8" },
-    split: ["两只", "老虎"],
-    titlePinyin: "liǎng zhī lǎo hǔ",
-    titleEnglish: "Two Tigers",
-    blurb: "A children's round sung to the tune of Frère Jacques. Short words, one per note: the easiest place to start.",
-    artist: "Traditional",
-  },
   "jasmine-flower": {
     title: "茉莉花",
     palette: { c0: "#0f231a", c1: "#2f6b4f", c2: "#d9e4c4", c3: "#5f9c7a", accent: "#f4f1d6" },
