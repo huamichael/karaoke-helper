@@ -227,13 +227,17 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
             {(t?.titlePinyin || t?.titleEnglish) && (
               <p className="h-sub">{t.titlePinyin && <span>{t.titlePinyin}</span>}{t.titleEnglish && <span>{t.titleEnglish}</span>}</p>
             )}
-            {t?.blurb && <p className="h-blurb">{t.blurb}</p>}
+            {/* While choosing a mode, its explanation takes the description's place: that spot is
+                clear of the background, and sharing one slot keeps the Sing pill from moving. */}
+            <div className="h-blurb-slot">
+              {t?.blurb && <p className="h-blurb">{t.blurb}</p>}
+              <p className="h-blurb sing-hint" aria-live="polite">{picking ? MODE_HINT[hint] : ""}</p>
+            </div>
             <div className="h-cta">
               {entry.playable
                 ? <SingButton title={entry.title} singingReady={SINGING_READY} picking={picking} onPicking={setPicking} onHint={setHint} onStart={start} />
                 : <><button className="btn" disabled>Coming soon</button><span className="h-meta">This song isn't on the server yet</span></>}
             </div>
-            <p className="sing-hint" aria-live="polite">{picking ? MODE_HINT[hint] : ""}</p>
           </div>
         </div>
       )}

@@ -85,8 +85,8 @@ EXAMPLE_RESULT = {
             "timing": None,
             "feedback": {
                 "code": "INITIAL_N_L",
-                "message": "Sounded closer to \"l\". For \"n\", keep the tongue tip behind your top teeth "
-                           "and let the air go through your nose.",
+                "message": "How to say \"nǐ\": Start with \"n\": tongue tip behind your top teeth, "
+                           "with the air going through your nose.",
             },
         },
     ],

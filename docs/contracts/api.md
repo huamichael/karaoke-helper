@@ -168,7 +168,7 @@ The user chose spoken-accuracy mode, sang 我想和你一起, and pronounced 你
       "timing": null,
       "feedback": {
         "code": "INITIAL_N_L",
-        "message": "Sounded closer to \"l\". For \"n\", keep the tongue tip behind your top teeth and let the air go through your nose."
+        "message": "How to say \"nǐ\": Start with \"n\": tongue tip behind your top teeth, with the air going through your nose."
       }
     }
     // ... 一, 起 with status "good" ...

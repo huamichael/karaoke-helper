@@ -34,7 +34,7 @@ scripts/gen-types.sh       # regenerates TypeScript types from the backend
 ### 1. Song screen
 
 - A list of songs from `GET /api/v1/songs`.
-- Selecting a song shows the mode choice before anything starts. Suggested wording:
+- Selecting a song shows the mode choice before anything starts. While choosing, the explanation replaces the song's description above the Sing pill. Suggested wording:
   - **Spoken accuracy.** "Did the right words come out? Checks the sounds of each word."
   - **Singing accuracy.** "A closer look at every sound, plus your rhythm against the original."
 - A Start button begins at line 1.

@@ -1,73 +1,101 @@
 """Feedback messages.
 
-Maps feedback codes (MISSING, INITIAL_ZH_Z, TONE_3_2, RHYTHM_EARLY and so on) to
-the text the learner reads, and picks the one message shown for each syllable.
+Picks the feedback code for a syllable (MISSING, INITIAL_ZH_Z, TONE_3_2,
+RHYTHM_EARLY and so on), which records which problem the grader found, and writes
+the message the learner reads.
+
+The message is a hint on how to say the target syllable: its starting sound, what
+is distinctive about its ending, and, in Word practice, its tone. It never says
+what the learner said or why it was wrong: the grader's idea of what it heard can
+be mistaken, and a confident wrong diagnosis misleads more than it helps.
 
 Owner: B; C and D add the rows for their own codes. Spec: docs/contracts/scoring.md.
 """
 
-from app.schemas import Feedback, Part, SoundScore, ToneGrade
+from app.mandarin import spell
+from app.schemas import Feedback, Part, SoundScore, Syllable, ToneGrade
 from app.scoring.confusions import final_partners, initial_partners
 
-_CURL = "curl your tongue tip up and back toward the roof of your mouth"
-_FLAT = "keep your tongue flat, with the tip just behind your top teeth"
-_PALATAL = "keep your tongue tip down behind your bottom teeth, raise the middle of your tongue, and spread your lips"
-_LIFT = "lift your tongue tip and curl it back, keeping the middle of your tongue low"
-_FRONT = "end with your tongue tip touching just behind your top teeth"
-_BACK = 'end at the back of your mouth, as in "song", with your tongue tip resting low'
-
-
-def _tip(heard: str, expected: str, how: str) -> str:
-    return f'Sounded closer to "{heard}". For "{expected}", {how}.'
-
-
 MESSAGES: dict[str, str] = {
-    "MISSING": "We didn't hear this syllable.",
-    "INITIAL_N_L": ('Sounded closer to "l". For "n", keep the tongue tip behind your top teeth '
-                    "and let the air go through your nose."),
-    "INITIAL_L_N": _tip("n", "l", "touch your tongue tip behind your top teeth and let the air flow around its sides, "
-                                  "not through your nose"),
-    "INITIAL_ZH_Z": _tip("z", "zh", _CURL),
-    "INITIAL_Z_ZH": _tip("zh", "z", _FLAT),
-    "INITIAL_CH_C": _tip("c", "ch", f"{_CURL}, with a puff of air"),
-    "INITIAL_C_CH": _tip("ch", "c", f"{_FLAT}, with a puff of air"),
-    "INITIAL_SH_S": _tip("s", "sh", _CURL),
-    "INITIAL_S_SH": _tip("sh", "s", _FLAT),
-    "INITIAL_J_ZH": _tip("zh", "j", _PALATAL),
-    "INITIAL_ZH_J": _tip("j", "zh", _LIFT),
-    "INITIAL_Q_CH": _tip("ch", "q", f"{_PALATAL}, with a puff of air"),
-    "INITIAL_CH_Q": _tip("q", "ch", f"{_LIFT}, with a puff of air"),
-    "INITIAL_X_SH": _tip("sh", "x", _PALATAL),
-    "INITIAL_SH_X": _tip("x", "sh", _LIFT),
-    "FINAL_AN_ANG": _tip("ang", "an", _FRONT),
-    "FINAL_ANG_AN": _tip("an", "ang", _BACK),
-    "FINAL_EN_ENG": _tip("eng", "en", _FRONT),
-    "FINAL_ENG_EN": _tip("en", "eng", _BACK),
-    "FINAL_IN_ING": _tip("ing", "in", _FRONT),
-    "FINAL_ING_IN": _tip("in", "ing", _BACK),
-    "FINAL_IAN_IANG": _tip("iang", "ian", _FRONT),
-    "FINAL_IANG_IAN": _tip("ian", "iang", _BACK),
-    "FINAL_UAN_UANG": _tip("uang", "uan", _FRONT),
-    "FINAL_UANG_UAN": _tip("uan", "uang", _BACK),
-    "FINAL_UEN_UENG": _tip("ueng", "uen", _FRONT),
-    "FINAL_UENG_UEN": _tip("uen", "ueng", _BACK),
-    # Tone codes are TONE_<expected>_<heard>. Owner: D.
-    "TONE_1_2": "Your pitch rose. Keep it high and level, as if holding one note.",
-    "TONE_1_3": "Your pitch dipped. Keep it high and level, as if holding one note.",
-    "TONE_1_4": "Your pitch fell. Keep it high and level, as if holding one note.",
-    "TONE_2_1": 'Your pitch stayed level. Let it rise, as when asking "What?"',
-    "TONE_2_3": 'Your pitch dipped first. Start in the middle and rise steadily, as when asking "What?"',
-    "TONE_2_4": 'Your pitch fell. Let it rise instead, as when asking "What?"',
-    "TONE_3_1": "Your pitch stayed high. Drop your voice low; at the end of a word, let it come back up a little.",
-    "TONE_3_2": "Your pitch rose without going low. Drop your voice low first; at the end of a word, let it come back up.",
-    "TONE_3_4": "Your pitch fell from high. Start low and stay low; at the end of a word, let it come back up a little.",
-    "TONE_4_1": 'Your pitch stayed level. Start high and drop sharply, like a firm "No!"',
-    "TONE_4_2": 'Your pitch rose. Start high and drop sharply, like a firm "No!"',
-    "TONE_4_3": 'Your pitch dipped and rose. Start high and drop sharply, like a firm "No!"',
+    "MISSING": "Say this syllable clearly, on its own.",
     # Rhythm codes. Wording is the scoring.md example; C can replace it.
     "RHYTHM_EARLY": "You came in early here. Wait a little longer before this syllable.",
     "RHYTHM_LATE": "You came in late here. Start this syllable a little sooner.",
 }
+
+_PALATAL = "tongue tip down behind your bottom teeth and the middle of your tongue raised"
+_CURLED = "tongue tip curled up and back toward the roof of your mouth"
+_FLAT = "tongue flat, with the tip just behind your top teeth"
+
+# How to make each starting consonant. A syllable with no consonant (wǒ, yī, ài) has no tip here.
+INITIAL_TIPS: dict[str, str] = {
+    "b": 'Start with "b": lips together, then open them without a puff of air.',
+    "p": 'Start with "p": lips together, then open them with a strong puff of air.',
+    "m": 'Start with "m": lips together, humming through your nose.',
+    "f": 'Start with "f": top teeth resting on your lower lip, blowing gently.',
+    "d": 'Start with "d": tongue tip tapping behind your top teeth, without a puff of air.',
+    "t": 'Start with "t": tongue tip tapping behind your top teeth, with a strong puff of air.',
+    "n": 'Start with "n": tongue tip behind your top teeth, with the air going through your nose.',
+    "l": 'Start with "l": tongue tip behind your top teeth, with the air flowing around its sides.',
+    "g": 'Start with "g": back of your tongue raised, released without a puff of air.',
+    "k": 'Start with "k": back of your tongue raised, released with a strong puff of air.',
+    "h": 'Start with "h": breathe out from the back of your throat, a little rougher than English "h".',
+    "j": f'Start with "j": {_PALATAL}, without a puff of air.',
+    "q": f'Start with "q": {_PALATAL}, with a strong puff of air.',
+    "x": f'Start with "x": {_PALATAL}, letting the air hiss out.',
+    "zh": f'Start with "zh": {_CURLED}, without a puff of air.',
+    "ch": f'Start with "ch": {_CURLED}, with a strong puff of air.',
+    "sh": f'Start with "sh": {_CURLED}, letting the air hiss out.',
+    "r": f'Start with "r": {_CURLED}, as for "sh", with your voice on.',
+    "z": f'Start with "z": {_FLAT}, like "ds" in "kids".',
+    "c": f'Start with "c": {_FLAT}, like "ts" in "cats".',
+    "s": f'Start with "s": {_FLAT}, letting the air hiss out.',
+}
+
+ENDING_TIPS = {
+    "n": 'End with your tongue tip touching just behind your top teeth, for "-n".',
+    "ng": 'End at the back of your mouth, as in "song", for "-ng".',
+}
+
+# How the tone sounds, for Word practice. In a sung line the melody replaces the tone.
+TONE_TIPS = {
+    1: "Keep your pitch high and level, as if holding one note.",
+    2: 'Let your pitch rise, as when asking "What?"',
+    3: "Drop your pitch low; at the end of a word, let it come back up a little.",
+    4: 'Let your pitch fall sharply, like a firm "No!"',
+    5: "Say it lightly and quickly.",
+}
+
+GENERAL_TIP = "Listen to it again and copy it, sound by sound."
+
+
+def _ending_tips(initial: str, final: str) -> list[str]:
+    """What is distinctive about a syllable's vowel and ending, as hints."""
+    tips = []
+    if final == "i" and initial in ("z", "c", "s", "zh", "ch", "sh", "r"):
+        tips.append(f'The "i" after "{initial}" is a buzz, not "ee": keep your tongue where the "{initial}" put it.')
+    elif "v" in final:
+        letter = "ü" if initial in ("n", "l") else "u"
+        tips.append(f'The "{letter}" here is "ee" said with rounded lips.')
+    elif final == "e":
+        tips.append('The "e" is a relaxed "uh", not "eh".')
+    ending = "ng" if final.endswith("ng") else "n" if final.endswith("n") else ""
+    if ending:
+        tips.append(ENDING_TIPS[ending])
+    return tips
+
+
+def hint(initial: str, final: str, tone: int | None = None, shown: str | None = None) -> str:
+    """How to say a syllable: its start, its ending and, if given, its tone. Nothing about an attempt.
+
+    tone is the tone to speak (after sandhi) in Word practice, or None for a sung line.
+    shown is how to write the syllable when no tone is given (its lyric pinyin).
+    """
+    target = spell(initial, final, tone) if tone else (shown or spell(initial, final))
+    tips = ([INITIAL_TIPS[initial]] if initial in INITIAL_TIPS else []) + _ending_tips(initial, final)
+    if tone in TONE_TIPS:
+        tips.append(TONE_TIPS[tone])
+    return f'How to say "{target}": ' + " ".join(tips or [GENERAL_TIP])
 
 
 def initial_code(part: Part) -> str:
@@ -82,35 +110,33 @@ def final_code(part: Part) -> str:
     return "FINAL_OTHER"
 
 
-def _sound_message(code: str, kind: str, part: Part) -> str:
-    if part.heard == part.expected:
-        return f'We could not hear the "{part.expected}" sound clearly. Try it again.'
-    if code in MESSAGES:
-        return MESSAGES[code]
-    if kind == "initial" and not part.expected:
-        return f'Start straight on the vowel, without a "{part.heard}" sound.'
-    if kind == "initial" and not part.heard:
-        return f'Start the syllable with "{part.expected}".'
-    return f'Sounded closer to "{part.heard}". Aim for "{part.expected}".'
+def pick(sound: SoundScore | None, tone: ToneGrade | None, rhythm_code: str | None = None,
+         *, syllable: Syllable | None = None) -> Feedback | None:
+    """The one feedback for a syllable, or None when nothing is wrong.
 
-
-def pick(sound: SoundScore | None, tone: ToneGrade | None, rhythm_code: str | None = None) -> Feedback | None:
-    """The one message for a syllable. Order: missing, initial or final, tone, rhythm. None when nothing is wrong.
-
-    rhythm_code is RHYTHM_EARLY or RHYTHM_LATE when the grader has decided this syllable's
-    rhythm score is below the good line. Sound and tone messages still win.
+    The code says which problem was found, in this order: missing, initial or final,
+    tone, rhythm. The message is the same hint on how to say the syllable whichever
+    problem it was; only rhythm keeps its own message. syllable is the expected one.
     """
     if sound is None:
-        return Feedback(code="MISSING", message=MESSAGES["MISSING"])
-    parts = [("initial", sound.initial), ("final", sound.final)]
-    flawed = [(kind, p) for kind, p in parts if p is not None and (p.score or 0) < 100]
-    if flawed:
-        kind, part = min(flawed, key=lambda kp: kp[1].score or 0)
-        code = initial_code(part) if kind == "initial" else final_code(part)
-        return Feedback(code=code, message=_sound_message(code, kind, part))
-    if tone is not None and tone.heard is not None and tone.heard != tone.expected:
-        code = f"TONE_{tone.expected}_{tone.heard}"
-        return Feedback(code=code, message=MESSAGES.get(code, f"Tone {tone.heard} heard; aim for tone {tone.expected}."))
-    if rhythm_code is not None:
-        return Feedback(code=rhythm_code, message=MESSAGES[rhythm_code])
-    return None
+        code = "MISSING"
+    else:
+        parts = [("initial", sound.initial), ("final", sound.final)]
+        flawed = [(kind, p) for kind, p in parts if p is not None and (p.score or 0) < 100]
+        if flawed:
+            kind, part = min(flawed, key=lambda kp: kp[1].score or 0)
+            code = initial_code(part) if kind == "initial" else final_code(part)
+        elif tone is not None and tone.heard is not None and tone.heard != tone.expected:
+            code = f"TONE_{tone.expected}_{tone.heard}"
+        elif rhythm_code is not None:
+            return Feedback(code=rhythm_code, message=MESSAGES[rhythm_code])
+        else:
+            return None
+    if syllable is not None:
+        initial, final, shown = syllable.initial, syllable.final, syllable.pinyin
+    elif sound is not None:
+        initial, final, shown = (sound.initial.expected if sound.initial else ""), sound.final.expected, None
+    else:
+        return Feedback(code=code, message=MESSAGES["MISSING"])
+    spoken_tone = tone.expected if tone is not None else None
+    return Feedback(code=code, message=hint(initial, final, spoken_tone, shown))

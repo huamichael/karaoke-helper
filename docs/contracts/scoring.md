@@ -108,15 +108,18 @@ Extract the pitch contour inside each syllable's span and express it in semitone
 
 ## Feedback
 
-Each syllable carries at most one feedback message. When a syllable has several problems, the grader picks one in this order: missing, initial or final, tone, rhythm.
+Each syllable that is not `good` carries one feedback code and one message.
 
-| Code pattern | Example | Supplied by |
-|---|---|---|
-| `MISSING` | "We didn't hear this syllable." | B |
-| `INITIAL_<expected>_<heard>` | `INITIAL_ZH_Z` | B |
-| `FINAL_<expected>_<heard>` | `FINAL_AN_ANG` | B |
-| `INITIAL_OTHER`, `FINAL_OTHER` | Generic message for pairs not in the table | B |
-| `TONE_<expected>_<heard>` | `TONE_3_2` | D |
-| `RHYTHM_EARLY`, `RHYTHM_LATE` | "You came in early here." | C |
+**The code** records which problem the grader found, picked in this order: missing, initial or final, tone, rhythm.
 
-Messages live in `scoring/feedback.py`. C and D add the rows for their own codes.
+| Code pattern | Example |
+|---|---|
+| `MISSING` | |
+| `INITIAL_<expected>_<heard>`, `FINAL_<expected>_<heard>` | `INITIAL_ZH_Z`, `FINAL_AN_ANG`: a commonly confused pair |
+| `INITIAL_OTHER`, `FINAL_OTHER` | any other mismatch |
+| `TONE_<expected>_<heard>` | `TONE_3_2` |
+| `RHYTHM_EARLY`, `RHYTHM_LATE` | |
+
+**The message** is a hint on how to say the target syllable, the same whichever problem was found: how to make its starting consonant, what is distinctive about its ending (-n, -ng, ü, the buzzing "i" of zi and shi, the relaxed "e"), and in Word practice its tone (after sandhi). For example: *How to say "xīn": Start with "x": tongue tip down behind your bottom teeth and the middle of your tongue raised, letting the air hiss out. End with your tongue tip touching just behind your top teeth, for "-n". Keep your pitch high and level, as if holding one note.*
+
+The message never says what the learner said or why it was wrong (team decision, 4 October 2026): the grader's idea of what it heard can be mistaken, and a confident wrong diagnosis misleads more than it helps. Only rhythm keeps its own message. The tips live in `scoring/feedback.py`.

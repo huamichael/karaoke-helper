@@ -196,10 +196,11 @@ def test_feedback_codes(monkeypatch, expected, said, code):
     assert r.syllables[0].feedback.code == code
 
 
-def test_feedback_messages_name_the_sounds(monkeypatch):
+def test_feedback_message_is_a_hint_for_the_target_not_a_claim_about_the_attempt(monkeypatch):
     added = run(monkeypatch, "果", line=make_line(["我"])).syllables[0].feedback.message
     dropped = run(monkeypatch, "一", line=make_line(["你"])).syllables[0].feedback.message
-    assert '"g"' in added and '"n"' in dropped
+    assert added == feedback.hint("", "uo", None, "wǒ") and '"g"' not in added
+    assert dropped == feedback.hint("n", "i", None, "nǐ")
 
 
 def directional_codes() -> list[tuple[str, str, str]]:
@@ -211,21 +212,24 @@ def directional_codes() -> list[tuple[str, str, str]]:
 
 
 @pytest.mark.parametrize("code, expected, heard", directional_codes())
-def test_every_confused_pair_has_a_message_naming_both_sounds(code, expected, heard):
-    message = feedback.MESSAGES[code]
-    assert message.startswith(f'Sounded closer to "{heard}". For "{expected}", ')
-
-
-def test_catalogue_has_no_codes_outside_the_confusion_table():
-    pair_codes = {code for code, _, _ in directional_codes()}
-    sound_codes = {c for c in feedback.MESSAGES if c.startswith(("INITIAL_", "FINAL_"))}
-    assert sound_codes == pair_codes
+def test_every_confused_pair_keeps_its_code_and_gets_the_hint(code, expected, heard):
+    # The code still records which pair was confused; the message is the hint for the target.
+    if code.startswith("INITIAL"):
+        sound = SoundScore(initial=Part(expected=expected, heard=heard, score=60), final=Part(expected="a", heard="a", score=100))
+        target = ("" if expected == "" else expected, "a")
+    else:
+        sound = SoundScore(initial=Part(expected="b", heard="b", score=100), final=Part(expected=expected, heard=heard, score=60))
+        target = ("b", expected)
+    fb = feedback.pick(sound, None)
+    assert (fb.code, fb.message) == (code, feedback.hint(*target))
 
 
 @pytest.mark.parametrize("expected, said, code", [("知", "资", "INITIAL_ZH_Z"), ("安", "昂", "FINAL_AN_ANG")])
-def test_confused_pair_gets_its_catalogue_message(monkeypatch, expected, said, code):
-    fb = run(monkeypatch, said, line=make_line([expected])).syllables[0].feedback
-    assert (fb.code, fb.message) == (code, feedback.MESSAGES[code])
+def test_confused_pair_gets_the_hint_for_the_target(monkeypatch, expected, said, code):
+    line = make_line([expected])
+    fb = run(monkeypatch, said, line=line).syllables[0].feedback
+    s = line.syllables[0]
+    assert (fb.code, fb.message) == (code, feedback.hint(s.initial, s.final, None, s.pinyin))
 
 
 def tone_on_ni(tone: ToneGrade | None):
@@ -243,7 +247,8 @@ def tone_on_ni(tone: ToneGrade | None):
 def test_wrong_tone_pulls_a_good_syllable_down(tone_score, status):
     s = tone_on_ni(ToneGrade(expected=3, heard=2, score=tone_score))
     assert (s.score, s.status) == (100, status)
-    assert (s.feedback.code, s.feedback.message) == ("TONE_3_2", feedback.MESSAGES["TONE_3_2"])
+    assert s.feedback.code == "TONE_3_2"
+    assert s.feedback.message == feedback.hint("n", "i", 3)
 
 
 @pytest.mark.parametrize("tone", [ToneGrade(expected=3, heard=3, score=40), ToneGrade(expected=3, heard=None, score=None), None])

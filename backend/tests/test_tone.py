@@ -199,23 +199,22 @@ def test_spans_must_match_syllables():
         score_tones(two_syllables(2, 3), to_syllables("你好"), TWO_SYLLABLE_SPANS[:1])
 
 
-# Tone feedback messages (the TONE_ rows in app/scoring/feedback.py)
+# Tone feedback (the hint's tone tip in app/scoring/feedback.py)
 
 
-def test_every_wrong_tone_has_its_own_message():
-    from app.scoring.feedback import MESSAGES
+def test_every_tone_has_a_tip():
+    from app.scoring.feedback import TONE_TIPS
 
-    for expected in (1, 2, 3, 4):
-        for heard in (1, 2, 3, 4):
-            if heard != expected:
-                assert f"TONE_{expected}_{heard}" in MESSAGES
+    assert set(TONE_TIPS) == {1, 2, 3, 4, 5}
 
 
 def test_wrong_tone_feedback_reaches_the_learner():
     from app.schemas import Part, SoundScore, ToneGrade
-    from app.scoring.feedback import MESSAGES, pick
+    from app.scoring.feedback import TONE_TIPS, pick
 
     perfect = SoundScore(initial=Part(expected="x", heard="x", score=100), final=Part(expected="in", heard="in", score=100))
     feedback = pick(perfect, ToneGrade(expected=1, heard=4, score=40))
-    assert feedback.code == "TONE_1_4" and feedback.message == MESSAGES["TONE_1_4"]
+    assert feedback.code == "TONE_1_4"
+    assert feedback.message.startswith('How to say "xīn":') and feedback.message.endswith(TONE_TIPS[1])
+    assert "4" not in feedback.message and "fell" not in feedback.message  # nothing about the attempt
     assert pick(perfect, ToneGrade(expected=1, heard=1, score=95)) is None

@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from app.mandarin import _HANZI_RUN, sandhi_tones, segment_words, to_syllables
+from app.mandarin import _HANZI_RUN, sandhi_tones, segment_words, spell, to_syllables
 
 SONGS = Path(__file__).resolve().parents[2] / "data" / "songs"
 
@@ -162,3 +162,35 @@ def tones(text):
 )
 def test_sandhi_tones(text, expected):
     assert tones(text) == expected
+
+
+# spell
+
+
+def every_syllable():
+    """(toneless pinyin_numeric, initial, final) for every syllable pypinyin gives a common character."""
+    seen = {}
+    for cp in range(0x4E00, 0x9FA6):
+        try:
+            for s in to_syllables(chr(cp)):
+                seen.setdefault(s.pinyin_numeric[:-1], (s.initial, s.final))
+        except ValueError:  # a few rare characters have no reading
+            pass
+    return seen
+
+
+def test_spell_rebuilds_every_mandarin_syllable():
+    seen = every_syllable()
+    assert len(seen) > 400
+    # Two interjections cannot round-trip: 哟 "yo" has the same parts as 噢 "o", and 噷 "hm" has no vowel.
+    wrong = {k: spell(i, f) for k, (i, f) in seen.items() if spell(i, f) != k.replace("v", "ü") and k not in ("yo", "hm")}
+    assert not wrong
+
+
+@pytest.mark.parametrize(("initial", "final", "tone", "expected"), [
+    ("x", "in", 1, "xīn"), ("", "uo", 3, "wǒ"), ("n", "v", 3, "nǚ"), ("j", "v", None, "ju"),
+    ("", "ve", 4, "yuè"), ("j", "iou", 4, "jiù"), ("h", "uei", None, "hui"), ("d", "e", 5, "de"),
+    ("s", "in", None, "sin"),  # not a Mandarin syllable, but a learner can say it
+])
+def test_spell(initial, final, tone, expected):
+    assert spell(initial, final, tone) == expected

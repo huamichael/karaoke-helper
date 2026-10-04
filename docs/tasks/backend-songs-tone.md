@@ -13,7 +13,7 @@ As of 3 October 2026, every deliverable below is built and tested, except:
 - Tuning `score_tones` on real recordings. Its constants come from synthetic voices. On our own spoken line takes it is still near chance, so tone stays off for lines.
 - The fixture recordings in `backend/tests/fixtures/audio/`, which the team records.
 
-The 12 tone feedback messages (`TONE_<expected>_<heard>`) are in `scoring/feedback.py`. They reach the learner once B's grader calls `score_tones`.
+Tone feedback is a tone tip in the syllable's hint (`TONE_TIPS` in `scoring/feedback.py`), shown in Word practice; the `TONE_<expected>_<heard>` code still records the tone the grader heard. Feedback never describes the attempt (scoring.md, Feedback).
 
 The three demo songs are built: 月亮代表我的心, 一剪梅 and 茉莉花. Their `lyrics.yaml` files hold reading fixes, word fixes, translations and glosses.
 
@@ -36,7 +36,7 @@ backend/tests/fixtures/           # you keep it; everyone adds recordings
 backend/tests/test_mandarin.py, test_tone.py
 ```
 
-You also add `pypinyin`, `jieba`, `praat-parselmouth` and `edge-tts` to `backend/pyproject.toml`, and the `TONE_<expected>_<heard>` rows to `scoring/feedback.py`.
+You also add `pypinyin`, `jieba`, `praat-parselmouth` and `edge-tts` to `backend/pyproject.toml`, and the tone tips (`TONE_TIPS`) to `scoring/feedback.py`.
 
 ## What you use from others
 

@@ -116,6 +116,30 @@ def sandhi_tones(syllables: list[Syllable]) -> list[int | None]:
     return tones
 
 
+def spell(initial: str, final: str, tone: int | None = None) -> str:
+    """Pinyin for an initial and a strict final, as a learner reads it.
+
+    ("", "uo") -> "wo", ("j", "v") -> "ju", ("n", "v") -> "nü", ("x", "in", 1) -> "xīn".
+    With a tone (1-4) the vowel carries its mark; with none, or 5, there is no mark.
+    Used to show a syllable that was heard, which may not be a word.
+    """
+    if initial:
+        letters = initial + {"iou": "iu", "uei": "ui", "uen": "un"}.get(final, final)
+        if initial in ("j", "q", "x"):
+            letters = letters.replace("v", "u")
+    elif final.startswith("v"):
+        letters = "yu" + final[1:]
+    elif final.startswith("i"):
+        letters = "y" + (final if final in ("i", "in", "ing") else {"iou": "ou"}.get(final, final[1:]))
+    elif final.startswith("u"):
+        letters = "wu" if final == "u" else "w" + {"uei": "ei", "uen": "en"}.get(final, final[1:])
+    else:
+        letters = final
+    if tone in (1, 2, 3, 4):
+        return to_tone(f"{letters}{tone}")
+    return letters.replace("v", "ü")
+
+
 def _readings(run: str) -> list[str]:
     """pypinyin's pinyin_numeric reading for each character of a run of Hanzi."""
     readings = lazy_pinyin(run, style=Style.TONE3, neutral_tone_with_five=True)

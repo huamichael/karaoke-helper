@@ -253,7 +253,7 @@ def _syllable_result(index, e, sound, span, rhythm_syllable, tone, trim_offset_m
     return SyllableResult(
         index=index, hanzi=e.hanzi, pinyin=e.pinyin, status=status, score=score,
         initial=initial, final=final, tone=tone, timing=timing,
-        feedback=None if status == "good" else feedback.pick(sound, tone, rhythm_code),
+        feedback=None if status == "good" else feedback.pick(sound, tone, rhythm_code, syllable=e),
     )
 
 

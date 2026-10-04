@@ -108,4 +108,4 @@ def test_feedback_prioritizes_pronunciation_then_tone_then_rhythm():
     assert feedback.pick(None, None, code).code == "MISSING"
     sound.final.score = 40
     assert feedback.pick(sound, None, code).code == "FINAL_OTHER"
-    assert "could not hear" in feedback.pick(sound, None).message
+    assert feedback.pick(sound, None).message.startswith('How to say "')
