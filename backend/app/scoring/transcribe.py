@@ -11,6 +11,8 @@ Owner: B. Spec: docs/contracts/backend-interfaces.md, section 3.
 from __future__ import annotations
 
 import os
+import re
+from collections.abc import Callable
 from functools import lru_cache
 
 from faster_whisper import WhisperModel
@@ -71,11 +73,39 @@ def load_mlx_model():
     return holder.get_model(repo, _mlx_dtype())
 
 
+_LATIN = re.compile(r"[A-Za-z]")
+
+
+def latin_tokens(decode: Callable[[list[int]], str], eot: int) -> tuple[int, ...]:
+    """The text tokens (ids below eot) whose text contains a Latin letter.
+
+    Whisper writes English for Mandarin that sounds like an English word ("How" for hào).
+    Only Hanzi are kept, so that would read as no speech. Suppressing these tokens makes
+    it write Hanzi instead. It says nothing about the expected lyric.
+    """
+    return tuple(i for i in range(eot) if _LATIN.search(decode([i])))
+
+
+@lru_cache(maxsize=1)
+def _mlx_suppress() -> tuple[int, ...]:
+    from mlx_whisper.tokenizer import get_tokenizer
+    tok = get_tokenizer(multilingual=True, num_languages=load_mlx_model().num_languages, language="zh", task="transcribe")
+    return (-1, *latin_tokens(tok.decode, tok.eot))  # -1 keeps Whisper's own suppressed symbols
+
+
+@lru_cache(maxsize=1)
+def _faster_suppress() -> tuple[int, ...]:
+    hf = load_model().hf_tokenizer
+    return (-1, *latin_tokens(hf.decode, hf.token_to_id("<|endoftext|>")))
+
+
 def warmup() -> None:
     if config.whisper_engine() == "mlx":
         load_mlx_model()
+        _mlx_suppress()
     else:
         load_model()
+        _faster_suppress()
 
 
 def heard_text(audio: Audio) -> str:
@@ -93,6 +123,7 @@ def _heard_faster(audio: Audio) -> str:
         temperature=0.0,
         condition_on_previous_text=False,
         vad_filter=os.environ.get("WHISPER_VAD", "1") != "0",
+        suppress_tokens=list(_faster_suppress()),
     )
     return "".join(segment.text for segment in segments)
 
@@ -107,6 +138,7 @@ def _heard_mlx(audio: Audio) -> str:
         temperature=0.0,
         condition_on_previous_text=False,
         verbose=None,
+        suppress_tokens=list(_mlx_suppress()),
     )
     return result.get("text", "")
 
