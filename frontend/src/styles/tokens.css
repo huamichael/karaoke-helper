@@ -25,10 +25,9 @@
   --serif: 'Noto Serif SC', 'Songti SC', serif;
   --ease: cubic-bezier(.2,.8,.2,1);
   /* The karaoke fill (--f, 0 to 1, per character), as lyric players draw it: a soft edge this wide that
-     sweeps across the character rather than a hard cut, and the character floating up this far as it is
-     sung. The gradient itself is in lyrics.css and song-screen.css: it reads each character's own --f. */
+     sweeps across the character rather than a hard cut. The gradient itself is in lyrics.css and
+     song-screen.css: it reads each character's own --f. */
   --fill-edge: 45%;
-  --fill-rise: -.06em;
   interpolate-size: allow-keywords;
   transition: --c0 1s var(--ease), --c1 1s var(--ease), --c2 1s var(--ease), --c3 1s var(--ease), --accent 1s var(--ease);
 }

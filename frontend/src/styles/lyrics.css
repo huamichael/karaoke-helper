@@ -51,10 +51,8 @@
 .line.active .word.s-missing .py { color: var(--missing); }
 .word.s-missing .hz { opacity: .5; }
 
-/* karaoke fill while listening: each character fills left to right (--f) behind a soft edge, and floats
-   up a touch as it is sung; when Listen ends the characters settle back (tokens.css, --fill-edge) */
-.line .hz { transition: transform .45s var(--ease); }
-.line.filling .hz { color: rgba(255,255,255,.3); transform: translateY(calc(var(--f, 0) * var(--fill-rise))); transition: none; }
+/* karaoke fill while listening: each character fills left to right (--f) behind a soft edge (tokens.css, --fill-edge) */
+.line.filling .hz { color: rgba(255,255,255,.3); }
 .line.filling .hz::after { content: attr(data-hz); position: absolute; inset: 0; color: #fff;
   -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--f, 0) * (100% + var(--fill-edge)) - var(--fill-edge)), transparent calc(var(--f, 0) * (100% + var(--fill-edge))));
   mask-image: linear-gradient(90deg, #000 calc(var(--f, 0) * (100% + var(--fill-edge)) - var(--fill-edge)), transparent calc(var(--f, 0) * (100% + var(--fill-edge)))); }

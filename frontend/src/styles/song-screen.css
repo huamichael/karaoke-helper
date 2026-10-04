@@ -58,8 +58,7 @@
 .sub-line .tok { display: flex; flex-direction: column; align-items: center; }
 .sub-line .py { height: 18px; font-size: 13px; color: rgba(255,255,255,.6); opacity: 1; }
 .sub-line .hz { position: relative; font-family: var(--serif); font-weight: 700; font-size: clamp(24px, 3.6vh, 32px); line-height: 1.2; color: rgba(255,255,255,.35); text-shadow: 0 2px 18px rgba(0,0,0,.5); }
-/* the karaoke fill: a soft edge sweeping across each character, which floats up a touch as it is sung (tokens.css) */
-.sub-line .hz { transform: translateY(calc(var(--f, 0) * var(--fill-rise))); }
+/* the karaoke fill: a soft edge sweeping across each character (tokens.css, --fill-edge) */
 .sub-line .hz::after { content: attr(data-hz); position: absolute; inset: 0; color: #fff;
   -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--f, 0) * (100% + var(--fill-edge)) - var(--fill-edge)), transparent calc(var(--f, 0) * (100% + var(--fill-edge))));
   mask-image: linear-gradient(90deg, #000 calc(var(--f, 0) * (100% + var(--fill-edge)) - var(--fill-edge)), transparent calc(var(--f, 0) * (100% + var(--fill-edge)))); }
