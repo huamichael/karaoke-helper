@@ -90,6 +90,12 @@ export function WordChips({ line, active, result, fresh, practised, fill, clicka
               className={`mark${status ? " show" : ""}${fresh ? " fresh" : ""}${notch ? " notched" : ""}`}
               style={{ "--d": `${k * 0.06}s`, "--notch": notch ?? undefined } as CSSProperties}
             />
+            {/* RHYTHM MARKER (disabled): "early" or "late" under the word in singing mode, separate
+                from the chip colour, which is pronunciation only. Enable together with the backend
+                field and regenerated types: docs/contracts/api.md, "Rhythm marker (disabled)".
+            {active && wr?.rhythm && wr.rhythm !== "on_time" && (
+              <span className={`rhythm r-${wr.rhythm}`}>{wr.rhythm === "early" ? "early" : "late"}</span>
+            )} */}
             <span className="tip">Practise</span>
             {canClick && <WordTooltip syllables={detail} />}
             {practised.includes(k) && <i className="chk" aria-hidden><CheckIcon /></i>}

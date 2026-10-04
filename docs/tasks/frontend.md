@@ -70,7 +70,7 @@ Opens over the line screen when the user clicks a word chip. It is identical in 
 |---|---|---|
 | Word chips | Grade from the Whisper base | Finer grade from Whisper + CTC |
 | Score row | Pronunciation, Completeness, Overall | Pronunciation, Completeness, Rhythm (when present), Overall |
-| Feedback message | Names the sound when Whisper heard a different syllable | Names the sound more often; can comment on rhythm |
+| Feedback message | Names the sound when Whisper heard a different syllable | Names the sound more often |
 | Clicking a word | Opens Word practice | Opens Word practice |
 
 You do not implement these differences. You send the mode, and the backend's response differs.
