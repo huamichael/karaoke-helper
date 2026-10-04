@@ -144,7 +144,7 @@ def test_word_target_rescales_without_tone(monkeypatch):
     assert (r.target, r.mode, r.word_index) == ("word", None, 4)
     assert [(w.index, w.text, w.syllable_indices) for w in r.words] == [(4, "一起", [0, 1])]
     assert [s.index for s in r.syllables] == [0, 1]
-    assert (r.scores.pronunciation, r.scores.completeness, r.scores.tone, r.scores.overall) == (83, 100, None, 88)
+    assert (r.scores.pronunciation, r.scores.completeness, r.scores.tone, r.scores.overall) == (83, 100, None, 86)  # 0.8*83 + 0.2*100
 
 
 def test_word_target_with_tones():
@@ -156,7 +156,7 @@ def test_word_target_with_tones():
                         word_specs=[(0, "一起", [0, 1])], engine="whisper", trim_offset_ms=0,
                         line_index=0, target="word", mode=None, word_index=0)
     assert r.scores.tone == 70
-    assert r.scores.overall == 83  # 0.5*83 + 0.2*100 + 0.3*70 = 82.5
+    assert r.scores.overall == 78  # 0.4*83 + 0.1*100 + 0.5*70 = 78.2
     assert r.syllables[1].tone.heard == 2
 
 
@@ -468,7 +468,7 @@ def test_one_syllable_word_tone_uses_whole_recording(monkeypatch):
     r = run(monkeypatch, "我", target="word", mode=None, word_index=0)
     assert calls == [(AUDIO, [LINE.syllables[0]], None)]
     assert (r.scores.tone, r.syllables[0].tone) == (90, grade3)
-    assert r.scores.overall == 97  # 0.50*100 + 0.20*100 + 0.30*90
+    assert r.scores.overall == 95  # 0.40*100 + 0.10*100 + 0.50*90
 
 
 def test_two_syllable_word_tone_uses_ctc_spans_and_skips_unscored(monkeypatch):
@@ -480,7 +480,7 @@ def test_two_syllable_word_tone_uses_ctc_spans_and_skips_unscored(monkeypatch):
     r = run(monkeypatch, "一起", target="word", mode=None, word_index=4)
     assert [c[2] for c in calls] == [spans_for(LINE.syllables[4:6])]
     assert r.scores.tone == 40
-    assert r.scores.overall == 82  # 0.50*100 + 0.20*100 + 0.30*40
+    assert r.scores.overall == 70  # 0.40*100 + 0.10*100 + 0.50*40
     assert r.engine == "whisper+ctc"
 
 

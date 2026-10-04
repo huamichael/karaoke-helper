@@ -10,7 +10,7 @@ You own everything about Mandarin text and pitch. First you write the one functi
 
 As of 3 October 2026, every deliverable below is built and tested, except:
 
-- Tuning `score_tones` on real recordings. Its constants come from synthetic voices.
+- Tuning `score_tones` on real recordings. Its constants come from synthetic voices. On our own spoken line takes it is still near chance, so tone stays off for lines.
 - The fixture recordings in `backend/tests/fixtures/audio/`, which the team records.
 
 The 12 tone feedback messages (`TONE_<expected>_<heard>`) are in `scoring/feedback.py`. They reach the learner once B's grader calls `score_tones`.
@@ -128,7 +128,7 @@ B's matcher is blocked until this exists, so it comes first.
 - Turn those levels into semitones. One level is roughly 2 to 3 semitones; the exact figure depends on the speaker and needs tuning.
 - For a one-syllable word there is nothing to compare the height against, so compare shape only: remove the mean from both the contour and the templates.
 - People move their pitch by different amounts, so each template may stretch between 0.5 and 2 times before comparing. Without this, a speaker with a shallow dip was heard as a level first tone.
-- For a longer word, remove the word's median instead, so the relative height of the syllables is kept.
+- For a longer word, read each syllable from its span start to the next span's start, because CTC spans cover only part of a syllable. The last syllable runs to the last voiced frame, for at most `LAST_SYLLABLE_MAX_MS`. Then remove `SHAPE_WEIGHT` (0.75) of each syllable's mean from it and from the shapes, so shape counts most and height relative to the recording still counts a little. Removing nothing (the earlier rule) recognised 22% of syllables in two-syllable edge-tts word clips; these two changes recognise 59%.
 - `heard` is the nearest template. The score falls as the distance to the expected template grows. Choose the scale so a clearly correct recording scores 85 or more.
 - The expected tone comes from `sandhi_tones`, not from the syllable's lexical tone.
 

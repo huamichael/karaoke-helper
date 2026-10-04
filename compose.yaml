@@ -22,6 +22,7 @@ services:
       HOME: /tmp                         # the host user has no home directory in the image
       GRADER: ${GRADER:-real}            # set GRADER=mock explicitly for UI development without models
       WHISPER_ENGINE: ${WHISPER_ENGINE:-faster}  # mlx-whisper is macOS-only; Docker stays on faster-whisper
+      WHISPER_MODEL: ${WHISPER_MODEL:-large-v3-turbo}  # smaller (medium, small) is faster on CPU
       ENABLE_CTC: ${ENABLE_CTC:-0}
       ENABLE_RHYTHM: ${ENABLE_RHYTHM:-0}
       ENABLE_TONE: ${ENABLE_TONE:-0}

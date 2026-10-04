@@ -53,9 +53,9 @@ On the Whisper base, those thresholds work out as follows:
 |---|---|---|
 | Line, spoken-accuracy mode | 0.71 × pronunciation + 0.29 × completeness | Same |
 | Line, singing-accuracy mode | 0.60 × pronunciation + 0.25 × completeness + 0.15 × rhythm | 0.71 × pronunciation + 0.29 × completeness |
-| Word practice | 0.50 × pronunciation + 0.20 × completeness + 0.30 × tone | 0.71 × pronunciation + 0.29 × completeness |
+| Word practice | 0.40 × pronunciation + 0.10 × completeness + 0.50 × tone | 0.80 × pronunciation + 0.20 × completeness |
 
-The singing-accuracy weights are the ones from our research notes. The spoken-accuracy weights are the same ones without rhythm. The Word practice weights are a proposal.
+The singing-accuracy weights are the ones from our research notes. The spoken-accuracy weights are the same ones without rhythm. In Word practice tone carries half the overall score: with 0.30, a word said with the wrong tone (tone score 52–60) still scored 86–88 on our recordings; with 0.50 it scores 76–80. Completeness is low because a single word is almost always either fully heard or not heard at all. Lowering completeness for a line would reward skipping syllables, because missing syllables drop out of pronunciation.
 
 ## How each layer works
 
@@ -101,6 +101,9 @@ Extract the pitch contour inside each syllable's span and express it in semitone
 - The neutral tone is not scored. A syllable with under 50 ms of voiced pitch gets `heard` and `score` of `None`.
 - These numbers come from synthetic voices and must be tuned on real recordings. They are constants at the top of `app/scoring/tone.py`.
 - A single-syllable word uses the whole voiced part of the recording, so it does not depend on the CTC layer. A word of two or more syllables needs the CTC layer's spans.
+- In a word of two or more syllables, a syllable's pitch is read from the start of its span to the start of the next syllable's span. CTC spans mark only where a syllable is recognised, often under half of it. The last syllable, and one followed by a syllable without a span, is read to the last voiced frame, for at most 400 ms.
+- A single syllable is compared by shape only. In a longer word, three quarters of each syllable's own mean pitch is removed from it and from the shapes, so shape counts most and height relative to the recording's median still counts a little. This lets a low, flat third tone inside a word (雨 in 雨天) be told apart from a level first tone.
+- On synthetic speech these two rules raised correctly recognised syllables in two-syllable words from 22% to 59%. In whole spoken lines the figure rose from 39% to 74%, and to 66% on voices not used to choose the numbers. On our own spoken line takes the tone checker is still near chance, so tone is not scored on lines.
 
 ## Feedback
 

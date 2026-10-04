@@ -44,6 +44,10 @@ READINGS = {
     "光": ("guāng", "guang1", "g", "uang", 1),
     "温": ("wēn", "wen1", "", "uen", 1),
     "翁": ("wēng", "weng1", "", "ueng", 1),
+    "轻": ("qīng", "qing1", "q", "ing", 1),
+    "的": ("de", "de5", "d", "e", 5),
+    "地": ("dì", "di4", "d", "i", 4),   # its reading alone; as a particle it is "de"
+    "得": ("dé", "de2", "d", "e", 2),
 }
 
 
@@ -118,6 +122,22 @@ def test_same_hanzi_copies_the_expected_reading():
     observed = match(expected, sylls("和", heard=True))
     assert (observed[0].pinyin_numeric, observed[0].initial, observed[0].final) == ("han4", "h", "an")
     assert components(score_sounds_base(expected, observed)) == [(100, 100)]
+
+
+@pytest.mark.parametrize("written", ["地", "得", "的"])
+def test_de_particles_are_the_same_word(written):
+    # Whisper writes 轻轻地 for a sung 轻轻的; all three particles are said "de".
+    expected = sylls("轻轻的")
+    observed = match(expected, sylls("轻轻" + written, heard=True))
+    assert components(score_sounds_base(expected, observed)) == [(100, 100)] * 3
+    assert (observed[2].hanzi, observed[2].pinyin_numeric) == (written, "de5")
+
+
+def test_de_particle_rule_needs_an_expected_de():
+    # 地 expected with its full reading "dì" is not the particle: a heard 的 ("de") is a different final.
+    expected = sylls("地")
+    observed = match(expected, sylls("的", heard=True))
+    assert components(score_sounds_base(expected, observed)) == [(100, 20)]
 
 
 def test_observed_tone_and_times_are_none_even_if_expected_has_them():
