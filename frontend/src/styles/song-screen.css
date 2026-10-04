@@ -1,7 +1,8 @@
 /* The song screen: the photograph is the page, a huge hairline title, the Sing pill, a subtitle
    that grades itself, and credits. The record is in record.css. Spec: docs/design/ui.md §4.1, §5.1. */
 
-.home { position: absolute; inset: 0; overflow: hidden; }
+/* --sub-hz: the subtitle's character size; its grade bars are 70% of it, and so are the steps' (below). */
+.home { position: absolute; inset: 0; overflow: hidden; --sub-hz: clamp(24px, 3.6vh, 32px); }
 .h-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(0,0,0,.68) 0%, rgba(0,0,0,.34) 46%, rgba(0,0,0,.42) 100%), linear-gradient(0deg, rgba(0,0,0,.62) 0%, transparent 36%), linear-gradient(180deg, rgba(0,0,0,.42) 0%, transparent 24%); }
 
 .h-top { position: absolute; top: 14px; left: 7vw; right: 40px; z-index: 3; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; transition: opacity .4s; }
@@ -9,8 +10,11 @@
 .wordmark { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; }
 .wordmark .vinyl { width: 26px; height: 26px; box-shadow: none; animation-play-state: running; }
 .h-tag { margin-top: 8px; font-size: 15px; color: rgba(255,255,255,.82); }
-.steps { display: flex; gap: 18px; margin-top: 6px; list-style: none; font-size: 13px; color: var(--text-3); }
-.steps b { font-family: var(--serif); font-weight: 700; color: var(--accent); margin-right: 6px; }
+.steps { display: flex; gap: 18px; margin-top: 6px; padding-bottom: 8px; list-style: none; font-size: 13px; color: var(--text-3); }
+.steps b { position: relative; display: inline-block; font-family: var(--serif); font-weight: 700; color: var(--accent); margin-right: 6px; }
+/* Under each number, left-aligned with it, one grade, good to missing: the subtitle's grade bar at the same size, in the shared
+   status shapes (status.css). They grow in one after another as the page opens (markIn: lyrics.css). */
+.steps .mark { position: absolute; left: 0; top: 100%; width: calc(var(--sub-hz) * .7); height: 4px; margin-top: 2px; border-radius: 3px; opacity: 1; transform-origin: left; animation: markIn .5s cubic-bezier(.3,1.6,.5,1) both; animation-delay: calc(var(--i) * 90ms + .5s); }
 @media (max-width: 1360px) { .steps { gap: 16px; } }
 @media (max-height: 760px) { .steps { display: none; } }
 
@@ -53,11 +57,11 @@
    (components/song/LyricSubtitle.tsx). Lines stack in one fixed box, so the new line and the leaving one
    overlap exactly while they cross-fade. */
 .subtitle { position: absolute; left: 40vw; bottom: 6.5vh; z-index: 2; display: flex; flex-direction: column; align-items: center; transform: translateX(-50%); pointer-events: none; animation: riseIn .8s var(--ease) .35s both; transition: opacity .4s; }
-.sub-lines { position: relative; width: min(820px, 64vw); height: calc(18px + clamp(24px, 3.6vh, 32px) * 1.2 + 11px); }
+.sub-lines { position: relative; width: min(820px, 64vw); height: calc(18px + var(--sub-hz) * 1.2 + 11px); }
 .sub-line { position: absolute; inset: 0; display: flex; justify-content: center; gap: 8px; will-change: transform, opacity, filter; }
 .sub-line .tok { display: flex; flex-direction: column; align-items: center; }
 .sub-line .py { height: 18px; font-size: 13px; color: rgba(255,255,255,.6); opacity: 1; }
-.sub-line .hz { position: relative; font-family: var(--serif); font-weight: 700; font-size: clamp(24px, 3.6vh, 32px); line-height: 1.2; color: rgba(255,255,255,.35); text-shadow: 0 2px 18px rgba(0,0,0,.5); }
+.sub-line .hz { position: relative; font-family: var(--serif); font-weight: 700; font-size: var(--sub-hz); line-height: 1.2; color: rgba(255,255,255,.35); text-shadow: 0 2px 18px rgba(0,0,0,.5); }
 /* the karaoke fill: a soft edge sweeping across each character (tokens.css, --fill-edge) */
 .sub-line .hz::after { content: attr(data-hz); position: absolute; inset: 0; color: #fff;
   -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--f, 0) * (100% + var(--fill-edge)) - var(--fill-edge)), transparent calc(var(--f, 0) * (100% + var(--fill-edge))));
