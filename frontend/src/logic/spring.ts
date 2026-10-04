@@ -3,7 +3,7 @@
  * JavaScript share them.
  *
  * LINE_SPRING (slight overshoot, ~500 ms) moves between lines.
- * SOFT_SPRING (almost none, ~300 ms) resizes the dock and the options pill.
+ * SOFT_SPRING (almost none, ~475 ms) resizes the dock and the Sing pill (hooks/useWidthMorph.ts).
  *
  * Owner: A. Spec: docs/design/ui.md §3.3.
  */

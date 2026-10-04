@@ -1,5 +1,6 @@
 /**
- * A glass pill whose width springs to its contents (the dock and the options pill).
+ * A glass pill whose width springs to its contents (the options pill; the dock and
+ * Sing use hooks/useWidthMorph.ts, the prototype's own timing).
  *
  * The motion-primitives toolbar pattern: measure the contents, animate the width
  * with a soft spring. Animating the width itself, rather than Motion's `layout`

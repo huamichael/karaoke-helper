@@ -5,10 +5,10 @@
  *
  * Owner: A. Spec: docs/design/ui.md §5.3 (dock column), §5.3.1, §5.4.
  */
-import type { CSSProperties, ReactNode } from "react";
+import { useRef, type CSSProperties, type ReactNode } from "react";
+import { useWidthMorph } from "../hooks/useWidthMorph";
 import type { DockAction, DockActionId } from "../logic/actions";
 import { PlayIcon, RetryIcon, StopIcon } from "./icons";
-import { MeasuredPill } from "./MeasuredPill";
 import { RecordButton, type Meter } from "./RecordButton";
 import { Vinyl } from "./Vinyl";
 
@@ -57,9 +57,14 @@ function Item({ a, i, spinning, recording, meter, onAction }: { a: DockAction; i
 
 export function Dock({ actions, prompt, promptKey, ...rest }: Props) {
   const key = prompt ? `prompt:${promptKey}` : actions.map((a) => `${a.id}/${a.label}/${+a.disabled}/${+a.primary}`).join("|");
+  const pill = useRef<HTMLDivElement>(null);
+  // New buttons: the width springs to them as in the prototype (the soft spring) while they fade in.
+  useWidthMorph(pill, key);
   return (
-    <MeasuredPill className="dock" innerClassName="dock-row" contentKey={key} label="Controls">
-      {prompt ?? actions.map((a, i) => <Item key={a.id} a={a} i={i} {...rest} />)}
-    </MeasuredPill>
+    <div ref={pill} className="dock" role="toolbar" aria-label="Controls">
+      <div key={key} className="dock-row">
+        {prompt ?? actions.map((a, i) => <Item key={a.id} a={a} i={i} {...rest} />)}
+      </div>
+    </div>
   );
 }
