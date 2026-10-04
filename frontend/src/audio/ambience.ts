@@ -6,6 +6,10 @@
  * Owner: A. Spec: docs/design/ui.md §5.1 ("Between songs"), §6 (Ambience).
  */
 
+/** Loudness of the crackle while the record plays, and of the static halfway between two songs (0–1). */
+const CRACKLE_LEVEL = 0.3;
+const STATIC_LEVEL = 0.08;
+
 let ctx: AudioContext | null = null;
 let crackle: GainNode | null = null;
 let noise: GainNode | null = null;
@@ -58,8 +62,8 @@ function start() {
 function apply() {
   if (!ctx || !crackle || !noise) return;
   const t = ctx.currentTime;
-  crackle.gain.setTargetAtTime(active && playing ? 0.6 : 0, t, 0.2);
-  noise.gain.setTargetAtTime(active ? level * 0.08 : 0, t, 0.03);
+  crackle.gain.setTargetAtTime(active && playing ? CRACKLE_LEVEL : 0, t, 0.2);
+  noise.gain.setTargetAtTime(active ? level * STATIC_LEVEL : 0, t, 0.03);
 }
 
 if (typeof document !== "undefined") {
