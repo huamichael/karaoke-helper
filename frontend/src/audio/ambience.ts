@@ -78,7 +78,8 @@ function start() {
 
 if (typeof document !== "undefined") {
   build();
-  for (const ev of ["pointerdown", "keydown"]) document.addEventListener(ev, start, { once: true });
+  // on the way down (capture, on window), so a press the tonearm keeps to itself counts too
+  for (const ev of ["pointerdown", "keydown", "touchend"]) window.addEventListener(ev, start, { once: true, capture: true });
 }
 
 /** On while the song screen shows and sound is on; the crackle only while the record plays. */

@@ -102,16 +102,22 @@ const RECORD_VOLUME = 0.8;
 const FADE_MS = 800;
 const STOP_FADE_MS = 250;
 
+/** The page's first of these lets a track play (the browser's user activation). */
+const GESTURES = ["pointerdown", "keydown", "touchend"] as const;
+
 /**
  * The song screen's record: plays [fromMs, toMs] of the track on a loop for as
  * long as the arm is down, fading in at the start of each pass and out before the
  * loop. Muted, it keeps playing silently, so the lyric subtitle stays in time.
- * Browsers refuse sound before the first click or key press; then it plays muted
- * and unmutes on the first one. Stopping fades out over a quarter second. With
- * no track to play, the lyric still goes round on a silent clock.
+ * Stopping fades out over a quarter second. It starts at startMs (where the record
+ * was last stopped, logic/subtitle.ts resumeFrom), fading in from there too.
  *
- * It starts at startMs (where the record was last stopped, logic/subtitle.ts
- * resumeFrom), fading in from there too.
+ * Until the page's first click or key press, browsers refuse to play it at all:
+ * Chrome lets only a <video>, not an <audio>, start muted. Then the lyric goes on,
+ * on a silent clock, and the first click or key press anywhere starts the track
+ * from where the lyric has got to. It listens on the way down (capture, on window),
+ * so a press the tonearm keeps to itself counts too. With no track to play at all,
+ * the silent clock just goes on.
  */
 export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number }, muted: boolean, startMs = win.fromMs): RecordPlayback {
   const a = new Audio(mediaUrl(audioUrl));
@@ -119,18 +125,33 @@ export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number
   a.volume = 0;
   a.muted = muted;
   a.currentTime = startMs / 1000;
-  let want = muted, blocked = false, raf = 0, stoppingAt = 0, silentSince = 0, begun = 0, settled = false;
+  let raf = 0, stoppingAt = 0, silentSince = 0, begun = 0, settled = false;
   let resolve!: (r: "ended" | "stopped") => void;
   const done = new Promise<"ended" | "stopped">((r) => (resolve = r));
-  const unlock = () => { blocked = false; a.muted = want; };
+  const clock = () => loopTime(win, startMs - win.fromMs + performance.now() - silentSince);
+  const listen = (on: boolean) => {
+    for (const ev of GESTURES) {
+      if (on) window.addEventListener(ev, unlock, true);
+      else window.removeEventListener(ev, unlock, true);
+    }
+  };
+  function unlock() {
+    listen(false);
+    if (settled || stoppingAt) return;
+    a.currentTime = clock() / 1000;
+    a.play().then(() => {
+      if (settled) return;
+      silentSince = 0;
+      start();
+    }, () => {});
+  }
   const finish = (r: "ended" | "stopped") => {
     if (settled) return;
     settled = true;
     cancelAnimationFrame(raf);
+    listen(false);
     a.pause();
     a.removeAttribute("src");
-    document.removeEventListener("pointerdown", unlock);
-    document.removeEventListener("keydown", unlock);
     resolve(r);
   };
   const frame = (now: number) => {
@@ -155,21 +176,13 @@ export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number
     a.currentTime = win.fromMs / 1000;
     a.play().catch(() => {});
   };
-  // No track to play (none in the bundle yet, or it cannot be decoded): keep time silently, still looping,
-  // so the lyric on the song screen goes on going round.
-  const silent = () => {
-    if (settled) return;
-    silentSince = performance.now();
-    a.removeAttribute("src");
-  };
+  // Not allowed yet: keep time silently, still looping, so the lyric goes on, until the first click or key
+  // press. No track to play (none in the bundle yet, or it cannot be decoded): the same, for good.
   a.play().then(start, (e: DOMException) => {
     if (settled) return;
-    if (e.name !== "NotAllowedError" || a.muted) return silent();
-    blocked = true;
-    a.muted = true;
-    document.addEventListener("pointerdown", unlock, { once: true });
-    document.addEventListener("keydown", unlock, { once: true });
-    a.play().then(start, silent);
+    silentSince = performance.now();
+    if (e.name === "NotAllowedError") listen(true);
+    else a.removeAttribute("src");
   });
   return {
     done,
@@ -180,13 +193,10 @@ export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number
     },
     timeMs: () => {
       if (settled) return null;
-      if (silentSince) return loopTime(win, startMs - win.fromMs + performance.now() - silentSince);
+      if (silentSince) return clock();
       return !a.paused && a.readyState >= 2 ? a.currentTime * 1000 : null;
     },
-    setMuted: (m) => {
-      want = m;
-      if (!blocked) a.muted = m;
-    },
+    setMuted: (m) => { a.muted = m; },
   };
 }
 
