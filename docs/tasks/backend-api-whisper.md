@@ -123,6 +123,8 @@ Test cases for `test_matcher.py`, none of which need audio. The expected line is
 
 ### Grader
 
+Task C now supplies alignment, finer sound scores, and rhythm. The orchestrator calls rhythm when enabled and spans exist, falls back on exceptions, and passes signed timing and rhythm feedback through assembly. Tone integration remains a separate Task D/B concern. Layer switches continue to default to off pending checkpoint B.
+
 - `assemble` follows scoring.md exactly. Do not put thresholds anywhere else.
 - `engine` reports what actually ran: `mock`, `whisper`, or `whisper+ctc`.
 - Add `audio.trim_offset_ms` to every time you return.

@@ -1,17 +1,11 @@
-"""Rhythm scoring for singing-accuracy mode.
-
-The numeric fit is kept independent from the shared result models so it can be
-covered while ``app.schemas`` is still being implemented by B. ``score_rhythm``
-constructs the contract result types lazily once those models are available.
-"""
+"""Rhythm scoring after removing start offset and tempo (owner C)."""
 
 from __future__ import annotations
 
 from math import exp
-from typing import TYPE_CHECKING, Sequence
+from typing import Sequence
 
-if TYPE_CHECKING:
-    from app.schemas import RhythmResult, Span, Syllable
+from app.schemas import RhythmResult, RhythmSyllable, Span, Syllable
 
 
 def _calculate_rhythm(
@@ -39,15 +33,9 @@ def _calculate_rhythm(
     mean_y = sum(y_values) / len(y_values)
     variance_x = sum((value - mean_x) ** 2 for value in x_values)
 
-    # If all reference onsets coincide, tempo cannot be estimated. A zero
-    # slope is the least-squares solution with the intercept set to mean user
-    # onset, so the starting point is still removed without dividing by zero.
-    slope = (
-        sum((x - mean_x) * (y - mean_y) for x, y in zip(x_values, y_values))
-        / variance_x
-        if variance_x
-        else 0.0
-    )
+    if variance_x == 0:
+        return None
+    slope = sum((x - mean_x) * (y - mean_y) for x, y in zip(x_values, y_values)) / variance_x
     intercept = mean_y - slope * mean_x
 
     offsets: list[int | None] = [None] * len(reference_times)
@@ -84,14 +72,6 @@ def score_rhythm(
         return None
 
     offsets, scores, line_score = calculation
-    try:
-        from app.schemas import RhythmResult as SharedRhythmResult
-        from app.schemas import RhythmSyllable
-    except ImportError as exc:
-        raise RuntimeError(
-            "score_rhythm needs RhythmResult and RhythmSyllable from app.schemas; "
-            "the shared result models are not available yet"
-        ) from exc
 
     syllables = [
         None
@@ -99,4 +79,4 @@ def score_rhythm(
         else RhythmSyllable(offset_ms=offset, score=score)
         for offset, score in zip(offsets, scores)
     ]
-    return SharedRhythmResult(score=line_score, syllables=syllables)
+    return RhythmResult(score=line_score, syllables=syllables)

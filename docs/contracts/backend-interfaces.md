@@ -116,7 +116,7 @@ def grade(audio: Audio, line: Line, target: str, mode: str | None, word_index: i
 def align(audio: Audio, expected: list[Syllable]) -> list[Span | None]
 ```
 - Forced-aligns the expected syllables to the audio. `None` for a syllable that has no usable span.
-- Uses only `initial` and `final` of each expected syllable. Ignores tone.
+- Uses standard spelling from `pinyin_numeric` with the tone digit removed for alignment. Uses strict `initial` and `final` fields to construct confused-sound variants and label component scores. Ignores tone.
 - Must work on a user recording and on a segment of the original song track. `align_track` calls it for the second case.
 
 ```python

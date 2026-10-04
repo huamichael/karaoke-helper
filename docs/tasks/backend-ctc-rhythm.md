@@ -45,7 +45,7 @@ You never need Whisper, the API or the frontend to do your work. Every function 
 Answer four questions and report them to the team:
 
 1. **Does forced alignment run?** Check `torchaudio.functional.forced_align` in the version you pin. It was scheduled for removal and then kept. The fallback is the `ctc-forced-aligner` package.
-   - Pin `torch` to the release that matches `torchaudio`. In October 2026 an unpinned lock resolved `torch` 2.14 with `torchaudio` 2.11, because torchaudio is in maintenance mode and releases less often. A compiled torchaudio built for a different torch version can fail to import. For example: `torch==2.11.*`, `torchaudio==2.11.*`.
+   - This implementation pins `torch==2.11.*` and `torchaudio==2.11.*` for reproducibility. TorchAudio 2.11 supports PyTorch 2.11 and later through its stable ABI; older releases require matching versions. Both 2.11 imports and a compiled CPU forced-alignment call have been checked on macOS.
    - `backend/pyproject.toml` already sends both packages to the CPU-only PyTorch index on Linux. Do not remove that.
 2. **Which model?** Start with `torchaudio.pipelines.MMS_FA`. It aligns romanised text, so toneless pinyin goes in directly. `kehanlu/mandarin-wav2vec2-aishell1` is the alternative, but it outputs characters, which makes comparing sound variants harder.
 3. **Are the boundaries right?** Align the fixture recordings, cut the audio at each span, and listen to the clips. Do this for sung lines and for spoken words.
@@ -87,7 +87,7 @@ Answer four questions and report them to the team:
 
 ### `align`
 
-- `start_ms` and `end_ms` come from the first and last frame of the syllable's letters, times 20.
+- Timing uses the verified model stride. `start_ms` is the first token frame; `end_ms` is the exclusive boundary after the last token frame, clipped to the recording duration.
 - `confidence` is the mean per-frame probability of the aligned tokens inside the span.
 - Return `None` for a syllable whose span is shorter than 40 ms or whose confidence is very low. Start with 0.1 as the cut-off and tune it.
 
@@ -96,7 +96,7 @@ Answer four questions and report them to the team:
 - For each syllable, build its variants: the expected spelling, plus one for each confused partner of its initial and of its final (from `confusions.py`). For example `zhun` gives `zun`, and `san` gives `sang`.
 - Score each variant on the frames around the syllable's span, with about 100 ms of margin on each side. The score is the mean log-probability along the best path.
 - `heard` is the variant that scores highest. The component score depends on how far the expected spelling is ahead of, or behind, the best other variant.
-- Suggested starting mapping: expected ahead by a clear margin gives 100; level gives about 70; a variant clearly ahead gives 40. Scoring.md requires 60 or below when a variant wins. Tune on the fixtures.
+- Compare initials and finals independently, keeping the other component fixed. The existing experimental mapping is kept in `ctc.py`; a winning alternative is capped at 60 as scoring.md requires, and ties prefer the expected sound. No parameters have been tuned without human recordings.
 - A component with no confused partner falls back to the span's `confidence`.
 - These numbers are starting points, not measurements.
 
@@ -118,8 +118,8 @@ Answer four questions and report them to the team:
 ### `eval_ctc.py`
 
 - For every fixture recording, print each syllable's Whisper-base score and CTC score side by side.
-- The file name says what is wrong and where (`error-4-l-n`: syllable 4 said with n instead of l; `missing-4`), so the script knows which syllable should be flagged. Naming rules: backend-interfaces.md section 6. Several speakers record each item; their names end the file name.
-- Summarise: errors caught and correct syllables wrongly flagged, for each layer.
+- Session filenames are `<line>__<variant>__<speaker>.wav`, with indexed errors such as `error-4-l-n` and `missing-4` (zero-based). Naming rules are in backend-interfaces.md section 6. Legacy unindexed error pairs require `--labels` when several syllables could be targeted. Unknown/ambiguous fixtures fail before models run.
+- Summarise errors caught and correct syllables wrongly flagged for each layer. A missing syllable or any component score at most 60 counts as flagged, including a confused component in an otherwise `ok` syllable.
 - Write the audio cut at each span to a temporary folder, for listening.
 
 ## Out of scope
@@ -127,3 +127,48 @@ Answer four questions and report them to the team:
 - Whisper, the matcher and the API.
 - Tone. D scores it; you only supply the spans, through the grader.
 - Melody.
+
+
+## Implemented status and running (3 October 2026)
+
+Alignment, per-component likelihood scoring, the track CLI, and checkpoint evaluation are implemented. The grader calls rhythm behind the existing switch. Following main's Task B integration, poor rhythm lowers a syllable that is still `good` after sound and tone checks to the rhythm score's status; the syllable's numeric score remains its sound score. Early/late feedback follows sound and tone feedback in priority. All optional-layer switches still default to off. The syllable types and public scoring function signatures are unchanged.
+
+The model is MMS_FA on CPU, with its wildcard output disabled because only known pinyin tokens are aligned. Its convolution stride is checked at load time. Emissions are cached by Audio identity with weak references and an eight-recording bound. Treat samples as immutable during a grading attempt. Imports and weight loading are lazy. The first model download is about 1.18 GB; subsequent runs use the PyTorch cache (`TORCH_HOME` may override it).
+
+From `backend/`:
+
+```bash
+uv sync
+uv run pytest
+uv run python -m pipeline.align_track --song yue-liang-dai-biao-wo-de-xin
+uv run python -m pipeline.align_track --song yi-jian-mei
+uv run python tests/eval_ctc.py --output /path/to/clips --report /path/to/checkpoint.json
+```
+
+`align_track` also accepts `--dry-run` and `--vocals /path/to/vocals.wav`. Vocal audio must have the same time origin as the full track. The track is decoded once with PyAV and each line is sliced with context without trimming silence. Only syllable timings change; a failed run or a concurrent bundle edit leaves the original JSON intact. Rerunning replaces existing syllable timings, so preserve hand corrections before rerunning.
+
+Evaluation uses the shared session filename parser for `<line>__<variant>__<speaker>.wav`, including `yijianmei__error-2-ing-in__mei.wav`. Indexed errors must match the expected confused sound at that index; annotations cannot override an indexed error or omission. Older two-field names still work, with `--labels` available for ambiguous unindexed errors, for example `{"yijianmei__error-n-l.wav": [5]}`.
+
+Every recording's name, labels and 16 kHz mono PCM16 WAV data are checked before either model runs. Stale label filenames, contradictory indices, unsupported variants and truncated WAVs fail explicitly. `no_speech` follows the production grader's gate: both layers count the expected syllables as missing and CTC is skipped. These rejected recordings remain visible in the report.
+
+Evaluation exports listening clips to a persistent temporary folder or `--output /path/to/clips`. Counts are printed both across all recordings and per speaker. Optional `--report /path/to/checkpoint.json` saves the counts, deliberate-error indices, transcript, component scores, flags and spans. Report spans use trimmed sample time; add the recording's `trim_offset_ms` to locate them in the original recording. A JSON report records a pending team decision, not a passed checkpoint. No recordings means a nonzero exit and an explicit pending-checkpoint message, never a passing report. To inspect performance or umlaut spelling independently:
+
+```bash
+uv run python tests/eval_ctc.py --benchmark /path/to/five-seconds.wav --line tests/fixtures/lines/yueliang.json --runs 3
+uv run python tests/eval_ctc.py --umlaut /path/to/nv.wav --line /path/to/nv-line.json
+```
+
+The umlaut probe compares `v`, `u`, and `yu`, reusing emissions and exporting each spelling's spans. Until human recordings establish otherwise, standard `v` remains the default. The benchmark uses fresh Audio objects for warmed repetitions, so it measures inference rather than cache hits. Its cold measurement includes model loading and a download if necessary.
+
+### Evidence and outstanding review
+
+- Current checkout is based on main `12ba760` (including Task B's scoring integration and matching contract update). The alignment contract's standard-pinyin sentence was corrected with the developer's explicit approval; main's scoring contract remains unchanged.
+- Current backend regression suite: 621 passed, 15 skipped, run with `.venv/bin/python -m pytest -q` from `backend/`. `git diff --check` passes. The skipped tests are existing stub/optional checks, not human CTC accuracy evidence. The earlier implementation passed `uv lock --check --offline`; uv is unavailable on the current shell path, so that check was not repeated in this iteration.
+- Native macOS: pinned packages import; compiled forced alignment runs; MMS_FA loaded and ran on both sung full-mix audio and a generated spoken 月亮 reference. Speech synthesis is a smoke test, not human accuracy evidence.
+- A five-second sung reference measured 2.646 s cold with weights already downloaded, and a 0.270 s warmed mean over three alignment-plus-scoring runs. This is a local Mac measurement, not a guarantee for other machines.
+- Generated provisional timings: 月亮代表我的心 has 182/193 usable syllable spans (11 missing); 一剪梅 has 142/146 (4 missing). Missing times remain null. Moon-song lines 3, 14, 16, 22, 24 and Yi Jian Mei lines 1, 18 require particular review. Neither bundle's times have been approved by human listening.
+- Original full-mix singing and even the spoken synthetic reference produced some low confidence/false-looking sound grades. Do not treat these exploratory scores as calibrated pronunciation measurements.
+- The human fixture audio directory is empty. Deliberate-error detection, false-flag rates, rushed human singing, and the final checkpoint B decision remain pending the team's recordings and listening review.
+- Docker/WSL runtime verification is pending: the local Docker daemon is stopped. The lockfile retains CPU-only Linux builds and no CUDA dependencies; native and container entry points use the same code and lock.
+
+The deterministic tests cover spelling, repeated tokens, span confidence/duration, emission reuse/release, component alternatives, Viterbi likelihood against exhaustive CTC paths, pipeline writes, session and legacy evaluation filenames, label contradictions, WAV preflight, no-speech gating, per-speaker JSON counts, and rhythm integration/fallback. Complete the human checkpoint before enabling `ENABLE_CTC=1` and `ENABLE_RHYTHM=1` for the demo.

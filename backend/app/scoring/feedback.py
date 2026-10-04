@@ -65,8 +65,8 @@ MESSAGES: dict[str, str] = {
     "TONE_4_2": 'Your pitch rose. Start high and drop sharply, like a firm "No!"',
     "TONE_4_3": 'Your pitch dipped and rose. Start high and drop sharply, like a firm "No!"',
     # Rhythm codes. Wording is the scoring.md example; C can replace it.
-    "RHYTHM_EARLY": "You came in early here.",
-    "RHYTHM_LATE": "You came in late here.",
+    "RHYTHM_EARLY": "You came in early here. Wait a little longer before this syllable.",
+    "RHYTHM_LATE": "You came in late here. Start this syllable a little sooner.",
 }
 
 
@@ -83,6 +83,8 @@ def final_code(part: Part) -> str:
 
 
 def _sound_message(code: str, kind: str, part: Part) -> str:
+    if part.heard == part.expected:
+        return f'We could not hear the "{part.expected}" sound clearly. Try it again.'
     if code in MESSAGES:
         return MESSAGES[code]
     if kind == "initial" and not part.expected:
