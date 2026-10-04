@@ -244,7 +244,7 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
             </div>
             <div className="h-cta">
               {entry.playable
-                ? <SingButton title={entry.title} picking={picking} onPicking={setPicking} onHint={setHint} onStart={start} />
+                ? <SingButton title={entry.title} picking={picking} onPicking={setPicking} onHint={setHint} onStart={start} stayOpenOn=".dial" />
                 : <><button className="btn" disabled>Coming soon</button><span className="h-meta">This song isn't on the server yet</span></>}
             </div>
           </div>

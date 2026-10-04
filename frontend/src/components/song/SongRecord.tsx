@@ -209,7 +209,7 @@ export const SongRecord = forwardRef<SongRecordHandle, Props>(function SongRecor
               maxWidth: Math.round(g.nameMax), opacity: +s.opacity.toFixed(3),
               transform: `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%, -50%) rotate(${s.tiltDeg.toFixed(2)}deg) scale(${s.scale.toFixed(3)})`,
             }}
-            onClick={() => turnTo(s.key)}>
+            onClick={() => { if (!s.selected) turnTo(s.key); }}>
             <span className="dn-n">{String(s.song + 1).padStart(2, "0")}</span>
             <span className="dn-t" style={{ fontSize: size }}>{e.title}</span>
             <span className="dn-a">{e.artist}{e.playable ? "" : ", coming soon"}</span>

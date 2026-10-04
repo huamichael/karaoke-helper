@@ -29,23 +29,30 @@ type Props = {
   onPicking(open: boolean): void;
   onHint(hint: ModeHint): void;
   onStart(mode: PlayMode): void;
+  /** A press inside this (a CSS selector) leaves the choice open. */
+  stayOpenOn?: string;
 };
 
-export function SingButton({ title, picking, onPicking, onHint, onStart }: Props) {
+export function SingButton({ title, picking, onPicking, onHint, onStart, stayOpenOn }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const pill = useRef<HTMLDivElement>(null);
   // Opening and closing spring the pill's width, a little slower than the dock, as in the prototype.
   useWidthMorph(pill, picking, 400);
 
-  // A click anywhere else closes the choice. It listens on the way down (capture, on window), before
-  // anything on the page can keep the press to itself: the tonearm does, so a press on it was missed.
+  // A click anywhere else closes the choice, except on stayOpenOn (the record: playing or pausing it, or
+  // turning the sound on, leaves the choice where it was). It listens on the way down (capture, on
+  // window), before anything on the page can keep the press to itself.
   useEffect(() => {
     if (!picking) return;
-    const off = (e: PointerEvent) => { if (!box.current?.contains(e.target as Node)) onPicking(false); };
+    const off = (e: PointerEvent) => {
+      const target = e.target as Element;
+      if (box.current?.contains(target) || (stayOpenOn && target.closest?.(stayOpenOn))) return;
+      onPicking(false);
+    };
     window.addEventListener("pointerdown", off, true);
     const t = setTimeout(() => box.current?.querySelector<HTMLElement>("[data-mode]")?.focus({ preventScroll: true }), 60);
     return () => { window.removeEventListener("pointerdown", off, true); clearTimeout(t); };
-  }, [picking, onPicking]);
+  }, [picking, onPicking, stayOpenOn]);
 
   const pick = (mode: PlayMode, i: number) => (
     <button data-mode={mode} style={{ "--i": i } as CSSProperties}
