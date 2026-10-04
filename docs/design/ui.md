@@ -89,7 +89,7 @@ Moments:
 
 - **Spinning the record (song screen):** the record follows the wheel, trackpad or drag continuously, 45° per song, and settles on a song with a spring when the gesture ends. It also turns slowly while a preview plays. On the way, the two photos crossfade and blur, the grain thickens into static (and, with sound on, radio static rises), and the title, copy and theme switch when the dial passes halfway. The new title's characters arrive one by one, out of a blur.
 - **Starting a song:** the title's characters drift up and blur out, the dial turns away to the right, the photo blurs and darkens into the line screen's background, and the lyric lines rise in one after another, followed by the dock.
-- **Karaoke fill during Listen:** each character fills left to right. Use each syllable's `start_ms` and `end_ms` from `song.json` when the pipeline has aligned the track; until then they are `null`, so split the line's time evenly.
+- **Karaoke fill during Listen:** each character fills left to right, in time with the singer. Each character starts filling 80 ms before its syllable's aligned `start_ms` (from `song.json`) and is full 400 ms after, or when the next syllable starts if that is sooner, so the colour keeps pace with the voice and a held note stays full rather than filling slowly across it. A syllable the aligner missed is spaced evenly between its timed neighbours. Constants: `FILL_LEAD_MS`, `FILL_MAX_MS`. A song with no aligned syllable splits the line's time evenly. Logic: `syllableStarts` and `fillFractions` in `frontend/src/logic/timing.ts`.
 - **Changing line:** the list moves so the active line sits 40% from the top. The active line's growth and the list's movement animate together, so no other line jumps: measure before and after, then animate the difference with transforms (FLIP).
 - **Swipe:** on touch, the list follows the finger. Past the first or last line, it stretches a little and springs back.
 - **Result reveal:** each word's status bar grows in, left to right, 60ms apart; scores count up.
@@ -335,7 +335,7 @@ The frontend task's rules all apply. In addition:
 |---|---|
 | Song screen | `GET /api/v1/songs` → `SongSummary`; themes and sleeve characters from the frontend's theme file |
 | Lyric line, pinyin, translation | `Song.lines[]`: `text`, `syllables[].pinyin`, `translation` |
-| Karaoke fill timing | `syllables[].start_ms`, `end_ms` when set; otherwise the line's `start_ms`–`end_ms` split evenly |
+| Karaoke fill timing | `syllables[].start_ms` when set (each character fills from 80 ms before its syllable to 400 ms after, gaps spaced evenly); otherwise the line's `start_ms`–`end_ms` split evenly |
 | "N / M", line rail | `line.index`, `SongSummary.line_count` |
 | Status bars | `AttemptResult.words[]`: `status`, `syllable_indices` |
 | Suggested word, primary action | `AttemptResult.next_step` |

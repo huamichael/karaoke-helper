@@ -43,64 +43,64 @@ glosses:
   呀: "(exclamation)"
 lines:
 - text: 好一朵美麗的茉莉花
-  start_ms: 21090
-  end_ms: 26730
+  start_ms: 20810
+  end_ms: 26400
 - text: 好一朵美麗的茉莉花
-  start_ms: 26730
-  end_ms: 32490
+  start_ms: 26400
+  end_ms: 32120
 - text: 芬芳美麗滿枝椏
-  start_ms: 32490
-  end_ms: 38110
+  start_ms: 32120
+  end_ms: 37620
 - text: 又香又白人人誇
-  start_ms: 38110
-  end_ms: 43760
+  start_ms: 37620
+  end_ms: 43220
 - text: 讓我來將你摘下 送給別人家
-  start_ms: 43760
-  end_ms: 53650
+  start_ms: 43220
+  end_ms: 53260
 - text: 茉莉花呀茉莉花
-  start_ms: 53650
+  start_ms: 53260
   end_ms: 60340
 - text: ''
   start_ms: 60340
-  end_ms: 71970
+  end_ms: 71390
 - text: 好一朵美麗的茉莉花
-  start_ms: 71970
-  end_ms: 77630
+  start_ms: 71390
+  end_ms: 77380
 - text: 好一朵美麗的茉莉花
-  start_ms: 77630
-  end_ms: 83250
+  start_ms: 77380
+  end_ms: 83120
 - text: 芬芳美麗滿枝椏
-  start_ms: 83250
-  end_ms: 88940
+  start_ms: 83120
+  end_ms: 88760
 - text: 又香又白人人誇
-  start_ms: 88940
-  end_ms: 94720
+  start_ms: 88760
+  end_ms: 94350
 - text: 讓我來將你摘下 送給別人家
-  start_ms: 94720
-  end_ms: 104740
+  start_ms: 94350
+  end_ms: 104310
 - text: 茉莉花呀茉莉花
-  start_ms: 104740
+  start_ms: 104310
   end_ms: 111020
 - text: ''
   start_ms: 111020
-  end_ms: 134510
+  end_ms: 133760
 - text: 好一朵美麗的茉莉花
-  start_ms: 134510
-  end_ms: 139900
+  start_ms: 133770
+  end_ms: 139660
 - text: 好一朵美麗的茉莉花
-  start_ms: 139900
-  end_ms: 145920
+  start_ms: 139660
+  end_ms: 145350
 - text: 芬芳美麗滿枝椏
-  start_ms: 145920
-  end_ms: 151530
+  start_ms: 145350
+  end_ms: 151020
 - text: 又香又白人人誇
-  start_ms: 151530
-  end_ms: 156930
+  start_ms: 151020
+  end_ms: 156780
 - text: 讓我來將你摘下 送給別人家
-  start_ms: 156930
-  end_ms: 167290
+  start_ms: 156780
+  end_ms: 166840
 - text: 茉莉花呀茉莉花
-  start_ms: 167290
+  start_ms: 166840
   end_ms: 174280
 - text: ''
   start_ms: 174280

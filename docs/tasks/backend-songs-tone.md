@@ -104,7 +104,26 @@ B's matcher is blocked until this exists, so it comes first.
 
 - Command line: `uv run python -m pipeline.build_song --id <song_id>`, or `--all` for every song. It reads `data/songs/<song_id>/lyrics.yaml` and writes `song.json` beside it, then prints a review table of every line's pinyin and words.
 - `--no-clips` skips generating spoken clips, so no internet is needed. `--check` also cuts each line from the track into `check/<line>.wav`, so you can listen to whether the line times are right.
-- Re-running keeps the syllable times `align_track` wrote, for every line whose text, times and readings did not change.
+- Re-running keeps the syllable times `align_track` wrote, for every line whose text, start and readings did not change. Trimming a line's `end_ms` keeps its times; a syllable that now starts after the new end loses its time.
+
+### Line timing: starting with the singing, and trimming long lines
+
+Lyric timestamps are often 0.1–0.4 s late, so a line clips its first word and plays the start of the next line. Once `align_track` has run, `uv run --group vocals python -m pipeline.line_ends --song <id> --apply` corrects them and rebuilds `song.json`, editing only the `start_ms` and `end_ms` values in `lyrics.yaml`:
+
+- Between two sung lines, the boundary moves to the quietest moment of the singer's voice (the separated `check/vocals.wav`) between the first line's last syllable and the second's first: the breath.
+- After an instrumental break, a line starts 100 ms before the voice comes in: where it rises to within 10 dB of the line's peak (instruments leaking into the voice track stay 17–20 dB below), searched near the first aligned syllable.
+- Without the voice track it falls back to 150 ms before the first aligned syllable; the aligner can run 0.1–0.3 s late and miss syllables, so this is rougher.
+- Running it again changes nothing.
+
+All three demo songs were corrected this way on 4 October 2026. Every cut between sung lines sits at least 25 dB below the singing, except 月亮代表我的心 line 7→8, where the singer glides into the next line without a breath (14 dB).
+
+
+A line whose `end_ms` runs into the instrumental makes Listen play the extra music, and lengthens the recording limit. To trim:
+
+1. Measure: `uv run --group vocals python -m pipeline.line_ends --song <id>`. Demucs separates the singer's voice once (cached in the git-ignored `check/vocals.wav`); for each line the tool prints the current `end_ms`, where the voice falls silent, and a suggested `end_ms`. It changes nothing.
+2. Check by ear: `build_song --check` cuts each line to `check/<line>.wav`. Quiet endings, breaths and reverb can fool the measurement.
+3. Edit that line's `end_ms` in `lyrics.yaml` (find it by `start_ms`), then rebuild with `build_song --id <id>`. Syllable times are kept. Or let `line_ends --apply --trim-fades --silence-db <n>` do it for every flagged line.
+4. Leave a short margin (the tool adds 300 ms) so the last sound is not clipped. The next entry may start later than the new end; a gap between lines is fine.
 - The `lyrics.yaml` format is in [data-model.md](../contracts/data-model.md), section 5. Every line carries `start_ms` and `end_ms`; lines with empty `text` mark instrumental gaps and are skipped.
 - Reading fixes go in the song's `readings` block, keyed by phrase: `掩没: yan3 mo4`. `reading_overrides` (done) turns them into per-line positions for `to_syllables`. Songs often sing 的 as "dì" and 了 as "liǎo".
 - For each line: `to_syllables` with that line's overrides, then `segment_words` to fill `word_index` and each word's `syllable_indices`.

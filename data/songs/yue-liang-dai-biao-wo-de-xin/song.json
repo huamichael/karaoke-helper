@@ -7,8 +7,8 @@
   "lines": [
     {
       "index": 0,
-      "start_ms": 12110,
-      "end_ms": 18490,
+      "start_ms": 12150,
+      "end_ms": 18460,
       "text": "你問我愛你有多深",
       "translation": "You ask me how deeply I love you",
       "syllables": [
@@ -178,8 +178,8 @@
     },
     {
       "index": 1,
-      "start_ms": 18490,
-      "end_ms": 24110,
+      "start_ms": 18460,
+      "end_ms": 23700,
       "text": "我愛你有幾分",
       "translation": "How much I love you",
       "syllables": [
@@ -307,8 +307,8 @@
     },
     {
       "index": 2,
-      "start_ms": 24110,
-      "end_ms": 30330,
+      "start_ms": 23700,
+      "end_ms": 30400,
       "text": "我的情也真 我的愛也真",
       "translation": "My feelings are true, my love is true",
       "syllables": [
@@ -528,8 +528,8 @@
     },
     {
       "index": 3,
-      "start_ms": 30330,
-      "end_ms": 36980,
+      "start_ms": 30400,
+      "end_ms": 36870,
       "text": "月亮代表我的心",
       "translation": "The moon represents my heart",
       "syllables": [
@@ -670,8 +670,8 @@
     },
     {
       "index": 4,
-      "start_ms": 36980,
-      "end_ms": 43050,
+      "start_ms": 36870,
+      "end_ms": 43110,
       "text": "你問我愛你有多深",
       "translation": "You ask me how deeply I love you",
       "syllables": [
@@ -841,8 +841,8 @@
     },
     {
       "index": 5,
-      "start_ms": 43050,
-      "end_ms": 49020,
+      "start_ms": 43110,
+      "end_ms": 48450,
       "text": "我愛你有幾分",
       "translation": "How much I love you",
       "syllables": [
@@ -970,8 +970,8 @@
     },
     {
       "index": 6,
-      "start_ms": 49020,
-      "end_ms": 55020,
+      "start_ms": 48450,
+      "end_ms": 55030,
       "text": "我的情不移 我的愛不變",
       "translation": "My feelings won't waver, my love won't change",
       "syllables": [
@@ -1175,8 +1175,8 @@
     },
     {
       "index": 7,
-      "start_ms": 55020,
-      "end_ms": 61080,
+      "start_ms": 55030,
+      "end_ms": 60730,
       "text": "月亮代表我的心",
       "translation": "The moon represents my heart",
       "syllables": [
@@ -1317,8 +1317,8 @@
     },
     {
       "index": 8,
-      "start_ms": 61080,
-      "end_ms": 67290,
+      "start_ms": 60730,
+      "end_ms": 67280,
       "text": "輕輕的一個吻",
       "translation": "One gentle kiss",
       "syllables": [
@@ -1438,8 +1438,8 @@
     },
     {
       "index": 9,
-      "start_ms": 67290,
-      "end_ms": 73100,
+      "start_ms": 67280,
+      "end_ms": 73050,
       "text": "已經打動我的心",
       "translation": "Has already touched my heart",
       "syllables": [
@@ -1580,8 +1580,8 @@
     },
     {
       "index": 10,
-      "start_ms": 73100,
-      "end_ms": 79630,
+      "start_ms": 73050,
+      "end_ms": 79560,
       "text": "深深的一段情",
       "translation": "A deep, deep love",
       "syllables": [
@@ -1701,8 +1701,8 @@
     },
     {
       "index": 11,
-      "start_ms": 79630,
-      "end_ms": 86160,
+      "start_ms": 79560,
+      "end_ms": 85770,
       "text": "教我思念到如今",
       "translation": "Has kept me longing until now",
       "syllables": [
@@ -1843,8 +1843,8 @@
     },
     {
       "index": 12,
-      "start_ms": 86160,
-      "end_ms": 91960,
+      "start_ms": 85770,
+      "end_ms": 92250,
       "text": "你問我愛你有多深",
       "translation": "You ask me how deeply I love you",
       "syllables": [
@@ -2014,8 +2014,8 @@
     },
     {
       "index": 13,
-      "start_ms": 91960,
-      "end_ms": 98190,
+      "start_ms": 92250,
+      "end_ms": 97960,
       "text": "我愛你有幾分",
       "translation": "How much I love you",
       "syllables": [
@@ -2087,7 +2087,7 @@
           "final": "en",
           "tone": 1,
           "start_ms": 95940,
-          "end_ms": 98040,
+          "end_ms": 97900,
           "index": 5,
           "word_index": 4
         }
@@ -2143,8 +2143,8 @@
     },
     {
       "index": 14,
-      "start_ms": 98190,
-      "end_ms": 104020,
+      "start_ms": 97960,
+      "end_ms": 104140,
       "text": "你去想一想 你去看一看",
       "translation": "Go and think it over, go and take a look",
       "syllables": [
@@ -2332,7 +2332,7 @@
     },
     {
       "index": 15,
-      "start_ms": 104020,
+      "start_ms": 104140,
       "end_ms": 110540,
       "text": "月亮代表我的心",
       "translation": "The moon represents my heart",
@@ -2474,8 +2474,8 @@
     },
     {
       "index": 16,
-      "start_ms": 134780,
-      "end_ms": 140880,
+      "start_ms": 134520,
+      "end_ms": 140790,
       "text": "輕輕的一個吻",
       "translation": "One gentle kiss",
       "syllables": [
@@ -2595,8 +2595,8 @@
     },
     {
       "index": 17,
-      "start_ms": 140880,
-      "end_ms": 146860,
+      "start_ms": 140790,
+      "end_ms": 146390,
       "text": "已經打動我的心",
       "translation": "Has already touched my heart",
       "syllables": [
@@ -2737,8 +2737,8 @@
     },
     {
       "index": 18,
-      "start_ms": 146860,
-      "end_ms": 152930,
+      "start_ms": 146390,
+      "end_ms": 152980,
       "text": "深深的一段情",
       "translation": "A deep, deep love",
       "syllables": [
@@ -2858,8 +2858,8 @@
     },
     {
       "index": 19,
-      "start_ms": 152930,
-      "end_ms": 159530,
+      "start_ms": 152980,
+      "end_ms": 159400,
       "text": "教我思念到如今",
       "translation": "Has kept me longing until now",
       "syllables": [
@@ -2943,7 +2943,7 @@
           "final": "in",
           "tone": 1,
           "start_ms": 156810,
-          "end_ms": 159510,
+          "end_ms": 159360,
           "index": 6,
           "word_index": 4
         }
@@ -3000,8 +3000,8 @@
     },
     {
       "index": 20,
-      "start_ms": 159530,
-      "end_ms": 165640,
+      "start_ms": 159400,
+      "end_ms": 165580,
       "text": "你問我愛你有多深",
       "translation": "You ask me how deeply I love you",
       "syllables": [
@@ -3171,8 +3171,8 @@
     },
     {
       "index": 21,
-      "start_ms": 165640,
-      "end_ms": 171270,
+      "start_ms": 165580,
+      "end_ms": 171320,
       "text": "我愛你有幾分",
       "translation": "How much I love you",
       "syllables": [
@@ -3300,8 +3300,8 @@
     },
     {
       "index": 22,
-      "start_ms": 171270,
-      "end_ms": 177650,
+      "start_ms": 171320,
+      "end_ms": 177520,
       "text": "你去想一想 你去看一看",
       "translation": "Go and think it over, go and take a look",
       "syllables": [
@@ -3489,8 +3489,8 @@
     },
     {
       "index": 23,
-      "start_ms": 177650,
-      "end_ms": 183790,
+      "start_ms": 177520,
+      "end_ms": 183060,
       "text": "月亮代表我的心",
       "translation": "The moon represents my heart",
       "syllables": [
@@ -3631,8 +3631,8 @@
     },
     {
       "index": 24,
-      "start_ms": 183790,
-      "end_ms": 189880,
+      "start_ms": 183060,
+      "end_ms": 189640,
       "text": "你去想一想 你去看一看",
       "translation": "Go and think it over, go and take a look",
       "syllables": [
@@ -3820,7 +3820,7 @@
     },
     {
       "index": 25,
-      "start_ms": 189880,
+      "start_ms": 189640,
       "end_ms": 194410,
       "text": "月亮代表我的心",
       "translation": "The moon represents my heart",

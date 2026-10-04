@@ -181,9 +181,51 @@ def test_build_song_drops_times_when_a_line_changes(tmp_path):
     song.lines[0].syllables[0].start_ms = 1000
     write_song(folder, song)
 
-    changed = {**LYRICS, "lines": [{**LYRICS["lines"][1], "start_ms": 1200}, LYRICS["lines"][2]]}
+    changed = {**LYRICS, "readings": {"长留": "zhang3 liu2"}}  # a different reading: re-align
     (folder / "lyrics.yaml").write_text(yaml.safe_dump(changed, allow_unicode=True), encoding="utf-8")
     assert build_song(folder, make_clips=False).lines[0].syllables[0].start_ms is None
+
+
+def test_build_song_keeps_times_when_a_line_moves(tmp_path):
+    folder = write_song_folder(tmp_path, LYRICS)
+    song = build_song(folder, make_clips=False)
+    song.lines[0].syllables[0].start_ms, song.lines[0].syllables[0].end_ms = 1000, 1200
+    write_song(folder, song)
+
+    moved = {**LYRICS, "lines": [{**LYRICS["lines"][0], "end_ms": 850},
+                                 {**LYRICS["lines"][1], "start_ms": 850}, LYRICS["lines"][2]]}
+    (folder / "lyrics.yaml").write_text(yaml.safe_dump(moved, allow_unicode=True), encoding="utf-8")
+    line = build_song(folder, make_clips=False).lines[0]
+    assert (line.start_ms, line.syllables[0].start_ms) == (850, 1000)
+
+
+def test_build_song_matches_repeated_lines_by_occurrence(tmp_path):
+    lyrics = {**LYRICS, "lines": [
+        {"text": "我想和你一起", "start_ms": 0, "end_ms": 1000},
+        {"text": "我想和你一起", "start_ms": 1000, "end_ms": 2000},
+    ]}
+    folder = write_song_folder(tmp_path, {k: v for k, v in lyrics.items() if k not in ("readings", "translations", "glosses", "words")})
+    song = build_song(folder, make_clips=False)
+    song.lines[0].syllables[0].start_ms, song.lines[0].syllables[0].end_ms = 100, 200
+    song.lines[1].syllables[0].start_ms, song.lines[1].syllables[0].end_ms = 1100, 1200
+    write_song(folder, song)
+    rebuilt = build_song(folder, make_clips=False)
+    assert [l.syllables[0].start_ms for l in rebuilt.lines] == [100, 1100]
+
+
+def test_build_song_keeps_times_when_a_line_is_trimmed(tmp_path):
+    folder = write_song_folder(tmp_path, LYRICS)
+    song = build_song(folder, make_clips=False)
+    for i, syllable in enumerate(song.lines[0].syllables):  # line 0 runs 1000-5000
+        syllable.start_ms, syllable.end_ms = 1000 + i * 500, 1300 + i * 500
+    write_song(folder, song)
+
+    trimmed = {**LYRICS, "lines": [{**LYRICS["lines"][1], "end_ms": 3200}, LYRICS["lines"][2]]}
+    (folder / "lyrics.yaml").write_text(yaml.safe_dump(trimmed, allow_unicode=True), encoding="utf-8")
+    line = build_song(folder, make_clips=False).lines[0]
+    assert line.end_ms == 3200
+    assert [s.start_ms for s in line.syllables] == [1000, 1500, 2000, 2500, 3000, None]
+    assert line.syllables[4].end_ms == 3200  # clipped to the new end
 
 
 @pytest.mark.parametrize(
