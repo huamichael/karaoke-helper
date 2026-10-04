@@ -11,7 +11,7 @@
  * Owner: A. Spec: docs/design/ui.md §5.1 ("The subtitle").
  */
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Line } from "../../api/client";
 import { demoMarks, subtitleIndex } from "../../logic/subtitle";
 import { fillFractions } from "../../logic/timing";
@@ -24,54 +24,65 @@ type Props = {
 };
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
-const same = (a: number[], b: number[]) => a.length === b.length && a.every((x, i) => Math.abs(x - b[i]) < 0.004);
+
+/** One character's fill (its --f, 0 to 1), and its grade mark once it is sung. */
+function paint(tok: HTMLElement, f: number) {
+  const hz = tok.children[1] as HTMLElement | undefined, v = f.toFixed(3);
+  if (hz && hz.style.getPropertyValue("--f") !== v) hz.style.setProperty("--f", v);
+  tok.classList.toggle("graded", f >= 0.999);
+}
 
 export function LyricSubtitle({ songId, lines, timeMs }: Props) {
-  const [view, setView] = useState<{ index: number; fill: number[] }>({ index: 0, fill: [] });
+  const [index, setIndex] = useState(0);
+  const root = useRef<HTMLDivElement>(null);
   const read = useRef(timeMs);
   read.current = timeMs;
 
   // A new song starts on its first line, waiting.
-  useEffect(() => { setView({ index: 0, fill: [] }); }, [songId]);
+  useEffect(() => { setIndex(0); }, [songId]);
 
+  // Every frame: which line shows, rendered only when it changes, and how far each of its characters
+  // has filled, written straight to them. A render a frame cost far more than the fill itself.
   useEffect(() => {
     let raf = requestAnimationFrame(function frame() {
       const t = read.current();
       if (t != null && lines.length) {
-        const index = subtitleIndex(lines, t);
-        const fill = fillFractions(lines[index], t);
-        setView((v) => (v.index === index && same(v.fill, fill) ? v : { index, fill }));
+        const i = subtitleIndex(lines, t);
+        setIndex(i);
+        const toks = root.current?.querySelector(`.sub-line[data-k="${songId}:${i}"]`)?.children;
+        if (toks) {
+          const fill = fillFractions(lines[i], t);
+          for (let j = 0; j < toks.length; j++) paint(toks[j] as HTMLElement, fill[j] ?? 0);
+        }
       }
       raf = requestAnimationFrame(frame);
     });
     return () => cancelAnimationFrame(raf);
-  }, [lines]);
+  }, [songId, lines]);
 
-  const line = lines[view.index];
-  const marks = useMemo(() => demoMarks(songId, view.index, line?.syllables.length ?? 0), [songId, view.index, line]);
+  const line = lines[index];
+  const marks = useMemo(() => demoMarks(songId, index, line?.syllables.length ?? 0), [songId, index, line]);
   if (!line) return null;
   return (
-    <div className="subtitle" aria-hidden>
+    <div ref={root} className="subtitle" aria-hidden>
       <div className="sub-lines">
         <AnimatePresence initial={false}>
           <motion.div
-            key={`${songId}:${view.index}`}
+            key={`${songId}:${index}`}
+            data-k={`${songId}:${index}`}
             className="sub-line"
             initial={{ opacity: 0, y: 18, filter: "blur(6px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -18, filter: "blur(6px)" }}
             transition={{ duration: 0.55, ease: EASE }}
           >
-            {line.syllables.map((s, j) => {
-              const f = view.fill[j] ?? 0;
-              return (
-                <span className={`tok s-${marks[j]}${f >= 0.999 ? " graded" : ""}`} key={j}>
-                  <span className="py">{s.pinyin}</span>
-                  <span className="hz" data-hz={s.hanzi} style={{ "--f": f } as CSSProperties}>{s.hanzi}</span>
-                  <i className="mark" />
-                </span>
-              );
-            })}
+            {line.syllables.map((s, j) => (
+              <span className={`tok s-${marks[j]}`} key={j}>
+                <span className="py">{s.pinyin}</span>
+                <span className="hz" data-hz={s.hanzi}>{s.hanzi}</span>
+                <i className="mark" />
+              </span>
+            ))}
           </motion.div>
         </AnimatePresence>
       </div>

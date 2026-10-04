@@ -13,7 +13,7 @@
  * Owner: A. Spec: docs/design/ui.md §3.3 ("Spinning the record"), §5.1, §6.
  */
 import { useReducedMotion } from "motion/react";
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import { useLatest } from "../../hooks/useLatest";
 import {
   crossfadeWeights, dragSettle, DRAG_PX_PER_SONG, labelSlots, mod, selectedIndex, STEP_DEG, stepSpring, wheelSettle, WHEEL_PX_PER_SONG,
@@ -21,7 +21,7 @@ import {
 } from "../../logic/recordWheel";
 import type { Entry } from "../../logic/songList";
 import { PLATTER_SPEED, platterStep } from "../../logic/turntable";
-import { RecordDisc } from "./RecordDisc";
+import { discTransform, RecordDisc } from "./RecordDisc";
 
 export type SongRecordHandle = { wheel(e: WheelEvent): void; step(dir: 1 | -1): void };
 
@@ -51,7 +51,6 @@ export const SongRecord = forwardRef<SongRecordHandle, Props>(function SongRecor
   const n = Math.max(1, entries.length);
   const reduced = useReducedMotion();
   const [u, setU] = useState(initial);
-  const [spin, setSpin] = useState(0);
   const [grabbing, setGrabbing] = useState(false);
   const dial = useRef<HTMLDivElement>(null);
   const st = useRef({ u: initial, v: 0, target: initial, raf: 0, last: 0, wheeling: false, wheelStart: 0, raw: 0, wheelT: 0 as ReturnType<typeof setTimeout> | 0, drag: null as Drag | null });
@@ -136,7 +135,13 @@ export const SongRecord = forwardRef<SongRecordHandle, Props>(function SongRecor
   }));
 
   // The platter: spins up when the record plays, slows to a stop after the arm is back on its rest.
-  const platter = useRef({ speed: 0 });
+  // The disc's angle is the wheel's position plus the platter's turn. It is written straight to the
+  // disc, every frame while the platter turns, not rendered: a render a frame cost far more than the turn.
+  const platter = useRef({ speed: 0, angle: 0 });
+  const spinEl = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (spinEl.current) spinEl.current.style.transform = discTransform(u * STEP_DEG + platter.current.angle);
+  }, [u]);
   useEffect(() => {
     const target = spinning && !reduced ? PLATTER_SPEED : 0;
     let last = performance.now(), raf = 0;
@@ -144,7 +149,10 @@ export const SongRecord = forwardRef<SongRecordHandle, Props>(function SongRecor
       const dt = Math.min(0.05, (now - last) / 1000), p = platter.current;
       last = now;
       p.speed = platterStep(p.speed, target, dt);
-      if (p.speed) setSpin((x) => x + p.speed * dt);
+      if (p.speed) {
+        p.angle += p.speed * dt;
+        if (spinEl.current) spinEl.current.style.transform = discTransform(st.current.u * STEP_DEG + p.angle);
+      }
       if (p.speed || target) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -189,7 +197,7 @@ export const SongRecord = forwardRef<SongRecordHandle, Props>(function SongRecor
   return (
     <div ref={dial} className={`dial${grabbing ? " grabbing" : ""}`} role="listbox" aria-label="Songs"
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
-      <RecordDisc entries={entries} weights={weights} g={g} rotation={u * STEP_DEG + spin} ring={ring} />
+      <RecordDisc entries={entries} weights={weights} g={g} ring={ring} spinRef={spinEl} />
       {between}
       {labelSlots(u, n, g).map((s) => {
         const e = entries[s.song];

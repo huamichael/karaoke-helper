@@ -29,6 +29,7 @@ export default function App() {
   const [leaving, setLeaving] = useState(false);
   const [arriving, setArriving] = useState(false);
   const backdrop = useRef<BackdropHandle>(null);
+  const grain = useRef<HTMLDivElement>(null);
 
   // Nothing shows until the list arrives, so a themed "coming soon" song never flashes first.
   // If the backend can't be reached, the themed songs still show, all coming soon.
@@ -64,9 +65,10 @@ export default function App() {
   }, []);
 
   // The record's position drives the photos' crossfade and the grain, every frame, without re-rendering.
+  // --grain goes on the grain itself: on the root it restyled the whole page every frame.
   const onTurn = useCallback((u: number) => {
     backdrop.current?.setWeights(crossfadeWeights(u, entries.length));
-    document.documentElement.style.setProperty("--grain", (0.1 + 0.34 * betweenAmount(u)).toFixed(3));
+    grain.current?.style.setProperty("--grain", (0.1 + 0.34 * betweenAmount(u)).toFixed(3));
   }, [entries.length]);
 
   const start = (m: Mode) => {
@@ -90,7 +92,7 @@ export default function App() {
     <div className={`app${song || leaving ? " singing" : ""}`} style={{ height: "100%" }}>
       <Backdrop ref={backdrop} entries={entries} selected={selected} />
       <div className="scrim" />
-      <div className="grain" aria-hidden />
+      <div ref={grain} className="grain" aria-hidden />
       <div className="stage">
         {song
           ? <LineScreen key={song.id} song={song} title={entries.find((e) => e.id === song.id)?.title ?? song.title} mode={mode} onExit={exit} />
