@@ -35,15 +35,16 @@ export function SingButton({ title, picking, onPicking, onHint, onStart }: Props
   const box = useRef<HTMLDivElement>(null);
   const pill = useRef<HTMLDivElement>(null);
   // Opening and closing spring the pill's width, a little slower than the dock, as in the prototype.
-  useWidthMorph(pill, picking, 120);
+  useWidthMorph(pill, picking, 400);
 
-  // A click anywhere else closes the choice.
+  // A click anywhere else closes the choice. It listens on the way down (capture, on window), before
+  // anything on the page can keep the press to itself: the tonearm does, so a press on it was missed.
   useEffect(() => {
     if (!picking) return;
     const off = (e: PointerEvent) => { if (!box.current?.contains(e.target as Node)) onPicking(false); };
-    document.addEventListener("pointerdown", off);
+    window.addEventListener("pointerdown", off, true);
     const t = setTimeout(() => box.current?.querySelector<HTMLElement>("[data-mode]")?.focus({ preventScroll: true }), 60);
-    return () => { document.removeEventListener("pointerdown", off); clearTimeout(t); };
+    return () => { window.removeEventListener("pointerdown", off, true); clearTimeout(t); };
   }, [picking, onPicking]);
 
   const pick = (mode: PlayMode, i: number) => (
