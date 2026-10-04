@@ -356,7 +356,7 @@ export default function LineScreen({ song, title, mode, onExit }: Props) {
     } else if (k === "l") listen();
     else if (k === "r") retry();
     else if (k === "p") togglePinyin();
-    else if (k === "e") setOpen((v) => !v);
+    else if (k === "e") toggleControls();
     else if (k === "ArrowDown") { e.preventDefault(); goTo(s.lineIndex + 1, 1); }
     else if (k === "ArrowUp") { e.preventDefault(); goTo(s.lineIndex - 1, -1); }
   };
@@ -382,9 +382,17 @@ export default function LineScreen({ song, title, mode, onExit }: Props) {
     return () => { off(); stepper.disconnect(); };
   }, [live, swipeHandler]);
 
+  // E and a double-click switch the whole top layer: opening shows every control; closing hides the header
+  // too, at once, instead of leaving it up until the pointer is still.
+  const toggleControls = () => {
+    const next = !live.current.open;
+    setOpen(next);
+    if (next) chrome.show();
+    else chrome.hide();
+  };
   const onDoubleClick = (e: MouseEvent) => {
     if ((e.target as HTMLElement).closest("button, .word, .dock, .opts, .advice, .f-mid, .f-below")) return;
-    setOpen((v) => !v);
+    toggleControls();
   };
 
   // While practising, a click on the faded lyrics ends practice (not while recording or grading).

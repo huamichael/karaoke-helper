@@ -17,6 +17,8 @@
 .dmeter { width: 110px; height: 6px; border-radius: 99px; background: rgba(255,255,255,.14); overflow: hidden; }
 .dmeter i { display: block; height: 100%; width: 0; background: var(--good); transition: width .08s; }
 
-.keys { position: absolute; left: 50%; bottom: 102px; z-index: 5; display: flex; gap: 18px; font-size: 13px; color: var(--text-3); white-space: nowrap; transform: translate(-50%, 8px); opacity: 0; pointer-events: none; transition: opacity .25s, transform .35s var(--ease); }
+/* The keyboard hints: a row just under the header while the controls are open. The lyric list's top fade grows
+   to clear this band (lyrics.css, --top-clear), so no song line runs under it. */
+.keys { position: absolute; left: 50%; top: 80px; z-index: 6; display: flex; gap: 18px; font-size: 13px; color: var(--text-3); white-space: nowrap; transform: translate(-50%, -6px); opacity: 0; pointer-events: none; transition: opacity .25s, transform .35s var(--ease); }
 .sing.open:not(.practising) .keys { opacity: 1; transform: translate(-50%, 0); transition-delay: .12s; }
 kbd { font-family: inherit; font-size: 12px; padding: 1px 6px; margin-right: 3px; border-radius: 5px; border: 1px solid rgba(255,255,255,.25); color: var(--text-2); }

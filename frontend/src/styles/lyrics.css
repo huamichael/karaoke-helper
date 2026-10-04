@@ -2,10 +2,17 @@
    a status bar under each word, and what sits under the active line.
    Spec: docs/design/ui.md §3.2, §5.3. */
 
-.viewport { position: absolute; inset: 0; overflow: hidden; touch-action: none; -webkit-mask-image: linear-gradient(transparent, #000 12%, #000 76%, transparent 95%); mask-image: linear-gradient(transparent, #000 12%, #000 76%, transparent 95%); will-change: opacity, transform; transition: opacity .5s var(--ease), transform .6s var(--ease), filter 0s; }
+/* --top-clear: how much of the top stays clear of lyrics. 0 normally; while the controls are open it clears the
+   header and the key hints row under it, and animates there so the lines above fade rather than pop. */
+@property --top-clear { syntax: '<length>'; inherits: false; initial-value: 0px; }
+.viewport { --top-clear: 0px; position: absolute; inset: 0; overflow: hidden; touch-action: none;
+  -webkit-mask-image: linear-gradient(transparent var(--top-clear), #000 calc(var(--top-clear) + 12%), #000 76%, transparent 95%);
+  mask-image: linear-gradient(transparent var(--top-clear), #000 calc(var(--top-clear) + 12%), #000 76%, transparent 95%);
+  will-change: opacity, transform; transition: opacity .5s var(--ease), transform .6s var(--ease), filter 0s, --top-clear .35s var(--ease); }
+.sing.open:not(.practising) .viewport { --top-clear: 112px; }
 /* While a word is practised the lyrics fade and shrink; the blur lands in one step once they have mostly faded,
    and leaves at once on the way back. Animating a 12px blur over this full-screen masked layer costs every frame. */
-.sing.practising .viewport { opacity: .12; filter: blur(12px) brightness(.55); transform: scale(.98); transition: opacity .5s var(--ease), transform .6s var(--ease), filter 0s linear .3s; }
+.sing.practising .viewport { opacity: .12; filter: blur(12px) brightness(.55); transform: scale(.98); transition: opacity .5s var(--ease), transform .6s var(--ease), filter 0s linear .3s, --top-clear .35s var(--ease); }
 .track { position: absolute; left: 0; right: 0; top: 0; padding: 0 64px; }
 
 .line { display: flex; flex-direction: column; align-items: center; padding: 14px 0; cursor: pointer; color: rgba(255,255,255,.55); transition: color .4s; }
