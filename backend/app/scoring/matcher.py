@@ -15,6 +15,7 @@ from app.scoring.confusions import final_partners, initial_partners
 GAP = 1.5
 # Component distance -> component score: exact, confused pair, other mismatch.
 COMPONENT_SCORE = {0: 100, 1: 60, 2: 20}
+DE_PARTICLES = frozenset("的地得")
 
 
 def match(expected: list[Syllable], heard: list[Syllable]) -> list[Syllable | None]:
@@ -68,15 +69,25 @@ def _distance(expected: str, heard: str, partners) -> int:
     return 1 if heard in partners(expected) else 2
 
 
-def _pair_cost(e: Syllable, h: Syllable) -> float:
+def _same_word(e: Syllable, h: Syllable) -> bool:
+    """The heard character is the expected word, whatever reading the transcript's character has."""
     if e.hanzi == h.hanzi:
+        return True
+    # The particles 的, 地 and 得 are all said "de", and Whisper writes whichever fits the
+    # grammar: 輕輕的 comes back as 轻轻地. Read alone, 地 is "dì", which would mark a
+    # correct "de" wrong every time.
+    return e.pinyin_numeric == "de5" and h.hanzi in DE_PARTICLES
+
+
+def _pair_cost(e: Syllable, h: Syllable) -> float:
+    if _same_word(e, h):
         return 0.0
     worst = max(_distance(e.initial, h.initial, initial_partners), _distance(e.final, h.final, final_partners))
     return float(worst)
 
 
 def _observed(e: Syllable, h: Syllable) -> Syllable:
-    reading = e if e.hanzi == h.hanzi else h
+    reading = e if _same_word(e, h) else h
     return Syllable(
         hanzi=h.hanzi, pinyin=reading.pinyin, pinyin_numeric=reading.pinyin_numeric,
         initial=reading.initial, final=reading.final, tone=None, start_ms=None, end_ms=None,

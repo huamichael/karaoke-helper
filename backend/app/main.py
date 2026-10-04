@@ -38,6 +38,12 @@ config.validate_layer_flags()
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     if config.grader() == "real":
         warmup()
+        log.warning("Grader: real. Recordings are graded.")
+    else:
+        # The app labels these results "Demo scores". A container created with GRADER=mock keeps
+        # it until it is recreated: `GRADER=real docker compose up -d --force-recreate backend`.
+        log.warning("Grader: MOCK. Recordings are NOT graded; every result is a canned demo score. "
+                    "Set GRADER=real and recreate the backend to grade.")
     yield
 
 
