@@ -90,34 +90,81 @@ function speakLine(line: Pick<Line, "start_ms" | "end_ms" | "text">, onTick: (ms
   });
 }
 
+export type RecordPlayback = Playback & {
+  /** The track position in ms while it plays (heard or muted), else null. */
+  timeMs(): number | null;
+  setMuted(muted: boolean): void;
+};
+
+const RECORD_VOLUME = 0.8;
+const FADE_MS = 800;
+const STOP_FADE_MS = 250;
+
 /**
- * The song screen's preview: about 12 seconds of the track from startMs, faded in
- * and out. onPlaying fires once sound actually starts (it may never: no file yet,
- * or the browser has not had a click). The clip's source is ui.md §9, question 3.
+ * The song screen's record: plays [fromMs, toMs] of the track on a loop for as
+ * long as the arm is down, fading in at the start of each pass and out before the
+ * loop. Muted, it keeps playing silently, so the lyric subtitle stays in time.
+ * Browsers refuse sound before the first click or key press; then it plays muted
+ * and unmutes on the first one. Stopping fades out over a quarter second.
  */
-export function playPreview(audioUrl: string, startMs: number, onPlaying: () => void, durationMs = 12_000): Playback {
-  return controlled((finish) => {
-    const a = new Audio(mediaUrl(audioUrl));
-    a.volume = 0;
-    a.currentTime = startMs / 1000;
-    let raf = 0, t0 = 0;
-    const fade = (now: number) => {
-      const t = now - t0;
-      a.volume = Math.max(0, Math.min(1, t / 800, (durationMs - t) / 800)) * 0.8;
-      if (t >= durationMs) finish("ended");
-      else raf = requestAnimationFrame(fade);
-    };
-    a.play().then(() => {
-      t0 = performance.now();
-      onPlaying();
-      raf = requestAnimationFrame(fade);
-    }, () => finish("ended"));
-    return () => {
-      cancelAnimationFrame(raf);
-      a.pause();
-      a.removeAttribute("src");
-    };
+export function playRecord(audioUrl: string, win: { fromMs: number; toMs: number }, muted: boolean): RecordPlayback {
+  const a = new Audio(mediaUrl(audioUrl));
+  a.preload = "auto";
+  a.volume = 0;
+  a.muted = muted;
+  a.currentTime = win.fromMs / 1000;
+  let want = muted, blocked = false, raf = 0, stoppingAt = 0, settled = false;
+  let resolve!: (r: "ended" | "stopped") => void;
+  const done = new Promise<"ended" | "stopped">((r) => (resolve = r));
+  const unlock = () => { blocked = false; a.muted = want; };
+  const finish = (r: "ended" | "stopped") => {
+    if (settled) return;
+    settled = true;
+    cancelAnimationFrame(raf);
+    a.pause();
+    a.removeAttribute("src");
+    document.removeEventListener("pointerdown", unlock);
+    document.removeEventListener("keydown", unlock);
+    resolve(r);
+  };
+  const frame = (now: number) => {
+    let ms = a.currentTime * 1000;
+    if (ms >= win.toMs) {
+      a.currentTime = win.fromMs / 1000;
+      ms = win.fromMs;
+    }
+    let v = Math.max(0, Math.min(1, (ms - win.fromMs) / FADE_MS, (win.toMs - ms) / FADE_MS));
+    if (stoppingAt) {
+      const k = (now - stoppingAt) / STOP_FADE_MS;
+      if (k >= 1) return finish("stopped");
+      v *= 1 - k;
+    }
+    a.volume = v * RECORD_VOLUME;
+    raf = requestAnimationFrame(frame);
+  };
+  const start = () => { if (!settled) raf = requestAnimationFrame(frame); };
+  a.play().then(start, (e: DOMException) => {
+    if (settled) return;
+    if (e.name !== "NotAllowedError" || a.muted) return finish("ended"); // no track yet, or it can't play
+    blocked = true;
+    a.muted = true;
+    document.addEventListener("pointerdown", unlock, { once: true });
+    document.addEventListener("keydown", unlock, { once: true });
+    a.play().then(start, () => finish("ended"));
   });
+  return {
+    done,
+    stop: () => {
+      if (settled) return;
+      if (a.paused || stoppingAt) return finish("stopped");
+      stoppingAt = performance.now();
+    },
+    timeMs: () => (!settled && !a.paused && a.readyState >= 2 ? a.currentTime * 1000 : null),
+    setMuted: (m) => {
+      want = m;
+      if (!blocked) a.muted = m;
+    },
+  };
 }
 
 /** The spoken reference: the word's clip, or speechSynthesis in zh-CN when audio_url is null. */

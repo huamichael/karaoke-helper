@@ -16,11 +16,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { getSong, type Mode, type Song } from "../api/client";
 import { setAmbienceActive, setStatic } from "../audio/ambience";
-import { playPreview, type Playback } from "../audio/player";
+import { playRecord, type RecordPlayback } from "../audio/player";
 import { CoverButton } from "../components/song/CoverButton";
 import { Credit } from "../components/song/Credit";
 import { HomeHeader } from "../components/song/HomeHeader";
-import { LyricSample } from "../components/song/LyricSample";
+import { LyricSubtitle } from "../components/song/LyricSubtitle";
 import { Scraps } from "../components/song/Scraps";
 import { MODE_HINT, SingButton } from "../components/song/SingButton";
 import { SongRecord, type SongRecordHandle } from "../components/song/SongRecord";
@@ -31,6 +31,7 @@ import { SHOW_MODE_CHOICE } from "../config";
 import { useLatest } from "../hooks/useLatest";
 import { useWindowSize } from "../hooks/useWindowSize";
 import { betweenAmount, wheelGeometry } from "../logic/recordWheel";
+import { previewWindow } from "../logic/subtitle";
 import type { Entry } from "../logic/songList";
 import { armLayout } from "../logic/turntable";
 
@@ -61,7 +62,7 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
   const root = useRef<HTMLElement>(null);
   const record = useRef<SongRecordHandle>(null);
   const arm = useRef<TonearmHandle>(null);
-  const audio = useRef<Playback | null>(null);
+  const audio = useRef<RecordPlayback | null>(null);
   const settleTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const playingNow = useRef(recordOn); // read by async arm callbacks before React re-renders
   const [picking, setPicking] = useState(false);
@@ -81,19 +82,29 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
   const live = useLatest({ entries, selected, sound, leaving, previewing });
   const go = (where: ArmPlace) => arm.current?.go(where) ?? Promise.resolve(true);
 
-  // ---- the preview: shown while the arm is down on a playable song, heard while sound is on ----
+  // ---- the preview: plays while the arm is down on a playable song (muted while sound is off) ----
   const stopAudio = useCallback(() => { audio.current?.stop(); audio.current = null; }, []);
   const startAudio = useCallback((k: number) => {
     const e = live.current.entries[k];
-    if (!e?.playable || !live.current.sound || audio.current) return;
+    if (!e?.playable || audio.current) return;
     songFor(e.id).then((song) => {
       const now = live.current;
-      if (!playingNow.current || now.leaving || !now.sound || now.entries[now.selected]?.id !== e.id || audio.current) return;
-      const pb = playPreview(song.audio_url, song.lines[0]?.start_ms ?? 0, () => {});
+      if (!playingNow.current || now.leaving || now.entries[now.selected]?.id !== e.id || audio.current || !song.lines.length) return;
+      const pb = playRecord(song.audio_url, previewWindow(song.lines), !now.sound);
       audio.current = pb;
       pb.done.then(() => { if (audio.current === pb) audio.current = null; });
     }, () => {});
   }, [live]);
+  const trackTime = useCallback(() => audio.current?.timeMs() ?? null, []);
+
+  // The subtitle shows the lyric of the song on the record.
+  const [lyrics, setLyrics] = useState<Song | null>(null);
+  useEffect(() => {
+    if (!entry?.playable) return setLyrics(null);
+    let alive = true;
+    songFor(entry.id).then((s) => { if (alive) setLyrics(s); }, () => { if (alive) setLyrics(null); });
+    return () => { alive = false; };
+  }, [entry?.id, entry?.playable]);
   const stopPreview = useCallback(() => {
     clearTimeout(settleTimer.current);
     stopAudio();
@@ -124,9 +135,8 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
   const toggleSound = () => {
     soundOn = !live.current.sound;
     setSound(soundOn);
-    if (!soundOn) stopAudio();
+    audio.current?.setMuted(!soundOn);
   };
-  useEffect(() => { if (sound && previewing) startAudio(selected); }, [sound, previewing, selected, startAudio]);
 
   // Changing songs while it plays lifts the arm on the cue lever; it sets down again once the record settles.
   const gestureStart = useCallback(() => {
@@ -249,7 +259,7 @@ export default function SongScreen({ entries, selected, onSelect, onTurn, onStar
         </SongRecord>
       )}
 
-      {t && <LyricSample sample={t.sample} />}
+      {entry && lyrics?.id === entry.id && <LyricSubtitle songId={entry.id} lines={lyrics.lines} timeMs={trackTime} />}
       {t && <Credit theme={t} />}
       {error && (
         <div className="home-error note" role="alert">

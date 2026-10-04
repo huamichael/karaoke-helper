@@ -4,15 +4,13 @@
  * Each song has a five-colour palette, and may have a photograph (Unsplash
  * License, in public/photos), an album cover (copyrighted: public/covers, which
  * git ignores), the recording's artist, album and year, how the title splits over
- * two lines on the song screen, and a sample line that grades itself on a loop.
+ * two lines on the song screen, and where the collage scraps look into the photo.
  *
  * A theme with a title but no matching song from the backend shows on the record
  * as "Coming soon" (docs/design/ui.md §5.1).
  *
  * Owner: A. Spec: docs/design/ui.md §3.1, §5.1, §9 question 7.
  */
-import type { Status } from "../api/client";
-
 export type Palette = { c0: string; c1: string; c2: string; c3: string; accent: string };
 
 export type SongTheme = {
@@ -32,8 +30,6 @@ export type SongTheme = {
   year?: string;
   /** Where each collage scrap looks into the photo (CSS background-position), one per scrap. */
   focus?: [string, string, string];
-  /** The song screen's subtitle: one line that fills and grades itself on a loop. Decorative. */
-  sample?: { hz: string; py: string; marks: Status[] };
 };
 
 export const FALLBACK_PALETTE: Palette = { c0: "#15141f", c1: "#3b3f6b", c2: "#6b4a6a", c3: "#2f5a5a", accent: "#ece8ff" };
@@ -46,7 +42,6 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     titleEnglish: "Two Tigers",
     blurb: "A children's round sung to the tune of Frère Jacques. Short words, one per note: the easiest place to start.",
     artist: "Traditional",
-    sample: { hz: "两只老虎", py: "liǎng zhī lǎo hǔ", marks: ["good", "ok", "good", "wrong"] },
   },
   "jasmine-flower": {
     title: "茉莉花",
@@ -62,7 +57,6 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     artist: "鳳飛飛",
     album: "鳳飛飛 金賞輯 3",
     year: "1971",
-    sample: { hz: "好一朵美麗的茉莉花", py: "hǎo yì duǒ měi lì de mò lì huā", marks: ["good", "good", "good", "wrong", "good", "good", "good", "ok", "good"] },
   },
   "yi-jian-mei": {
     title: "一剪梅",
@@ -78,7 +72,6 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     artist: "費玉清",
     album: "清韻悠揚 精選（一）",
     year: "1983",
-    sample: { hz: "一剪梅", py: "yì jiǎn méi", marks: ["good", "ok", "good"] },
   },
   "yue-liang-dai-biao-wo-de-xin": {
     title: "月亮代表我的心",
@@ -94,7 +87,6 @@ export const SONG_THEMES: Record<string, SongTheme> = {
     artist: "鄧麗君",
     album: "島國之情歌 第四集 香港之戀",
     year: "1977",
-    sample: { hz: "月亮代表我的心", py: "yuè liàng dài biǎo wǒ de xīn", marks: ["good", "good", "good", "ok", "good", "good", "wrong"] },
   },
 };
 
