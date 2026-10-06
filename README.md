@@ -6,6 +6,8 @@ Lotus Roots brings pronunciation practice and karaoke together in a desktop web 
 
 A vinyl-inspired song browser, animated artwork, and an immersive lyric view make practice feel like listening to a record.
 
+Built by Michael Hua, Rayan Tarar, Jin Wayne, Gordon Mei during MHacks 2026. Check out our [Devpost](https://devpost.com/software/lotus-roots)!
+
 ## Highlights
 
 - **Line-by-line pronunciation feedback.** Record a lyric and receive word grades, pronunciation scores, and tips for Mandarin initials and finals.
@@ -185,3 +187,5 @@ docs/              Architecture, API contracts, scoring rules, and UI design
 ```
 
 See the [documentation index](docs/README.md) for architecture and implementation details, the [API contract](docs/contracts/api.md) for integration, and the [scoring specification](docs/contracts/scoring.md) for how grades are calculated.
+
+
